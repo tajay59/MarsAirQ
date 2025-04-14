@@ -1,0 +1,224 @@
+body {
+  font-family: arial, sans-serif;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@page {
+  size: letter portrait;
+  margin: 0mm 0mm 0mm 0mm;
+}
+/*
+ .box{
+    box-sizing: border-box;
+    width: 810px;
+
+    background-image: linear-gradient(180deg, #e2e8f0 , #e2e8f00c );
+    border-radius: 7px; 
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 250px 120px 80px 70px 50px 50px;
+    place-items: center;
+    padding-bottom: 50px;
+    margin: 0 26px;
+}*/
+.invoice {
+  width: 800px;
+  height: 1040px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.invoice_box {
+  width: 800px;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 160px 140px auto 70px 170px 150px;
+}
+.invoice_box_row0 {
+  margin-top: 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.invoice_box_row0 .leftbar {
+  background-color: #35475F;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  flex-direction: row;
+}
+.invoice_box_row0 .leftbar h1 {
+  width: 220px;
+  height: 50px;
+  background-color: white;
+  margin: 0;
+  font-size: 50px;
+  font-weight: lighter;
+  margin-left: 180px;
+}
+.invoice_box_row0 .rightbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: #35475F;
+  width: 100%;
+  height: 100px;
+  padding-bottom: 20px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+.invoice_box_row2 {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 16px 32px;
+}
+.invoice_box_row2 .left {
+  height: 100px;
+}
+.invoice_box_row2 .right {
+  width: 300px;
+  height: 100px;
+}
+.invoice_box_row2 .right p {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: 1fr;
+}
+.invoice_box_row3 {
+  padding-top: 12px;
+  padding: 16px 32px;
+}
+.invoice_box_row4 {
+  padding: 16px 32px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  font-weight: bold;
+  padding-top: 12px;
+}
+.invoice_box_row4 .row4_right > p {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  padding-right: 12px;
+}
+.invoice_box_row5 {
+  padding: 16px 32px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  grid-template-rows: 40px;
+  width: 100%;
+}
+.invoice_box_row5 .lefttotal {
+  width: 360px;
+  height: 40px;
+}
+.invoice_box_row5 .total {
+  display: flex;
+  flex-direction: row;
+  font-size: 20px;
+  font-weight: bold;
+  width: 360px;
+  height: 40px;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #35475F;
+  color: white;
+  border-radius: 8px;
+}
+.invoice_box_row6 {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: end;
+  padding: 16px 32px;
+  color: black;
+  border-top: 1px solid black;
+  margin-top: 50px;
+}
+.invoice_box_row6 div {
+  height: 100px;
+}
+.invoice_box_row6 div p {
+  font-weight: bold;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+.invoice_box_row6 .rightfooter {
+  width: 150px;
+}
+
+.left, .right {
+  width: 300px;
+  height: 160px;
+  border-radius: 8px;
+  margin: 8px;
+  padding: 8px;
+}
+.left .title, .right .title {
+  text-align: left;
+  font-weight: bold;
+  color: black;
+  background-color: rgba(221, 221, 221, 0.3490196078);
+}
+
+p {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  padding: 4px;
+  margin: 0;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(odd) {
+  background-color: rgba(221, 221, 221, 0.3490196078);
+  border: none;
+}
+
+td {
+  border: none;
+}
+
+td:nth-child(even), th:nth-child(even), td:nth-child(3), th:nth-child(3) {
+  text-align: center;
+}
+
+.tableheader th:nth-child(1) {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+.tableheader th:nth-child(4) {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+.tableheader th {
+  background-color: #000000;
+  color: rgba(255, 255, 255, 0.9019607843);
+  border: none;
+}/*# sourceMappingURL=app.css.map */

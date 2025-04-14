@@ -1,0 +1,46 @@
+1. Shall implement Login, Registration and Password reset 
+2. Ability to download data
+3. View live data
+4. Add/Remove stations
+5. Store all sensor data, user data etc in a database
+6. Basic Visualization of data stored in database
+7. Shall allow all new account registrations to be Accepted or Denied by an Admin user. This completes the registration process
+
+
+mosquitto_ctrl dynsec init C:\'Program Files'\mosquitto\dynamic-security.json admin
+
+mosquitto_ctrl dynsec init dynamic-security.json admin
+
+
+mosquitto_ctrl -u admin -h localhost dynsec getDefaultACLAccess unsubscribe
+mosquitto_ctrl -u admin  dynsec setDefaultACLAccess unsubscribe allow
+mosquitto_ctrl -u admin  dynsec setDefaultACLAccess unsubscribe deny
+
+
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec getDefaultACLAccess unsubscribe
+
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec createClient alfa 
+
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec listClients
+
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec addClientRole alfa sensors <priority>
+
+
+Create ACL
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec addRoleACL airq publishClientSend /sensor allow 20
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec addRoleACL airq publishClientReceive /sensor allow 20 
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec addRoleACL airq subscribeLiteral /sensor allow 20
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec addRoleACL airq unsubscribeLiteral /sensor allow 20 
+
+Create Roles
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec listRoles
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec createRole airq
+
+Set role to Client/group
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec addClientRole alfa airq 20
+
+
+
+Get Client/group info
+mosquitto_ctrl -o "C:\Users\tedwards\Documents\PROJECTS\Mars AirQ\optionsfile.txt" dynsec getClient alfa
+

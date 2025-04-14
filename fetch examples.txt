@@ -1,0 +1,42 @@
+AT=32.6,SM1=589,time=080420241520,key=Pl@nt$
+
+
+{"id":"ORD43e7429a780f3df6d582fba718a38a8d"}
+
+
+const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), { 'Accept': 'application/json', 'Content-Type': 'application/json' } );
+const [status, data] = await FetchStore.GET(URL);   
+
+            if(status){
+                
+    
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { () } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    NotificationStore.pushNotification("Re-trying in 5 seconds" ,"secondary","text-onSecondary","flat","fas fa-triangle-exclamation","onSecondary",true,3000); 
+                    setTimeout( () => { ()} ,5000); 
+                }
+            } 
+
+
+console.error(`${funcName} error: ${err.message}`);   
+
+
+
+
+import { useFetchStore } from '@/stores/fetchStore';  
+
+// VARIABLES
+const FetchStore            = useFetchStore();

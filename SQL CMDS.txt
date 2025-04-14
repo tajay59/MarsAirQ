@@ -1,0 +1,7 @@
+.headers on
+.mode column
+.timer on
+SELECT * FROM jwt_tokens ORDER BY "created_at" DESC;
+SELECT jti,user_id,valid,fresh,type,iat,exp,csrf FROM jwt_tokens ORDER BY "iat" DESC LIMIT 10;
+SELECT jti,user_id,valid,fresh,type,iat,exp,csrf FROM jwt_tokens ORDER BY "iat" DESC;
+DELETE FROM jwt_tokens;
