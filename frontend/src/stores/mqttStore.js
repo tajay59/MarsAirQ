@@ -2,6 +2,18 @@ import {defineStore} from 'pinia'
 import {ref,reactive, shallowReactive,shallowRef, toRaw} from 'vue'
 
 
+const makeid = (length) =>{
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+
+    for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+    return "IOT_WEB_"+result;
+    };
+
+
 export const useMqttStore =  defineStore('mqtt', ()=>{
 
     /*  
@@ -14,14 +26,12 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
         2. https://eclipse.dev/paho/files/jsdoc/Paho.MQTT.Client.html
     */ 
 
-    // STATES 
-    const mqtt              = ref(null);
-    // const host              = ref("aq.cimh.edu.bb");  // Host Name or IP address  NOT WORKING
-    // const port              = ref(16003);  // Port number
+    // STATES  
     const username          = ref(null);
     const password          = ref(null);
-    const host              = ref("www.yanacreations.com");  // Host Name or IP address
-    const port              = ref(8883);  // Port number
+    const host              = ref("mqtt.cimh.edu.bb");  // Host Name or IP address
+    const port              = ref(443);                 // Port number
+    const mqtt              = ref(new Paho.MQTT.Client( host.value ,port.value,"/mqtt", makeid(12) ));
     const payload           = ref(null); // Set initial values for payload
     const payloadTopic      = ref("");
     const subTopics         = shallowReactive(new Set([])); // "a","b","c"
@@ -35,15 +45,20 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
 
     // ACTIONS
     
-    const onSuccess = ()=> {
+    const onSuccess = () => {
         // called when the connect acknowledgement has been received from the server.
         // console.log(`Connected to: ${host.value}`);      
     }
 
-    const onConnected = (reconnect,URI)=> {
+    const onConnected = (reconnect,URI) => {
         // called when a connection is successfully made to the server. after a connect() method.
         console.log(`Connected to: ${URI} , Reconnect: ${reconnect} `); 
         connected.value = true;  
+
+       
+        let topics = toRaw(subs); 
+        topics.forEach( topic => subscribe(topic) );
+        
 
         // const topics = toRaw(subTopics);                 
         // topics.values().forEach((topic)=>{ subscribe(topic); });  
@@ -88,16 +103,7 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
             }
         }
  
-    const makeid = (length) =>{
-        var result           = '';
-        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        var charactersLength = characters.length;
-
-        for ( var i = 0; i < length; i++ ) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-            }
-        return "IOT_WEB_"+result;
-        };
+    
 
     // SUBCRIBE UTIL FUNCTIONS
     const sub_onSuccess = (response) => {   
@@ -178,11 +184,10 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
         }
  
 
-    const connect = () => {
-        var IDstring = makeid(12);
-        
-        console.log(`MQTT: Connecting to Server : ${host.value} Port : ${port.value}` );
-        mqtt.value    = new Paho.MQTT.Client( host.value ,port.value,"/mqtt",IDstring );   
+    const connect = () => {      
+       try {
+        console.log(`MQTT: Connecting to Server : ${host.value} Port : ${port.value},  USER: ${username.value} PASSWORD: ${password.value}` );
+        // mqtt.value    = new Paho.MQTT.Client( host.value ,port.value,"/mqtt",IDstring );   
     
         var options   = {userName: username.value, password: password.value, timeout: 3, onSuccess: onSuccess, onFailure: onFailure, invocationContext: {"host":host.value,"port": port.value }, useSSL: true, reconnect: true, uris:[`ws://${host.value}:${port.value}/mqtt`] }; 
         
@@ -190,6 +195,10 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
         mqtt.value.onMessageArrived   = onMessageArrived;
         mqtt.value.onConnected        = onConnected;
         mqtt.value.connect(options);    
+       } catch (error) {
+         console.log(error)
+       }
+                     
     };
 
     const isConnected = () => {

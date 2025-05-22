@@ -48,10 +48,10 @@
 
     // Highcharts, Load the exporting module and Initialize exporting module.
     import Highcharts from 'highcharts';
-    import more from 'highcharts/highcharts-more';
-    import Exporting from 'highcharts/modules/exporting';
-    Exporting(Highcharts); 
-    more(Highcharts);
+   import  'highcharts/highcharts-more';
+    import  'highcharts/modules/exporting';
+    
+    
     
     
     // VARIABLES
@@ -61,7 +61,7 @@
     const UserStore      = useUserStore(); 
     const Mqtt           = useMqttStore();
     const { connected, payload, payloadTopic } = storeToRefs(Mqtt);
-    const { selectedStation, darkmode }  = storeToRefs(UserStore);
+    const { selectedStation, darkmode, layout}  = storeToRefs(UserStore);
     // const { month, threedays, sevendays } = storeToRefs(AppStore);
     const chart          = ref(null); // Chart object
     const chart1         = ref(null); // Chart object
@@ -91,7 +91,7 @@
 
         if (!!window.Worker) { 
             historyLoading.value = true;
-            const { selectedStation }  = storeToRefs(UserStore);
+            const { selectedStation, layout}  = storeToRefs(UserStore);
             let timestamp = Math.floor(new Date().getTime() / 1000);
             const cookie        = UserStore.getCookie("csrf_access_token"); 
             worker.postMessage({"timestamp": timestamp,"param": param,"station":  selectedStation.value, "user": UserStore.getID, "cookie": cookie});
@@ -128,7 +128,7 @@
         chartEl.value = document.querySelectorAll(".highcharts-figure");
         if(darkmode.value)
             chartEl.value.forEach(el => { el.classList.replace('highcharts-light','highcharts-dark') });  
-        else if (!darkmode)
+        else if (!darkmode.value)
             chartEl.value.forEach(el => { el.classList.replace('highcharts-dark','highcharts-light') });    
         CreateCharts();      
         
@@ -165,7 +165,8 @@
     // WATCHERS
     watch(payload,(msg)=> {          
         // LIVE GRAPH
-        params.value = Object.keys(msg.data)
+        if(msg.type == 'station')
+            params.value = Object.keys(msg.data)
 
         if(points.value > 0)
             points.value --;    
@@ -217,7 +218,7 @@
         navigation: {
             buttonOptions: {
                 verticalAlign: 'top',
-                x: -70
+                x: 0
             }
         },
     
@@ -264,7 +265,7 @@
         navigation: {
             buttonOptions: {
                 verticalAlign: 'top',
-                x: -70
+                x: 0
             }
         },
     
@@ -294,88 +295,6 @@
     }
 </script>
 
-    
 <style>
-/*   Style */
-@import url("https://code.highcharts.com/css/highcharts.css");
 
-
-.highcharts-background {
-    transition: all 250ms;
-}
-
-.highcharts-description {
-    margin: 1rem 0;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        /* Colors for data series and points */
-        --highcharts-color-0: #b3597c;
-        --highcharts-color-1: #c4688c;
-        --highcharts-color-2: #78a8d1;
-        --highcharts-color-3: #7991d2;
-        --highcharts-color-4: #7d7bd4;
-        --highcharts-color-5: #977dd5;
-        --highcharts-color-6: #b3597c;
-        --highcharts-color-7: #b27fd6;
-
-        /* UI colors */
-        --highcharts-background-color: #333;
-
-        /*
-            Neutral color variations
-            https://www.highcharts.com/samples/highcharts/css/palette-helper
-        */
-        --highcharts-neutral-color-100: rgb(255, 255, 255);
-        --highcharts-neutral-color-80: rgb(214, 214, 214);
-        --highcharts-neutral-color-60: rgb(173, 173, 173);
-        --highcharts-neutral-color-40: rgb(133, 133, 133);
-        --highcharts-neutral-color-20: rgb(92, 92, 92);
-        --highcharts-neutral-color-10: rgb(71, 71, 71);
-        --highcharts-neutral-color-5: rgb(61, 61, 61);
-        --highcharts-neutral-color-3: rgb(57, 57, 57);
-
-        /* Highlight color variations */
-        --highcharts-highlight-color-100: rgb(122, 167, 255);
-        --highcharts-highlight-color-80: rgb(108, 144, 214);
-        --highcharts-highlight-color-60: rgb(94, 121, 173);
-        --highcharts-highlight-color-20: rgb(65, 74, 92);
-        --highcharts-highlight-color-10: rgb(58, 63, 71);
-    }
-}
-
-.highcharts-dark {
-    /* Colors for data series and points */
-    --highcharts-color-0: #b3597c;
-    --highcharts-color-1: #c4688c;
-    --highcharts-color-2: #78a8d1;
-    --highcharts-color-3: #7991d2;
-    --highcharts-color-4: #7d7bd4;
-    --highcharts-color-5: #977dd5;
-    --highcharts-color-6: #b3597c;
-    --highcharts-color-7: #b27fd6;
-
-    /* UI colors */
-    --highcharts-background-color: #333;
-
-    /* Neutral color variations */
-    --highcharts-neutral-color-100: rgb(255, 255, 255);
-    --highcharts-neutral-color-80: rgb(214, 214, 214);
-    --highcharts-neutral-color-60: rgb(173, 173, 173);
-    --highcharts-neutral-color-40: rgb(133, 133, 133);
-    --highcharts-neutral-color-20: rgb(92, 92, 92);
-    --highcharts-neutral-color-10: rgb(71, 71, 71);
-    --highcharts-neutral-color-5: rgb(61, 61, 61);
-    --highcharts-neutral-color-3: rgb(57, 57, 57);
-
-    /* Highlight color variations */
-    --highcharts-highlight-color-100: rgb(122, 167, 255);
-    --highcharts-highlight-color-80: rgb(108, 144, 214);
-    --highcharts-highlight-color-60: rgb(94, 121, 173);
-    --highcharts-highlight-color-20: rgb(65, 74, 92);
-    --highcharts-highlight-color-10: rgb(58, 63, 71);
-}
-
-    
 </style>

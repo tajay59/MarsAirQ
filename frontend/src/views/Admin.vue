@@ -6,47 +6,45 @@
     <VNavigationDrawer width="270" permanent :floating="(route.name == 'Admin')? false : true" v-if="mdAndUp" >
       <template #prepend >
         <div class="my-3 mt-7"  >
-            <VImg  src="@/assets/logo.png"  max-height="100" height="100%">              
+          <VImg v-if="!darkmode" src="@/assets/logo6_light.png" width="200" max-height="150" class="mx-15" style=" cursor: pointer;" @click="router.push({name:'Home'})"  >
+                <template v-slot:placeholder>
+                    <div class="d-flex align-center justify-center fill-height">
+                        <VProgressCircular color="grey-lighten-4" indeterminate ></VProgressCircular>
+                    </div>
+                </template>
+            </VImg>
+            <VImg v-else src="@/assets/logo6_white.png" width="200"  max-height="150" class="mx-15" style=" cursor: pointer;" @click="router.push({name:'Home'})"  >
+                <template v-slot:placeholder>
+                    <div class="d-flex align-center justify-center fill-height">
+                        <VProgressCircular color="grey-lighten-4" indeterminate ></VProgressCircular>
+                    </div>
+                </template>
+            </VImg>
+            <!-- <VImg  src="@/assets/logo.png"  max-height="100" height="100%">              
               <template v-slot:placeholder>
                 <div class="d-flex align-center justify-center fill-height">
                   <VProgressCircular color="grey-lighten-4" indeterminate ></VProgressCircular>
                 </div>
               </template>
-            </VImg> 
-            <div class="mt-n5 text-center" >
+            </VImg>  -->
+            <!-- <div class="mt-n5 text-center" >
               <span class="roboto-black-italic !text-purple-800  dark:!text-purple-300 text-xl font-bold " style=" cursor: pointer" @click="router.push({name:'Home'})">Mars </span><span class="roboto-condensed-200 !text-gray-500 dark:!text-gray-400">Air</span><span class="!text-purple-800  dark:!text-purple-300 font-weight-bold text-h4">Q</span> 
-            </div>
+            </div> -->
           </div>     
       </template>
 
         <VList nav    >
-          <VListItem class="justify-center" justify="center" >
-            <div class="flex justify-center " >
-              <VBtn class="mx-1"  variant="text"  title="Home" @click="router.push({name:'Home'})" icon density="compact"  >
-                  <Icon icon="iconamoon:home-fill" width="24" height="24" class="!text-neutral-600 dark:!text-neutral-400" />
-              </VBtn>
-
-              <VBtn   variant="text"  title="Profile" @click="router.push({name:'Profile'})" icon density="compact"  >
-                  <Icon icon="iconamoon:profile-fill" width="24" height="24" class="!text-neutral-600 dark:!text-neutral-400" />
-              </VBtn>
-
-              <VBtn  class="mx-1"  variant="text"  :title="(UserStore.loggedIn)? 'Logout': 'Login'" @click="(UserStore.loggedIn)? UserStore.userLogout() : router.push({name:'Login'}) "  icon density="compact"     >
-                  <Icon v-if="UserStore.loggedIn"  icon="majesticons:login" width="24" height="24" class="!text-neutral-600 dark:!text-neutral-400"  />
-                  <Icon v-else icon="majesticons:logout" width="24" height="24" class="!text-neutral-600 dark:!text-neutral-400"  />
-              </VBtn> 
-
-              <VBtn  :elevation="0"  variant="text"  @click="darkmode = !darkmode"   title="Theme"  icon density="compact"  >     
-                  <Icon v-if="darkmode" icon="line-md:sun-rising-filled-loop" width="24" height="24" class="!text-neutral-600 dark:!text-neutral-400"  />       
-                  <Icon v-else   icon="line-md:sunny-filled-loop-to-moon-filled-loop-transition" width="24" height="24" class="!text-neutral-600 dark:!text-neutral-400"  />   
-              </VBtn> 
-            </div>
-          </VListItem>
+          
           <VDivider :opacity="100" class="border-neutral-300 dark:border-neutral-600 mb-5"  />
           <VListItem>
             <p class="text-subtitle-1" >Admin</p>
           </VListItem>      
 
-          <VListItem v-for="route in routeItems" class="mr-10" style="text-decoration: none;"  :prepend-icon="route.icon" :title="route.title" :value="route.name" :to="route.route"></VListItem>        
+          <VListItem v-for="route in routeItems" class="mr-10" style="text-decoration: none;"   :title="route.title" :value="route.name" :to="route.route">
+            <template #prepend >
+              <Icon  :icon="route.icon" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300 mr-5" /> 
+            </template>
+          </VListItem>        
         
         </VList>
       </VNavigationDrawer>
@@ -79,11 +77,10 @@ const siteWorker        = ref(null);
 
 
 const routeItems   = ref([
-        {"icon":"mdi:mdi-account-group","title":"Accounts","route":"/admin/accounts","name":"Accounts"},  
-        {"icon":"mdi:mdi-map-marker-multiple","title":"Sites","route":"/admin/sites","name":"Sites"}, 
-        {"icon":"mdi mdi-email-fast","title":"Email List","route":"/admin/emails","name":"Emails"}, 
-        // {"icon":"mdi:mdi-lock","title":"Analytics","route":"/analytics/map","name":"Analytics"},   
-        // {"icon":"mdi:mdi-lock","title":"Admin","route":"/admin","name":"Admin"},   
+        {"icon":"mdi:accounts-group","title":"Accounts","route":"/admin/accounts","name":"Accounts"},  
+        {"icon":"mdi:map-markers","title":"Entities","route":"/admin/entities","name":"Entities"}, 
+        {"icon":"streamline:send-email-solid","title":"Email List","route":"/admin/emails","name":"Emails"},
+        {"icon":"fluent:branch-request-16-filled","title":"Requests","route":"/admin/requests","name":"AdminRequests"}
     ])
 
 

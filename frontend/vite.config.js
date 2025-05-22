@@ -17,7 +17,7 @@ export default defineConfig({
 
   plugins: [
     vue({ template: { transformAssetUrls } }), // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
-    vuetify({ autoImport: true, styles: { configFile: 'src/styles/settings.scss'} }),   
+    vuetify({ autoImport: true, styles: { configFile: 'src/styles/settings.scss'}, }),   
     // basicSsl(),
     ViteFonts({
       google: {
@@ -37,7 +37,7 @@ export default defineConfig({
     extensions: [ '.js', '.json', '.jsx', '.mjs', '.ts', '.tsx', '.vue', ],
   },
  
-  build: { outDir: '../store' },
+  build: { outDir: '../dist' },
   server: {
     port: 3000,
     host:true, 

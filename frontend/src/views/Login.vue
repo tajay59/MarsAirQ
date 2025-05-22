@@ -115,7 +115,7 @@
           </VCol>
         </VRow>
         <VRow>
-          <Toast />
+            
         </VRow>
 
       </VContainer>
@@ -273,7 +273,7 @@ const userLogin = async ()=>{
                     UserStore.mqtt_sub_credentials = data['web'];
                     Mqtt.username = data['web']['username'];
                     Mqtt.password = data['web']['password'];
-                    Mqtt.connect();
+                    // Mqtt.connect();
                     UserStore.getAllSites();
                   
 

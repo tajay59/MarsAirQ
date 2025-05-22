@@ -1,7 +1,7 @@
 <template>  
 <VContainer fluid class="fill-height pa-0">
   <VRow class="fill-height pa-0" >
-    <VCol cols="4" class="bg-neutral-800" >    
+    <VCol v-if="!smAndDown" cols="4" class="bg-neutral-800" >    
       
       <Toast  position="bottom-right" />
       <div class="my-10 h-[250px]" >
@@ -26,9 +26,6 @@
       </div>
       
    
-       
-            
-        
       <VStepperVertical v-model="page" color="secondary" flat border theme="dark" hide-actions  >
         <template v-slot:default="{step}">
           <VStepperVerticalItem class="bg-transparent !text-gray-300" :complete="step > 0" subtitle="Personal details" title="User" value="0" >
@@ -46,7 +43,7 @@
       </VStepperVertical>    
     </VCol>
 
-    <VCol cols="8" class="bg-blue pa-0" >
+    <VCol :cols="(smAndDown)? '12': '8'" class="bg-blue pa-0" >
       <VCarousel v-model="page" height="100%" hide-delimiter-background :show-arrows="false">
         <VCarouselItem   key="0" >
           <VSheet height="100%" >
@@ -247,127 +244,13 @@
   const department        = ref("");  
   const verifying         = ref(false);
   const {darkmode}        = storeToRefs(UserStore);
+  const {caribbeanCountries} = storeToRefs(AppStore);
   const snackbar           = reactive({"show":ref(false),"text":ref(""),"timeout": ref(3000),"color": ref("success")});
   const showPasscode          = ref(false);  
   const showPasscodeConfirm   = ref(false);  
   const enableSubmitButton  = ref(false); 
   const errors        = reactive({name:"", errors: []}); 
   const finished    = ref(false); 
-
-  const caribbeanCountries = [
-  {
-    name: "Antigua and Barbuda",
-    center: {
-      latitude: 17.0608,
-      longitude: -61.7964
-    }
-  },
-  {
-    name: "Bahamas",
-    center: {
-      latitude: 25.0239,
-      longitude: -77.3963
-    }
-  },
-  {
-    name: "Barbados",
-    center: {
-      latitude: 13.1939,
-      longitude: -59.5431
-    }
-  },
-  {
-    name: "Belize",
-    center: {
-      latitude: 17.2510,
-      longitude: -88.7719
-    }
-  },
-  {
-    name: "Cuba",
-    center: {
-      latitude: 21.5217,
-      longitude: -77.7812
-    }
-  },
-  {
-    name: "Dominica",
-    center: {
-      latitude: 15.4150,
-      longitude: -61.3710
-    }
-  },
-  {
-    name: "Dominican Republic",
-    center: {
-      latitude: 19.1940,
-      longitude: -70.6667
-    }
-  },
-  {
-    name: "Grenada",
-    center: {
-      latitude: 12.1165,
-      longitude: -61.6790
-    }
-  },
-  {
-    name: "Guyana",
-    center: {
-      latitude: 4.9387,
-      longitude: -58.9310
-    }
-  },
-  {
-    name: "Haiti",
-    center: {
-      latitude: 18.9712,
-      longitude: -72.2852
-    }
-  },
-  {
-    name: "Jamaica",
-    center: {
-      latitude: 18.1096,
-      longitude: -77.2975
-    }
-  },
-  {
-    name: "Saint Kitts and Nevis",
-    center: {
-      latitude: 17.3571,
-      longitude: -62.7829
-    }
-  },
-  {
-    name: "Saint Lucia",
-    center: {
-      latitude: 13.9094,
-      longitude: -60.9789
-    }
-  },
-  {
-    name: "Saint Vincent and the Grenadines",
-    center: {
-      latitude: 13.2541,
-      longitude: -61.2072
-    }
-  },
-  {
-    name: "Suriname",
-    center: {
-      latitude: 3.9190,
-      longitude: -56.0278
-    }
-  },
-  {
-    name: "Trinidad and Tobago",
-    center: {
-      latitude: 10.6918,
-      longitude: -61.2225
-    }
-  }
-];
 
 
 
@@ -437,7 +320,7 @@
 // Computed Properties
 const countries = computed(() => {
   let list = [];
-  caribbeanCountries.forEach((country) => list.push(country.name));
+  caribbeanCountries.value.forEach((country) => list.push(country.name));
   return list
 })
 

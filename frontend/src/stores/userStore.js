@@ -1,4 +1,4 @@
-import {defineStore} from 'pinia'
+import {defineStore, getActivePinia} from 'pinia'
 import {ref,computed, reactive} from 'vue' 
 import { useNotificationStore } from '@/stores/notificationStore'; 
 import { useRoute, useRouter } from "vue-router";
@@ -49,6 +49,7 @@ export const useUserStore =  defineStore('user', ()=>{
     const darkmode          = ref(false);
     const resetPasswordPage = ref(0);
     const resetTimer        = ref(0); 
+    const layout            = ref({"site":"","device":"", "dashboard":[]});
 
     // FUNCTIONS
     const capitalize  = (phrase) => {
@@ -266,8 +267,18 @@ const deleteAllCookies = ()=> {
 
 
 const localLogout = () => {
-  clearUser();     
-  deleteAllCookies();  
+    clearUser();     
+    deleteAllCookies();  
+    console.log("FINISHING LOGGING OUT");
+    // map through that list and use the **$reset** fn to reset the state
+    //   getActivePinia()._s.forEach(store => store.$reset());
+    let pinia = getActivePinia()
+    let count = 0;
+    
+    // pinia._s.forEach(store => {console.log(store); store.$reset(); });
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log("ALL LOGGED OUT");
 }
 
 const userLogout = async () => {
@@ -289,59 +300,72 @@ const userLogout = async () => {
       let keys        = Object.keys(data);
     
     if (response.status == 401) { 
-      
+          console.log("HERE ");
+
           if(keys.includes("message")){
             //console.log(data);
+            console.log("HERE 2");
             if( data['message'] === "loggedOut" ) {   
-
+                console.log("HERE 4");
                 // PUSH NOTIFICATION              message,color,      textColor,      variant, icon,                 iconColor,   state
                 NotificationStore.pushNotification("Logged out!","secondary","text-onSecondary","flat","fas fa-circle-check","onSecondary",true,2000); 
 
                 // UPDATE PINIA STORES
-                clearUser();      
-                deleteAllCookies(); 
-                    mqtt_sub_credentials.value = null;
-                    Mqtt.username = null;
-                    Mqtt.password = null;
-                    Mqtt.unsubscribeAll();
+                localLogout(); 
+                // clearUser();      
+                // deleteAllCookies(); 
+              
+                mqtt_sub_credentials.value = null;
+                Mqtt.username = null;
+                Mqtt.password = null;
+                Mqtt.unsubscribeAll();
            
                 // REDIRECT TO EXPLORE PAGE SINCE LOGOUT WAS SUCCESSFUL 
                 setTimeout(()=>{ router.replace( { name:"Home"});},1000);
                 
             }                                    
-            else{             
+            else {      
+                console.log("HERE 5"); 
+                localLogout();      
                 // PUSH NOTIFICATION 
                 NotificationStore.pushNotification( "Unable to logout" ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
-            }
-        
+            }        
         }
-        else{              
+        else {    
+            console.log("HERE 3");          
             // PUSH NOTIFICATION 
             // NotificationStore.pushNotification( "Unable to logout"  ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
-             // UPDATE PINIA STORES
-             clearUser();      
-             deleteAllCookies(); 
-        
-             // REDIRECT TO EXPLORE PAGE SINCE LOGOUT WAS SUCCESSFUL 
-             setTimeout(()=>{ router.replace( { name:"Home"});},1000);
+            // UPDATE PINIA STORES
+            localLogout(); 
+            //  clearUser();      
+            //  deleteAllCookies(); 
+
+            // REDIRECT TO EXPLORE PAGE SINCE LOGOUT WAS SUCCESSFUL 
+            setTimeout(()=>{ router.replace( { name:"Home"});},1000);
         }
     }                                        
-    else {             
+    else {    
+        console.log("HERE 1");         
       // PUSH NOTIFICATION 
-      NotificationStore.pushNotification( "Unable to logout" ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
+      // NotificationStore.pushNotification( "Unable to logout" ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
+      localLogout();
+    //   clearUser();      
+    //   deleteAllCookies(); 
+      // REDIRECT TO EXPLORE PAGE SINCE LOGOUT WAS SUCCESSFUL 
+      setTimeout(()=>{ router.replace( { name:"Home"});},1000);
   }
 
     }
     catch(err){
        
       if( err.message === "The user aborted a request."){
-          console.log("REQUEST TIMEDOUT");
-              // UPDATE PINIA STORE
-              loggedIn.value  = false;
-              user.value      = "";
+        console.log("REQUEST TIMEDOUT");
+        // UPDATE PINIA STORE
+        loggedIn.value  = false;
+        user.value      = "";
 
-              // PUSH NOTIFICATION 
-              NotificationStore.pushNotification("Request timed out"  ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
+        // PUSH NOTIFICATION 
+        NotificationStore.pushNotification("Request timed out"  ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
       }
       // console.error('Logout error: ', err.message);    
       
@@ -360,7 +384,7 @@ const getAllSites = async () => {
           
   try {
       
-      const [status, data] = await FetchStore.POST(URL, form, {  } );
+      const [status, data] = await FetchStore.POST(URL, form, {} );
       siteLoading.value   = false;
   
       if(status){
@@ -496,6 +520,7 @@ const getUserSuball = async () => {
       getSelectedStation,
       mqtt_sub_credentials,
       userSites,
+      layout,
       getUserSuball,
       getAllSites,
       setSelectedStation,
@@ -507,6 +532,6 @@ const getUserSuball = async () => {
       clearUser,
       getStatus,
       getCsrfToken}
-},{persist: true});
+},{persist: true, });
 
  

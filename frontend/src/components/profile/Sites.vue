@@ -1,25 +1,8 @@
 <template>
- <div class="w-full h-dvh flex flex-col" >
+ <div class="w-full h-dvh flex flex-col " >
 
     <div class=" h-20 flex flex-col justify-center ml-16 relative" >
-        <VSpeedDial location="left center" transition="slide-x-reverse-transition" >
-            <template v-slot:activator="{ props: activatorProps }">                      
-                <VFab v-bind="activatorProps" icon density="compact" color="transparent"  elevation="0" class="absolute top-0 right-24" size="large"  >
-                    <Icon  v-if="activatorProps['aria-expanded'] == 'false'" icon="line-md:close-to-menu-alt-transition" width="24" height="24" />
-                    <Icon v-else icon="line-md:menu-to-close-alt-transition" width="28" height="28" />
-                </VFab>                     
-            </template>
-
-            <VBtn key="1" icon title="Search" color="onSurface"  variant="text" @click="openSearch = true" >
-                <Icon icon="tdesign:map-search-filled" width="24" height="24" />
-            </VBtn>
-
-            <VBtn key="2" icon title="Create a Site" color="onSurface" variant="text" @click="openCreateSite = true"  >
-                <Icon icon="line-md:map-marker-plus-filled" width="24" height="24" />
-            </VBtn>           
-        </VSpeedDial>
-
-        <Toast />
+       <!-- TOP BAR -->          
     </div>
 
     <div class="bg-neutral-200 dark:bg-neutral-800 h-full ml-10 rounded-tl-3xl overflow-hidden  border border-neutral-800" >
@@ -28,28 +11,26 @@
             <VRow class=" w-full  bg-neutral-200 dark:bg-neutral-800 pa-7 pl-10"   >
                 <!-- <VCol cols="12" > <p  class="text-xl font-medium">Site Details</p></VCol> -->
                 <VCol class=""  :cols="(mdAndUp)? 5 : 12"  >
-                    <VCard class="pa-3 bg-neutral-100 dark:bg-neutral-700/[0.5] " flat rounded="lg"  >
-                        
-                        <div id="listmap" class="size-full rounded-lg " :class="[(mdAndUp)? 'min-h-[600px]':'min-h-[200px]']"  ></div>
-                        <VCardItem v-if="!!spss" class="px-0" > 
+                    <VCard class="pa-3 bg-neutral-100 dark:bg-neutral-700/[0.5] " flat rounded="lg"  >                        
+                        <div :id="mapcontainer" class="size-full rounded-lg " :class="[(mdAndUp)? 'min-h-[600px]':'min-h-[200px]']"  ></div>
+                        <VCardItem  class="px-0" > 
                             <VContainer fluid class="pa-0" >
                                 <VRow align="center" class="pa-0 ma-0 mb-1"  >
                                     <VCol cols="4" class="pa-0"  ><p>Latitude</p></VCol>
-                                    <VCol cols="8" class="pa-0"  ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2 " >{{ spss.lat }}</p></VCol>
+                                    <VCol cols="8" class="pa-0"  ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2 " >{{ latitude }}</p></VCol>
                                 </VRow>
                                 
                                 <VRow align="center" class="pa-0 ma-0"  >
                                     <VCol cols="4"  class="pa-0" ><p>Longitude</p></VCol>
-                                    <VCol cols="8"  class="pa-0" ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2" >{{ spss.lon }}</p></VCol>
+                                    <VCol cols="8"  class="pa-0" ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2" >{{  longitude  }}</p></VCol>
                                 </VRow>
-                            </VContainer>
-                        
+                            </VContainer>                        
                         </VCardItem>
                     </VCard>
                 </VCol>
 
                 <VCol class="mt-" :cols="(mdAndUp)? 7 : 12" >            
-                    <VCard class="pa-3  bg-neutral-100 dark:bg-neutral-700/[0.5] relative " flat rounded="lg"  min-height="712" >
+                    <VCard v-if="sitePages.pages.length > 0" class="pa-3  bg-neutral-100 dark:bg-neutral-700/[0.5] relative " flat rounded="lg"  min-height="712" >
                         <VList rounded="lg" density="compact"    variant="flat" class="relative mx-auto h-full bg-transparent"  >
                             <VListItem  variant="text" :active="(!!spss)? spss.id == site.id : false" class="bg-neutral-100 dark:bg-neutral-600/[0.9] mb-2"  v-for="site in sitePages.pages[sitePages.page - 1]" @click="setMarkerOnListMap(site.lat,site.lon); AppStore.setSPSS(site)" :key="site.id" :value="site.id"  border rounded="lg" >
                                 <template #title >
@@ -63,7 +44,7 @@
                                     <VIcon v-else icon="mdi:mdi-map-marker-multiple" class="text-red-700 dark:text-red-400" title="Disabled"  />
                                 </template>
                                 <template #append>        
-                                    <VBtn  flat rounded="lg" title="View Details" variant="tonal" @click="router.push({name:'Site',params:{id: site.id}});" color="tertiary" icon="mdi:mdi-open-in-new" density="compact" class="text-none text-sm" />
+                                    <VBtn  flat rounded="lg" title="View Details" variant="tonal" @click="router.push({name:'ProfileSite',params:{id: site.id}});" color="tertiary" icon="mdi:mdi-open-in-new" density="compact" class="text-none text-sm" />
                                 </template>
                             </VListItem>
                         </VList>
@@ -72,12 +53,25 @@
                             <VPagination v-model="sitePages.page" v-if="sitePages.count > 0" :length="sitePages.count" density="compact" @click="AppStore.getPage(sitePages.page)"  :total-visible="7"></VPagination>
                         </VCardItem>
                     </VCard>
+                    <VCard v-else class="pa-3  bg-neutral-100 dark:bg-neutral-700/[0.5] flex place-content-center" flat rounded="lg"  min-height="712" >                        
+                        <VCardItem  class=" mx-auto w-full"     >
+                            <div class="  flex flex-col place-items-center "   >
+                                <VSheet class="flex gap-3 align-center justify-center  rounded-lg my-3 pa-5" border width="230"  >
+                                    <span class="flex place-content-center" >Click</span>
+                                    <Icon  icon="gg:menu-grid-o" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" /> 
+                                    <Icon  icon="garden:chevron-right-fill-12" width="12" height="12" class="!text-neutral-500 dark:!text-neutral-300" /> 
+                                    <Icon  icon="line-md:map-marker-plus-filled" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" />
+                                </VSheet>
+                                <p class="!max-w-[230px] text-pretty my-3" >To submit a request for a new Site </p>                                
+                            </div>
+                        </VCardItem>
+                    </VCard>
                 </VCol>
             </VRow>
             
 
             <VRow  >
-                <VDialog v-model="openSearch" transition="dialog-bottom-transition" width="500" persistent >
+                <VDialog v-model="openSiteSearch" transition="dialog-bottom-transition" width="500" persistent >
                     <template v-slot:default="{ isActive }">
                         <VCard >
                             <VToolbar >
@@ -102,7 +96,7 @@
                                             <VIcon v-else icon="mdi:mdi-map-marker-multiple" class="text-red-700 dark:text-red-400" title="Disabled"  />
                                         </template>
                                         <template #append>        
-                                            <VBtn  flat rounded="lg" variant="tonal" color="tertiary" @click="router.push({name:'Site',params:{id: site.id}})" icon="mdi:mdi-open-in-new" density="compact" class="text-none text-sm" />
+                                            <VBtn  flat rounded="lg" variant="tonal" color="tertiary" @click="router.push({name:'ProfileSite',params:{id: site.id}})" icon="mdi:mdi-open-in-new" density="compact" class="text-none text-sm" />
                                         </template>
                                     </VListItem>
                                 </VList>
@@ -137,7 +131,7 @@
                             </VCardText>
 
                             <VCardActions class="justify-end pa-4">
-                                <VBtn text="Submit" @click="addSite()" class="text-none font-bold"  :disabled="enableSiteCreateBtn" :loading="createSiteLoading"  ></VBtn>
+                                <VBtn text="Submit" @click="addSite()" class="text-none font-bold"  :disabled="enableSiteCreateBtn" :loading="createSiteRequestLoading"  ></VBtn>
                                 <VBtn text="Cancel" @click="isActive.value = false"   class="text-none"></VBtn>                          
                             </VCardActions>
                         </VCard>
@@ -179,11 +173,15 @@ const UserStore         = useUserStore();
 const AppStore          = useAppStore();
 const toast             = useToast(); 
 const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
-const {spss,sitePages,siteSearchPages, createSiteLoading}   = storeToRefs(AppStore);
+const {
+    spss,
+    sitePages,
+    siteSearchPages,
+    createSiteLoading,
+    openSiteSearch,
+    openCreateSite}   = storeToRefs(AppStore);
 const compToRender      = ref({"selected": "registering","init":false, "list":[{"text":"New Registrations","name":"registering","component":"NewAccounts"}, {"text":"Accounts","name":"accounts","component":"Accounts"}]})
-const tab               = ref("");
-const openSearch        = ref(false);
-const openCreateSite    = ref(false);
+const tab               = ref(""); 
 const blueIcon          = ref(null);
 const greenIcon         = ref(null);
 const redIcon           = ref(null);
@@ -193,12 +191,15 @@ const createSiteMarker  = shallowRef(null);
 const listSiteMarker    = shallowRef(null);
 const mymap             = shallowRef(null);
 const listmap           = shallowRef(null);
+const mapcontainer      = ref(`container${_.random(0,100000)}`);
 const mtLayer           = new MaptilerLayer( {
                                 apiKey: 'MacqP5qqahFSZdWB6tSq', // https://cloud.maptiler.com/maps/landscape/    https://docs.maptiler.com/leaflet/examples/vector-tiles-in-leaflet-js/
                                 style: MaptilerStyle.STREETS.DARK //https://docs.maptiler.com/sdk-js/examples/built-in-styles/
                             } ); 
 const createSite        = reactive({name:"", lat:"0",lon:"0"}); 
 let searchTextID, timeoutVal = 1000; 
+
+const createSiteRequestLoading = ref(false);
 
 
 // PROPS
@@ -302,27 +303,45 @@ const activeState = computed(() => {
     }
 }); 
 
+const longitude = computed(()=> {
+    let res = "";
+    if(!!spss.value){
+        if(!!spss.value.lon)
+            return spss.value.lon
+    }
+    return res
+})
+
+const latitude = computed(()=> {
+    let res = "";
+    if(!!spss.value){
+        if(!!spss.value.lat)
+            return spss.value.lat
+    }
+    return res
+})
+
 
 // FUNCTIONS
 const addSite = async () => {
-    let result = await AppStore.createSite(createSite.name, createSite.lat, createSite.lon);
+    let result = await AppStore.createSiteRequest(createSite.name, createSite.lat, createSite.lon, createSiteRequestLoading);
  
     switch (result) {
-        case "added":
-            AppStore.getPageCount();
-            AppStore.getPage(1);
+        case "submitted":
+            // AppStore.getPageCount();
+            // AppStore.getPage(1);
             openCreateSite.value = false;
             createSite.name  = "";
             createSite.lat  = "0";
             createSite.lon  = "0";
-            toast.add({ severity: 'success', summary: 'CREATED', detail: 'Successfully created new SITE!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Successfully submitted request for new SITE!', life: 3000 });             
             break;
         
         case "failed":
-            AppStore.getPageCount();
-            AppStore.getPage(1);
+            // AppStore.getPageCount();
+            // AppStore.getPage(1);
             openCreateSite.value = false;
-            toast.add({ severity: 'success', summary: 'FAILED', detail: 'Unable to create new SITE!', life: 3000 });         
+            toast.add({ severity: 'success', summary: 'FAILED', detail: 'Unable to submit new SITE request', life: 3000 });         
             break;  
 
         default:
@@ -380,7 +399,7 @@ onMounted(() => {
         .bindPopup('Prospective site location')  
         .setIcon(greenIcon.value)      
     
-    listmap.value =  map('listmap',{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
+    listmap.value =  map(mapcontainer.value,{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
     
     // /*
     tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {

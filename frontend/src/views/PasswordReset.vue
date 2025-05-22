@@ -1,7 +1,7 @@
 <template>
   <VContainer fluid class="fill-height pa-0">
   <VRow class="fill-height pa-0" >
-    <VCol cols="4" class="bg-slate-900 pa-0" >    
+    <VCol v-if="!smAndDown" cols="4" class="bg-slate-900 pa-0" >    
       
       <Toast  position="bottom-right" />
       <div class="h-[400px]" >
@@ -55,7 +55,7 @@
       </VStepperVertical>    
     </VCol>
 
-    <VCol cols="8" class="bg-blue pa-0" >
+    <VCol :cols="(smAndDown)? '12': '8'" class="bg-blue pa-0" >
       <VCarousel v-model="resetPasswordPage" height="100%" hide-delimiter-background :show-arrows="false">
         <VCarouselItem   key="0" >
           <VSheet height="100%" >
@@ -263,7 +263,6 @@
   const toast             = useToast();  
   const {darkmode,resetPasswordPage,resetTimer}        = storeToRefs(UserStore); 
   const verification      = ref("");
-  const page              = ref(0);
   let prTimerID;
   const variant           = "outlined"; //   'outlined' | 'plain' | 'underlined' | 'filled' | 'solo' | 'solo-inverted' | 'solo-filled'
   const complete          = reactive({ "account": ref(false), "verification": ref(false), "password": ref(false), "complete": ref(false) });

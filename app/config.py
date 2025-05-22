@@ -15,8 +15,8 @@ class Config(object):
     SECRET_KEY                              = environ.get('SECRET_KEY', 'Som3$ec5etK*y')
     UPLOAD_FOLDER                           = environ.get('UPLOAD_FOLDER') 
     TEMP_QUOTATIONS                         = environ.get('TEMP_QUOTATIONS') 
-    IMAGE_FOLDER                    = environ.get('IMAGE_FOLDER')
-    IMAGE_FOLDER_RAW                = environ.get('IMAGE_FOLDER_RAW')
+    IMAGE_FOLDER                            = environ.get('IMAGE_FOLDER')
+    IMAGE_FOLDER_RAW                        = environ.get('IMAGE_FOLDER_RAW')
     INVOICE_FOLDER                          = environ.get('INVOICE_FOLDER') 
     QRCODE_FOLDER                           = environ.get('QRCODE_FOLDER') 
     QRCODE_TEMP_FOLDER                      = environ.get('QRCODE_TEMP_FOLDER') 
@@ -47,9 +47,9 @@ class Config(object):
 
     # MONGODB VARIABLES
     DB_USERNAME                             = environ.get('DB_USERNAME') 
-    DB_PASSWORD                             = environ.get('DB_PASSWORD') 
-    # DB_SERVER                               = environ.get('DB_SERVER') 
+    DB_PASSWORD                             = environ.get('DB_PASSWORD')    
     DB_PORT                                 = environ.get('DB_PORT') 
+    DB_SERVER                               = environ.get('DB_SERVER')  
 
     # FLASK MAIL
     MAIL_SERVER                             = environ.get('MAIL_SERVER') 
@@ -64,14 +64,8 @@ class Config(object):
     MAIL_SUPPRESS_SEND                      = environ.get('MAIL_SUPPRESS_SEND') 
     MAIL_ASCII_ATTACHMENTS                  = eval(environ.get('MAIL_ASCII_ATTACHMENTS'))
     PROPAGATE_EXCEPTIONS                    = False
-    DB_SERVER1                              = environ.get('DB_SERVER1')
     
-    if name == "posix":        
-        DB_SERVER                           = environ.get('DB_SERVER1') 
-    else:
-        DB_SERVER                           = environ.get('DB_SERVER') # WINDOWS
- 
- 
+     
     SQLALCHEMY_DATABASE_URI                 = 'sqlite:///' + join(basedir, 'database.db')
     SQLALCHEMY_TRACK_MODIFICATIONS          = False
 

@@ -184,7 +184,7 @@
     const AppStore        = useAppStore();
     const UserStore       = useUserStore();
     const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
-    const { darkmode }  = storeToRefs(UserStore);
+    const { darkmode, layout}  = storeToRefs(UserStore);
     const { allStaffAccounts,emailSelectedItem, emailList }      = storeToRefs(AppStore);
     const variant         = "solo-inverted"; //   'outlined' | 'plain' | 'underlined' | 'filled' | 'solo' | 'solo-inverted' | 'solo-filled'
     const emailState      = reactive({registration:"",cancellation:""})

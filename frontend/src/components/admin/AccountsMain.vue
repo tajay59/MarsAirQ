@@ -17,9 +17,7 @@
                         <VTab text="Staff" value="staff" color="surface" density="compact" variant="text"  fixed rounded="0"  class="text-none text-sm" ></VTab>
                         <VTab text="Users" value="users" color="surface" density="compact" variant="text" fixed rounded="0"   class="text-none text-sm" ></VTab> 
                     </VTabs>
-
-                  
-
+                    
                     <VDivider />
 
                     <VCardItem class="my-2"  >

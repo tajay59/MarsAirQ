@@ -52,9 +52,19 @@ timeOffset = -4
 PRODUCT_DELIMITER = "_"
 
 caribbean_countries = [
+     {
+        "name": "Anguilla",
+        "icon": "emojione-v1:flag-for-anguilla",
+        "code": "AI",
+        "center": {
+            "latitude": 18.2206,
+            "longitude": -63.0686
+        }
+    },
     {
         "name": "Antigua and Barbuda",
         "icon": "emojione-v1:flag-for-antigua-and-barbuda",
+        "code": "AG",
         "center": {
             "latitude": 17.0608,
             "longitude": -61.7964
@@ -63,6 +73,7 @@ caribbean_countries = [
     {
         "name": "Bahamas",
         "icon": "emojione-v1:flag-for-bahamas",
+        "code": "BS",
         "center": {
             "latitude": 25.0239,
             "longitude": -77.3963
@@ -71,6 +82,7 @@ caribbean_countries = [
     {
         "name": "Barbados",
         "icon": "emojione-v1:flag-for-barbados",
+        "code": "BB",
         "center": {
             "latitude": 13.1939,
             "longitude": -59.5431
@@ -79,14 +91,34 @@ caribbean_countries = [
     {
         "name": "Belize",
         "icon": "emojione-v1:flag-for-belize",
+        "code": "BZ",
         "center": {
             "latitude": 17.2510,
             "longitude": -88.7719
         }
     },
+     {
+        "name": "British Virgin Islands",
+        "icon": "twemoji:flag-british-virgin-islands",
+        "code": "VG",
+        "center": {
+            "latitude": 18.4207,
+            "longitude": -64.6400
+        }
+    },
+    {
+        "name": "Cayman Islands",
+        "icon": "emojione-v1:flag-for-cayman-islands",
+        "code": "KY",
+        "center": {
+            "latitude": 19.3133,
+            "longitude": -81.2546
+        }
+    },
     {
         "name": "Cuba",
         "icon": "emojione-v1:flag-for-cuba",
+        "code": "CU",
         "center": {
             "latitude": 21.5217,
             "longitude": -77.7812
@@ -95,6 +127,7 @@ caribbean_countries = [
     {
         "name": "Dominica",
         "icon": "emojione-v1:flag-for-dominica",
+        "code": "DM",
         "center": {
             "latitude": 15.4150,
             "longitude": -61.3710
@@ -103,6 +136,7 @@ caribbean_countries = [
     {
         "name": "Dominican Republic",
         "icon": "emojione-v1:flag-for-dominican-republic",
+        "code": "DO",
         "center": {
             "latitude": 19.1940,
             "longitude": -70.6667
@@ -111,6 +145,7 @@ caribbean_countries = [
     {
         "name": "Grenada",
         "icon": "emojione-v1:flag-for-grenada",
+        "code": "GD",
         "center": {
             "latitude": 12.1165,
             "longitude": -61.6790
@@ -119,6 +154,7 @@ caribbean_countries = [
     {
         "name": "Guyana",
         "icon": "emojione-v1:flag-for-guyana",
+        "code": "GY",
         "center": {
             "latitude": 4.9387,
             "longitude": -58.9310
@@ -127,6 +163,7 @@ caribbean_countries = [
     {
         "name": "Haiti",
         "icon": "emojione-v1:flag-for-haiti",
+        "code": "HT",
         "center": {
             "latitude": 18.9712,
             "longitude": -72.2852
@@ -135,14 +172,25 @@ caribbean_countries = [
     {
         "name": "Jamaica",
         "icon": "emojione-v1:flag-for-jamaica",
+        "code": "JM",
         "center": {
             "latitude": 18.1096,
             "longitude": -77.2975
         }
     },
     {
+        "name": "Montserrat",
+        "icon": "emojione-v1:flag-for-montserrat",
+        "code": "MS",
+        "center": {
+            "latitude": 16.7425,
+            "longitude": -62.1874
+        }
+    },
+    {
         "name": "Saint Kitts and Nevis",
         "icon": "emojione-v1:flag-for-st-kitts-and-nevis",
+        "code": "KN",
         "center": {
             "latitude": 17.3571,
             "longitude": -62.7829
@@ -151,14 +199,25 @@ caribbean_countries = [
     {
         "name": "Saint Lucia",
         "icon": "emojione-v1:flag-for-st-lucia",
+        "code": "LC",
         "center": {
             "latitude": 13.9094,
             "longitude": -60.9789
         }
     },
     {
+        "name": "Sint Maarten",
+        "icon": "twemoji:flag-sint-maarten",
+        "code": "SX",
+        "center": {
+            "latitude": 18.0425,
+            "longitude": -63.0548
+        }
+    },
+    {
         "name": "Saint Vincent and the Grenadines",
         "icon": "emojione-v1:flag-for-st-vincent-and-grenadines",
+        "code": "VC",
         "center": {
             "latitude": 13.2541,
             "longitude": -61.2072
@@ -167,6 +226,7 @@ caribbean_countries = [
     {
         "name": "Suriname",
         "icon": "emojione-v1:flag-for-suriname",
+        "code": "SR",
         "center": {
             "latitude": 3.9190,
             "longitude": -56.0278
@@ -175,9 +235,19 @@ caribbean_countries = [
     {
         "name": "Trinidad and Tobago",
         "icon": "emojione-v1:flag-for-trinidad-and-tobago",
+        "code": "TT",
         "center": {
             "latitude": 10.6918,
             "longitude": -61.2225
+        }
+    },
+    {
+        "name": "Turks and Caicos Islands",
+        "icon": "twemoji:flag-turks-and-caicos-islands",
+        "code": "TC",
+        "center": {
+            "latitude": 21.6940,
+            "longitude": -71.7979
         }
     }
 ]
@@ -820,7 +890,7 @@ def register():
 
                 if len(location) > 0:
                     user["icon"]    = location[0]["icon"]
-                    user["center"]  =  location[0]["center"]
+                    user["center"]  = location[0]["center"]
 
                 # STORE TEMPORARILY IN DATABASE FOR TWO WEEKS
                 espireAt    = datetime.now(timezone(timedelta(hours= timeOffset))) + timedelta(weeks=2)
@@ -1019,6 +1089,28 @@ def getAllAccounts():
     return jsonify({"status":"failed"})
 
 
+@app.route('/api/get/account', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="getAccount")
+def getAccount():   
+    if request.method == "POST": 
+        form = request.form 
+        # GET USER ACCOUNT INFO
+        user        = escape(form.get("account"))
+        account     = mongo.findUser(id= user)
+
+        if account:
+            account.pop("role") 
+            account.pop("password")  
+            # account.pop("timestamp") 
+            account.pop("registered") 
+            account.pop("web") 
+            account.pop("emailconfirmed")      
+          
+            return jsonify({"status":"ok","account": account})
+    return jsonify({"status":"failed"})
+
+
 @app.route('/api/get/suball', methods=['POST'])  
 @jwt_required()
 @tryCatch(name="getUserSuball")
@@ -1049,7 +1141,7 @@ def getAllSites():
         if account["role"] in ["admin", "staff"] or account["suball"] == True:
             sites = mongo.findAllSites({})
         else:
-            sites = mongo.findAllSites({"owner": account["id"]})
+            sites = mongo.findAllSites({ 'type': 'site', '$or': [ { 'owner': account["id"] }, { 'secondaryowners': { '$in': [account["id"]] } } ] }) 
 
         if sites:          
             return jsonify({"status":"ok","sites": sites, "suball": account["suball"]})
@@ -1076,6 +1168,40 @@ def getSite():
 
     return jsonify({"status":"failed"})
 
+@app.route('/api/get/requests', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="getRequests")
+def getRequests():   
+    if request.method == "POST": 
+        form = request.form 
+        # GET USER ACCOUNT INFO
+        user        = escape(form.get("account")) 
+        account     = mongo.findUser(id= user)
+
+        if account and account["role"] == "admin":
+            # site = mongo.findSite(id= siteID)
+            req = mongo.findAllTempDoc({"type":"requests"})
+            if req:
+                return jsonify({"status":"ok","requests": req})
+
+    return jsonify({"status":"failed"})
+
+@app.route('/api/get/sites', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="getSites")
+def getSites():   
+    if request.method == "POST": 
+        form = request.form 
+        # GET USER ACCOUNT INFO
+        user        = escape(form.get("account"))
+        account     = mongo.findUser(id= user)
+
+        if account:
+            # site = mongo.findSite(id= siteID)
+            site = mongo.getSitesForOwner(owner= user)
+            if site:
+                return jsonify({"status":"ok","data": site})
+    return jsonify({"status":"failed"})
 
 @app.route('/api/aod', methods=['POST'])  
 @jwt_required()
@@ -1115,7 +1241,7 @@ def approveOrDeny():
                     web["acls"]       = [{"type":"main","topic": f"/station/data/{web["username"]}/#","acc":4},{"type":"other","topic":f"/station/data/{web["username"]}/#","acc":1}, {"type":"suball","topic":f"/station/data/#","acc":1},{"type":"other","topic":f"/station/data/#","acc":1}]
                              
               
-                    newAccount["web"] = {"username": web["username"] , "password": pwd, "topic": f"/station/data/{web["username"]}/#" }
+                    newAccount["web"] = {"username": web["username"], "password": pwd, "topic": f"/station/data/{web["username"]}/#", "topic1": "" }
               
                                    
                     # UPDATE COLLECTIONS
@@ -1225,6 +1351,141 @@ def deleteAccounts():
     return jsonify({"status":"failed"})
 
 
+@app.route('/api/get/entities', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="getAllEntities")
+def getAllEntities():   
+    if request.method == "POST": 
+        data        = request.get_json()
+        # GET USER ACCOUNT INFO
+        accountID   = escape(data["account"]) 
+        account     = mongo.findUser(id= accountID)
+
+        if account["role"] == "admin":
+            entities = mongo.findAllEntities({"_id":0})    
+            return jsonify({"status":"exist","entities": entities})
+
+    return jsonify({"status":"failed"})
+
+
+@app.route('/api/create/entity', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="createEntity")
+def createEntity():   
+    if request.method == "POST": 
+      
+        data        = request.get_json()
+        # GET USER ACCOUNT INFO
+        accountID   = escape(data["account"])
+        name        = escape(data["name"])
+        code        = str(escape(data["code"]))
+        country     = ""
+        account     = mongo.findUser(id= accountID)
+
+        try:
+            country     = [x["name"] for x in caribbean_countries if x["code"] == code ][0]
+        except:
+            pass
+
+        if account["role"] == "admin":
+            exist, notice  = mongo.entityExist(name= name)
+
+            if exist:
+                entities = mongo.findAllEntities({"_id":0})    
+                return jsonify({"status":"exist","entities": entities})
+            else:
+                entity               = {"id": f"ENT{token_hex(16)}","name": name, "country": country, "code": code} 
+                entity["web"]        = {"username":token_hex(8),"password": token_hex(16)}
+                entity["device"]     = {"username":token_hex(8),"password": token_hex(16)}
+                entity["websubtopic"]       = f"/station/data/{name.lower()}/#"
+                entity["devicesubtopic"]    = f"/station/msg/{name.lower()}/#"
+                pwdWeb               = ph.hash(entity["web"]["password"])
+                pwdDevice            = ph.hash(entity["device"]["password"])
+            
+
+                web                  = {} 
+                web["id"]            = token_hex(16)
+                web["username"]      = entity["web"]["username"]
+                web["password"]      = pwdWeb
+                web["type"]          = "web"
+                web["superuser"]     = False
+                web["owner"]         = entity["id"]
+                web["acls"]          = [{"type":"main","topic": entity["websubtopic"],"acc":4},{"type":"other","topic": entity["websubtopic"],"acc":1}, {"type":"suball","topic":f"/station/data/#","acc":1},{"type":"other","topic":f"/station/data/#","acc":1}]
+                
+                device               = {}
+                device["id"]         = token_hex(16)
+                device["username"]   = entity["device"]["username"]
+                device["password"]   = pwdDevice
+                device["type"]       = "device"
+                device["superuser"]  = False
+                device["owner"]      = entity["id"]
+                device["acls"]       = [{"type":"sub","topic": entity["devicesubtopic"],"acc":4},{"type":"other","topic": entity["devicesubtopic"],"acc":1},{"type":"pub","topic": entity["websubtopic"],"acc":2}]
+                
+                res = mongo.addEntity(entity)
+
+                if res:
+                    mongo.addMqttUser(web.copy())
+                    mongo.addMqttUser(device.copy())
+                    entities = mongo.findAllEntities({"_id":0})                
+                    return jsonify({"status":"created","entities": entities})
+                
+    return jsonify({"status":"failed"})
+
+@app.route('/api/delete/entity', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="deleteEntity")
+def deleteEntity():   
+    if request.method == "POST": 
+        form = request.form 
+        # GET USER ACCOUNT INFO
+        accountID   = escape(form.get("account")) 
+        entityID    = escape(form.get("id"))
+        account     = mongo.findUser(id= accountID)
+
+        if account["role"] == "admin":    
+            count = mongo.deleteEntity({"id": entityID})
+            
+            if count > 0: 
+                count1 = mongo.removeMqttUser(entityID)
+                if count1 > 0:
+                    return jsonify({"status":"deleted" })
+
+    return jsonify({"status":"failed"})
+
+
+def addSite(name,lat,lon,entity):
+    '''
+    ACLs   meaning
+        1 means read only, 
+        2 means write only, 
+        3 means readwrite and 
+        4 means subscribe 
+    '''
+    siteID  = f"SITE{token_hex(16)}"
+    hash    = ph.hash(siteID)
+    site    = {"type":"site","id": siteID,"name": name, "lat": lat, "lon": lon,"entity": entity, "radius": 200,"enabled": True, "devices":[]}
+
+    # device               = {}
+    # device["id"]         = token_hex(16)
+    # device["username"]   = token_hex(8)
+    # device["password"]   = hash
+    # device["type"]       = "device"
+    # device["superuser"]  = False
+    # device["site"]       = siteID 
+    # device["owner"]      = ""
+    # device["acls"]       = [{"type":"sub","topic": f"/station/msg/username/#","acc":4},{"type":"other","topic": f"/station/msg/username/#","acc":1},{"type":"pub","topic": f"/station/data/username/#","acc":2}]
+    
+
+    # mongo.addMqttUser(device.copy())
+    # exist, notice    = mongo.mqttUserExist(id = device["id"])
+    exist, notice    = mongo.entityExist(id = entity)
+    if exist:        
+        inserted = mongo.addSite(site)
+        if inserted and exist:                 
+            return  "added"    
+            
+    return "failed"
+
 @app.route('/api/create/site', methods=['POST'])  
 @jwt_required()
 @tryCatch(name="createSite")
@@ -1236,33 +1497,45 @@ def createSite():
         name         = escape(form.get("name"))
         lat          = float(escape(form.get("lat")))
         lon          = float(escape(form.get("lon")))
+        entity       = str(escape(form.get("entity")))
 
         account     = mongo.findUser(id= user)
 
+        '''
+        ACLs   meaning
+            1 means read only, 
+            2 means write only, 
+            3 means readwrite and 
+            4 means subscribe 
+        '''
+        
         if account["role"] == "admin":
-            siteID  = f"SITE{token_hex(16)}"
-            hash    = ph.hash(siteID)
-            site    = {"type":"site","id": siteID,"name": name, "lat": lat, "lon": lon,"owner":"", "radius": 200,"enabled": True, "devices":[]}
+            res = addSite(name,lat,lon, entity)
 
-            device               = {}
-            device["id"]         = token_hex(16)
-            device["username"]   = token_hex(8)
-            device["password"]   = hash
-            device["type"]       = "device"
-            device["superuser"]  = False
-            device["site"]       = siteID 
-            device["owner"]      = ""
-            device["acls"]       = [{"type":"sub","topic": f"/station/msg/username/#","acc":4},{"type":"other","topic": f"/station/msg/username/#","acc":1},{"type":"pub","topic": f"/station/data/username/#","acc":2}]
-            
-
-            mongo.addMqttUser(device.copy())
-            exist, notice       = mongo.mqttUserExist(id = device["id"])
-            inserted = mongo.addSite(site)
-
-            if inserted and exist:                 
+            if res == "added":                 
                 return jsonify({"status":"added"})
                 
     return jsonify({"status":"failed"})
+
+@app.route('/api/delete/site', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="deleteSite")
+def deleteSite():   
+    if request.method == "POST": 
+        form = request.form 
+        # GET USER ACCOUNT INFO
+        accountID   = escape(form.get("account")) 
+        siteID      = escape(form.get("site"))
+        account     = mongo.findUser(id= accountID)
+
+        if account["role"] == "admin":    
+            count = mongo.deleteSite({"id": siteID})
+            
+            if count > 0: 
+                return jsonify({"status":"deleted" })
+
+    return jsonify({"status":"failed"})
+
 
 
 @app.route('/api/create/device', methods=['POST'])  
@@ -1279,7 +1552,7 @@ def createDevice():
 
         if account["role"] == "admin":
 
-            siteToUpdate     = mongo.findSite(id= siteID) # Account to update
+            siteToUpdate     = mongo.findSite(id= siteID) # Site to update
 
             if siteToUpdate:
                 data.pop("id")
@@ -1287,6 +1560,7 @@ def createDevice():
                 data["id"] = f"DEV{token_hex(16)}"
                 data["lat"] = float(data["lat"])
                 data["lon"] = float(data["lon"])
+                data["dashboard"] = []
 
                 # CREATE DEVICE              
                 updated = mongo.updateSite({"id": siteID, "type": "site"} ,{"$push": { "devices": data}})
@@ -1308,7 +1582,7 @@ def deleteDevice():
         # GET USER ACCOUNT INFO
         accountID   = escape(form.get("account")) 
         siteID      = escape(form.get("site"))
-        deviceID      = escape(form.get("id"))
+        deviceID    = escape(form.get("id"))
         account     = mongo.findUser(id= accountID)
 
         if account:    
@@ -1353,6 +1627,34 @@ def updateSite():
     return jsonify({"status":"failed"})
 
 
+@app.route('/api/site/request', methods=['POST'])  
+# @jwt_required()
+# @tryCatch(name="updateSiteRequest")
+def siteRequest():   
+    if request.method == "POST": 
+      
+        data        = request.get_json()
+        print(data)
+        # GET USER ACCOUNT INFO
+        accountID   = escape(data["account"])
+        siteID      = escape(data["id"])
+        reqType     = escape(data["type"])
+        account     = mongo.findUser(id= accountID)
+
+        if account["role"] == "user":
+            data.pop("type")
+            espireAt    = datetime.now(timezone(timedelta(hours= timeOffset))) + timedelta(weeks=2)
+            query       = { "expireAt":espireAt,"id": f"REQ{token_hex(16)}","account": accountID,"reqtype":reqType,"type":"requests","data":data }
+            inserted    = mongo.createTempDoc(query)
+
+            if inserted:
+                # REQUEST SUBMITTED               
+                return jsonify({"status":"submitted"})
+                
+    return jsonify({"status":"failed"})
+
+
+
 @app.route('/api/update/device', methods=['POST'])  
 @jwt_required()
 @tryCatch(name="updateDevice")
@@ -1374,6 +1676,33 @@ def updateDevice():
 
                 # UPDATE DEVICE                
                 updated = mongo.updateSite({"id": siteID, "type": "site","devices.id": deviceID} ,{"$set": { "devices.$.name": data["name"],"devices.$.lat": float(data["lat"]),"devices.$.lon": float(data["lon"]),"devices.$.processor": data["processor"],"devices.$.params": data["params"]}})
+
+                if updated:      
+                    site = mongo.getSiteWithOwner(site= siteID) 
+                    return jsonify({"status":"updated","data": site})
+                
+    return jsonify({"status":"failed"})
+
+@app.route('/api/update/device/dashboard', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="updateDeviceDashboard")
+def updateDeviceDashboard():   
+    if request.method == "POST": 
+      
+        data        = request.get_json()
+        # GET USER ACCOUNT INFO
+        accountID   = str(escape(data["account"]))
+        siteID      = str(escape(data["site"]))
+        deviceID    = str(escape(data["device"]))
+        # deviceID    = escape(data["dashboad"])
+        account     = mongo.findUser(id= accountID)
+
+        if account:
+            siteToUpdate     = mongo.findSite(id= siteID) # Account to update
+
+            if siteToUpdate:
+                # UPDATE DEVICE                
+                updated = mongo.updateSite({"id": siteID, "type": "site","devices.id": deviceID} ,{"$set": {"devices.$.dashboard": data["dashboard"]}})
 
                 if updated:      
                     site = mongo.getSiteWithOwner(site= siteID) 
@@ -1434,8 +1763,31 @@ def getPageCount():
                 count = mongo.searchPaginationPageCount(searchtext= search,owner= account["id"], role= account["role"])    
             else:
                 count = mongo.paginationPageCount(owner= account["id"], role= account["role"])
-            
-        if count:          
+        
+        if count >= 0:          
+            return jsonify({"status":"ok","count": count})
+
+    return jsonify({"status":"failed"})
+
+@app.route('/api/get/entity/pagecount', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="getPageCountEntity")
+def getPageCountEntity():   
+    if request.method == "POST": 
+        form = request.form 
+        # GET USER ACCOUNT INFO
+        user        = escape(form.get("account"))
+        ops         = escape(form.get("ops"))
+        search      = escape(form.get("search"))
+        account     = mongo.findUser(id= user)
+
+        if account:    
+            if ops == "search":        
+                count = mongo.searchPaginationPageCountEntity(searchtext= search,owner= account["id"], role= account["role"])    
+            else:
+                count = mongo.paginationPageCountEntity(owner= account["id"], role= account["role"])
+        
+        if count >= 0:          
             return jsonify({"status":"ok","count": count})
 
     return jsonify({"status":"failed"})
@@ -1473,12 +1825,29 @@ def assignUser():
         userID      = escape(form.get("id"))
         account     = mongo.findUser(id= accountID)
         userAcc     = mongo.findUser(id= userID)
+        exist, notice    = mongo.mqttUserExist(site = siteID) 
 
-        if account and userAcc:    
+        if account and userAcc :    
+            # ASSIGN
             data = mongo.updateSite({"id": siteID},{"$set":{"owner": userID}})
-            mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "sub"} ,{"$set": { "acls.$.topic": f"/station/msg/{userAcc['web']['username']}/#"}})
-            mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "other"} ,{"$set": { "acls.$.topic": f"/station/msg/{userAcc['web']['username']}/#"}})
-            mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "pub"} ,{"$set": { "acls.$.topic": f"/station/data/{userAcc['web']['username']}/#"}})
+            if exist:
+                mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "sub"}   ,{"$set": { "acls.$.topic": f"/station/msg/{userAcc['web']['username']}/#"}})
+                mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "other"} ,{"$set": { "acls.$.topic": f"/station/msg/{userAcc['web']['username']}/#"}})
+                mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "pub"}   ,{"$set": { "acls.$.topic": f"/station/data/{userAcc['web']['username']}/#"}})
+            
+            if data:          
+                site = mongo.getSiteWithOwner(site= siteID)
+            
+                if site:
+                    return jsonify({"status":"assigned","data": site })
+                
+        if account and userID == "":    
+            # DEASSIGN
+            data = mongo.updateSite({"id": siteID},{"$set":{"owner": userID}})
+            if exist:
+                mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "sub"}   ,{"$set": { "acls.$.topic": f"/station/msg/username/#"}})
+                mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "other"} ,{"$set": { "acls.$.topic": f"/station/msg/username/#"}})
+                mongo.updateMqttUser({"site": siteID, "type": "device","acls.type": "pub"}   ,{"$set": { "acls.$.topic": f"/station/data/username/#"}})
             
             if data:          
                 site = mongo.getSiteWithOwner(site= siteID)
@@ -1497,7 +1866,7 @@ def getPage():
     if request.method == "POST": 
         form = request.form 
         # GET USER ACCOUNT INFO
-        print(form)
+        
         user        = escape(form.get("account"))
         ops         = escape(form.get("ops"))
         search      = escape(form.get("search"))
@@ -1510,7 +1879,7 @@ def getPage():
             else:
                 data = mongo.paginationPage(page= page, owner= account["id"], role= account["role"])   
 
-            if data:          
+            if len(data) >= 0:          
                 return jsonify({"status":"ok","page": page,"data": data})
 
     return jsonify({"status":"failed"})
@@ -1698,7 +2067,7 @@ def getCode(image_id):
 @app.route('/api/qrcode/batch', methods=['POST'])  
 #@jwt_required()
 @tryCatch(name="getBatchCode")
-def getBatchCode( ):   
+def getBatchCode():   
     if request.method == "POST":
  
         data = request.get_json()

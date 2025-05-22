@@ -1,16 +1,14 @@
-  <template>  
-    
-    <div  class="w-screen h-screen  relative flex items-center justify-center" >
+  <template>     
+    <div  :class="[(smAndDown)?'h-[calc(100dvh-57px)] mb-n3':'h-screen']"   class="w-screen   relative flex items-center justify-center" >
        
-      <div id="map" class="w-[100%]  h-[100%]"  ></div> 
+      <div :id="mapcontainer" class="w-[100%]  h-[100%]"  ></div> 
 
-      <VBottomSheet :model-value="openLiveSheet" height="350" persistent content-class="bg-transparent"  >
-        <VSheet rounded="t-lg" color="surface" >
-      
+      <VBottomSheet :model-value="openLiveSheet" height="400" persistent content-class="bg-transparent"  >
+        <VSheet rounded="t-lg" color="surface" >      
           <VContainer class="h-full w-full pb-0 " fluid >
             <VRow class=" h-full pa-0 rounded-lg">
-              <VCol  class="  border-r-2 border-neutral-300 rounded-lg overflow-hidden max-w-[230px] min-w-[200px] !bg-neutral-100 dark:!bg-purple-200"  >                
-                    <VChip   v-for="param in params" size="large" :color="(darkmode)? 'surface': 'onSurface'" :variant="(graphToRender.selected == param)? 'flat': 'text' " class="text-caption ma-1 w-full max-w-[200px] rounded-lg border-b-[1px] border-neutral-600 "  @click="AppStore.resetGraphData(); graphToRender.selected = param; /*getData(param)*/" >
+              <VCol  class="  border-r-2 border-neutral-300 rounded-lg overflow-hidden max-w-[230px] min-w-[200px] max-h-[390px] overflow-y-scroll scrolleffect !bg-neutral-100 dark:!bg-purple-100"  >                
+                  <VChip   v-for="param in params" size="large" :color="(darkmode)? 'surface': 'onSurface'" :variant="(graphToRender.selected == param)? 'flat': 'text' " class="text-caption ma-1 w-full max-w-[200px] rounded-lg border-b-[1px] border-neutral-600 "  @click="AppStore.resetGraphData(); graphToRender.selected = param; /*getData(param)*/" >
                       <template #prepend>
                         <Icon :icon="paramDetails[param].icon" width="24" height="24" class=""  />
                       </template>
@@ -18,15 +16,13 @@
                         <p  class="pl-3 font-bold text-xs" >{{ _.capitalize(param) }}</p>
                         <p class="pl-3 font-bold text-xs" > {{ _.round(sensordata[param], 2) }} {{ paramDetails[param].units }} </p>
                       </div>
-                    </VChip>      
-                   
+                  </VChip>                    
               </VCol>
              
-              <VCol   class="bg- red border-r-2 border-neutral-300 rounded-lg " >                
-                <KeepAlive>
-                  <component :is="renderGrapgh" class="tab"></component>
-                </KeepAlive>   
-                <VBtn icon="mdi:mdi-close" class="absolute top-8 right-12" color="onSurface" variant="tonal" density="compact" @click="UserStore.setSelectedStation(null)" />             
+              <VCol   class=" rounded-lg pa-0" >                
+                <KeepAlive>       
+                    <AllGraphs :param="graphToRender.selected" />                            
+                </KeepAlive>             
               </VCol>
             </VRow>
           </VContainer>
@@ -39,7 +35,7 @@
   <script setup>
     import { storeToRefs } from 'pinia';
     import { useMqttStore } from '@/stores/mqttStore'; 
-    import { ref,reactive, watch, onMounted, onBeforeUnmount, shallowRef, resolveComponent, computed } from 'vue';  
+    import { ref,reactive, watch, onMounted, onBeforeUnmount, shallowRef, resolveComponent, computed, onBeforeMount } from 'vue';  
     import { useRoute ,useRouter } from "vue-router";
     import _ from 'lodash';
     import { useToast } from 'primevue/usetoast';
@@ -53,38 +49,40 @@
     import 'leaflet.markercluster'   // https://github.com/leaflet/Leaflet.markercluster
     import 'leaflet.markercluster/dist/MarkerCluster.css'
     import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-    import Temperature from '@/components/graphs/Temperature.vue';
-    import Humidity from '@/components/graphs/Humidity.vue';
-    import Pressure from '@/components/graphs/Pressure.vue';
-    import Voc from '@/components/graphs/Voc.vue';
-    import Vocindex from '@/components/graphs/Vocindex.vue';
 
     import { map, tileLayer, marker, DomEvent,  Popup } from 'leaflet';
     import L from 'leaflet';
+
+    import AllGraphs from '@/components/graphs/AllGraphs.vue';
     
 
   
   // VARIABLES
   
-  const Mqtt                      = useMqttStore();
-  const UserStore                 = useUserStore(); 
-  const AppStore                  = useAppStore();
+  const Mqtt         = useMqttStore();
+  const UserStore    = useUserStore(); 
+  const AppStore     = useAppStore();
   const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
-  const { payload, payloadTopic } = storeToRefs(Mqtt);
+  const { connected, payload, payloadTopic } = storeToRefs(Mqtt);
+
   const {
     id,
     loggedIn,
-    image,     
+    image,  
+    suball,   
     darkmode, 
     selectedStation, 
     mqtt_sub_credentials, 
     userSites}           = storeToRefs(UserStore);
+
   const {paramDetails,historyLoading}  = storeToRefs(AppStore);
   const router                    = useRouter();
   const route                     = useRoute(); 
   const toast                     = useToast();  
   const mymap                     = shallowRef(null);
   const markers                   = shallowRef(new L.markerClusterGroup({chunkedLoading: false}));
+  const mapcontainer              = ref(`container${_.random(0,100000)}`);
+  
   const sensordata                = ref({});
   const params                    = ref([]);
   const stations                  = ref({});  
@@ -93,7 +91,7 @@
   const redIcon                   = ref(null);
   const goldIcon                  = ref(null);
   const blackIcon                 = ref(null);
-  const graphToRender             = ref({"selected": "temperature","init":false, "list":[{"name":"temperature","component":"Temperature"}, {"name":"humidity","component":"Humidity"}]})
+  const graphToRender             = ref({"selected": "temperature","init":false, "list":[]})
 
   const mtLayer                   = new MaptilerLayer( {
                                       apiKey: 'MacqP5qqahFSZdWB6tSq', // https://cloud.maptiler.com/maps/landscape/    https://docs.maptiler.com/leaflet/examples/vector-tiles-in-leaflet-js/
@@ -107,13 +105,12 @@
       var pos = this._map._latLngToNewLayerPoint(this._latlng, e.zoom, e.center),
         anchor = this._getAnchor()
       DomUtil.setPosition(this._container, pos.add(anchor))
-    }
- 
+    } 
     */
 
    // Computed properties 
    const openLiveSheet = computed(()=> !!selectedStation.value  );
-    
+   
   
   // WATCHERS
   watch(payload,(msg)=> {    
@@ -188,22 +185,31 @@
     }
   })
   
-  const renderGrapgh = computed(() => {
-      if(graphToRender.value.selected == 'temperature')
-        return Temperature
-      else if (graphToRender.value.selected == 'humidity')
-        return Humidity
-      else if (graphToRender.value.selected == 'pressure')
-        return Pressure
-      else if (graphToRender.value.selected == 'voc')
-        return Voc
-      else if (graphToRender.value.selected == 'vocindex')
-        return Vocindex        
-     } 
-  ) 
   
   // FUNCTIONS
+  onBeforeMount(() => {
+    connected.value = false;
+ 
+    if(userSites.value.length <= 0){ 
+      UserStore.getAllSites();
+    }
+  })
+
+
   onMounted(() => {
+
+    
+
+    if(!Mqtt.isConnected) { 
+      if(suball.value){
+        Mqtt.subTo("/station/data/#");
+      }
+      else {
+        if(!!mqtt_sub_credentials.value)
+          Mqtt.subTo(mqtt_sub_credentials.value.topic);
+      }
+        Mqtt.connect();
+    } 
 
     L.Popup.prototype._animateZoom = (e) => {
       // SOLVE ERROR WHICH OCCURS WHEN ZOOMING AFTER OPENING A POPUP    
@@ -212,6 +218,7 @@
       var pos = this._map._latLngToNewLayerPoint(this._latlng, e.zoom, e.center),
         anchor = this._getAnchor()
       DomUtil.setPosition(this._container, pos.add(anchor))
+    
     }
 
     UserStore.setSelectedStation(null); 
@@ -222,7 +229,7 @@
     goldIcon.value  = createIcon("goldstripe");
     blackIcon.value = createIcon("blackstripe");
 
-    mymap.value = map('map').setView([13.176257678629065, -59.54376034587126], 11);  
+    mymap.value = map(mapcontainer.value).setView([13.176257678629065, -59.54376034587126], 11);  
      
    
       
@@ -240,10 +247,11 @@
     UserStore.getAllSites();
   });
   
-  onBeforeUnmount(()=>{ 
+  onBeforeUnmount(() =>{ 
     // Mqtt.unsubTo("/references")
     // Mqtt.unsubTo("/devices")
     // Mqtt.subTo("/station")
+    
   });
   
   const createIcon = (name) => {      
@@ -252,11 +260,11 @@
         shadowUrl: '/src/assets/marker-shadow.png',
         // iconUrl: `../src/assets/${name}.png`,
         // shadowUrl: '../src/assets/marker-shadow.png',
-        iconSize: [50, 50],
-        iconAnchor: [25.5, 49.5],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-        shadowAnchor : [13,40]
+        iconSize:     [50, 50],
+        iconAnchor:   [25.5, 49.5],
+        popupAnchor:  [1, -34],
+        shadowSize:   [41, 41],
+        shadowAnchor: [13,40]
     });  
   }
   

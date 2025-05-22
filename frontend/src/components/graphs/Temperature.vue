@@ -1,33 +1,34 @@
 <template>
-    <VContainer align="center" class="h-full" fluid>
-         
-        <VRow class="bg- green fill-height" >
-            <VCol class="bg- blue pa-0 relative"    >    
-                
-                <TransitionGroup name="slide-right"   >
-                    <VSheet v-show="graphType == 'live'"  key="0"   class="pa-0"  >                
-                        <figure class="highcharts-figure highcharts-light">
-                            <div id="container"></div> 
+    <VContainer align="center" class="h-full" fluid>         
+        <VRow class=" fill-height" >
+            <VCol cols="12" class="flex align-start justify-end gap-3 pa-0" >
+                <SelectButton v-model="selected" :options="options"  optionLabel="name" class=""   aria-labelledby="basic"  :allowEmpty="false" @click="graphType =  selected.type"  size="small" >
+                    <template #option="slotProps" >
+                        <p class="text-sm font-semi-bold font-[Roboto]" >{{ slotProps.option.name }}</p>
+                    </template>
+                </SelectButton>
+
+                <Button    severity="primary"    class="dark:!bg-[hsl(0,0%,3%)] !bg-[hsl(0,0%,90%)]  !text-black dark:!text-white !text-small h-[37px]  border" size="small" @click="getDataToggle = !getDataToggle">                  
+                    <p class="font-normal text-sm" >Refresh</p>                
+                </Button>
+            </VCol>
+
+            <VCol cols="12" class="pa-0"  align="start" >    
+                <TransitionGroup name="slide-right"  >
+                    <VSheet v-show="graphType == 'live'"  key="0"   class="pa-0 rounded-lg mt-5"  >            
+                        <figure class="highcharts-figure highcharts-light ">
+                            <div id="container"  class="rounded-xl overflow-clip"></div> 
                         </figure>
                     </VSheet>
-                    <VSheet v-show="graphType != 'live' && !historyLoading" key="1"  class="pa-0"  >                              
+                    <VSheet v-show="graphType != 'live' && !historyLoading" key="1"  class="pa-0 rounded-lg mt-5"  >                       
                         <figure  class="highcharts-figure highcharts-light">
-                            <div id="container1"></div> 
+                            <div id="container1" class="rounded-xl overflow-clip"></div> 
                         </figure>                    
                     </VSheet> 
                     <VSheet v-show="graphType != 'live' && historyLoading" key="2"  class="pa-0 size-full flex justify-center align-center"  >
                         <VProgressCircular   indeterminate></VProgressCircular> 
                     </VSheet>                
-                </TransitionGroup>
-                
-                
-
-                <VBtnGroup  variant="outlined" divided density="compact" rounded="lg" class="absolute left-2 -top-1"   >
-                    <VBtn text="Live"    :active="(graphType == 'live')"    :class="[(graphType == 'live')?   'font-bold': 'font-regular']"   color="onSurface"   class="text-caption " @click="graphType = 'live'"    size="x-small" ></VBtn>
-                    <VBtn text="3 Days"  :active="(graphType == 'three')"   :class="[(graphType == 'three')?  'font-bold': 'font-regular']"   color="onSurface"   class="text-caption"  @click="graphType = 'three' "  size="x-small" ></VBtn>
-                    <VBtn text="7 Days"  :active="(graphType == 'seven')"   :class="[(graphType == 'seven')?  'font-bold': 'font-regular']"   color="onSurface"   class="text-caption"  @click="graphType = 'seven' "  size="x-small" ></VBtn>
-                    <VBtn text="1 Month" :active="(graphType == 'month')"   :class="[(graphType == 'month')?  'font-bold': 'font-regular']"   color="onSurface"   class="text-caption"  @click="graphType = 'month' "  size="x-small" ></VBtn> 
-                </VBtnGroup> 
+                </TransitionGroup> 
             </VCol>
         </VRow> 
     </VContainer>     
@@ -48,10 +49,10 @@
 
     // Highcharts, Load the exporting module and Initialize exporting module.
     import Highcharts from 'highcharts';
-    import more from 'highcharts/highcharts-more';
-    import Exporting from 'highcharts/modules/exporting';
-    Exporting(Highcharts); 
-    more(Highcharts);
+   import  'highcharts/highcharts-more';
+    import  'highcharts/modules/exporting';
+    
+    
     
     
     // VARIABLES
@@ -61,23 +62,28 @@
     const UserStore      = useUserStore(); 
     const Mqtt           = useMqttStore();
     const { connected, payload, payloadTopic } = storeToRefs(Mqtt);
-    const { selectedStation, darkmode }  = storeToRefs(UserStore);
-    // const { month, threedays, sevendays } = storeToRefs(AppStore);
+    const { selectedStation, darkmode, layout}  = storeToRefs(UserStore);
+    const { liveData } = storeToRefs(AppStore);
     const chart          = ref(null); // Chart object
     const chart1         = ref(null); // Chart object
-    const points         = ref(6000); // Specify the quantity of points to be shown on the live graph simultaneously.
+    const points         = ref(300); // Specify the quantity of points to be shown on the live graph simultaneously.
     const shift          = ref(false); // Delete a point from the left side and append a new point to the right side of the graph.
     const graphType      = ref("live");
     const params         = ref([]);
     const chartEl        = ref(null);
     const stationName    = ref("");
     const historyLoading = ref(false);
-
+    const getDataToggle  = ref(false);
     const month          = ref([]);
     const threedays      = ref([]);
     const sevendays      = ref([]);
+
+    const selected       = ref({"name":'Live', "type":'live'});
+    const options        = ref([{"name":'Live', "type":'live'},{"name":'3 Days', "type":'three'},{"name":'7 Days', "type":'seven'},{"name":'1 Month', "type":'month'}]);
     
     let worker           = new Worker("/src/assets/js/mapHistoryDataWorker.js"); 
+
+    let getDataID = ""
 
     
     // FUNCTIONS
@@ -88,20 +94,20 @@
     }
 
     const getData = async (param) => { 
-
-        if (!!window.Worker) { 
+      
+        if (!!window.Worker) {  
             historyLoading.value = true;
-            const { selectedStation }  = storeToRefs(UserStore);
+            // const { selectedStation, layout}  = storeToRefs(UserStore);
+             
             let timestamp = Math.floor(new Date().getTime() / 1000);
             const cookie        = UserStore.getCookie("csrf_access_token"); 
-            worker.postMessage({"timestamp": timestamp,"param": param,"station":  selectedStation.value, "user": UserStore.getID, "cookie": cookie});
+            worker.postMessage({"timestamp": timestamp,"param": param,"station":  UserStore.getSelectedStation, "user": UserStore.getID, "cookie": cookie});
         }
-        else { 
+        else {  
             let timestamp = Math.floor(new Date().getTime() / 1000)
             let result    = await AppStore.getMapHistoryData(timestamp, timestamp, param);
 
             if ('data' in result) {
-
                 let data      = result["data"];  
                 let three     = new Date(result["three"]).getTime();
                 let seven     = new Date(result["seven"]).getTime();
@@ -126,10 +132,13 @@
     onMounted(() => {
         // THIS FUNCTION IS CALLED AFTER THIS COMPONENT HAS BEEN MOUNTED
         chartEl.value = document.querySelectorAll(".highcharts-figure");
+        
+
         if(darkmode.value)
             chartEl.value.forEach(el => { el.classList.replace('highcharts-light','highcharts-dark') });  
-        else if (!darkmode)
-            chartEl.value.forEach(el => { el.classList.replace('highcharts-dark','highcharts-light') });    
+        else if (!darkmode.value)
+            chartEl.value.forEach(el => { el.classList.replace('highcharts-dark','highcharts-light') });   
+
         CreateCharts();      
         
         if(window.Worker){
@@ -137,7 +146,8 @@
             worker.onmessage = (e) => {
                 historyLoading.value = false;
                 let data =  e.data;
-
+                
+                // console.log(data);
                 threedays.value = data["threedays"];
                 sevendays.value = data["sevendays"];
                 month.value     = data["month"];
@@ -163,18 +173,36 @@
 
  
     // WATCHERS
+    watch(()=> selected.value,(name)=> {
+        console.log(`value : ${name}`)
+        console.log(name)
+
+    })
+
+
+    watch(getDataToggle,()=> {
+        clearTimeout(getDataID);
+
+        getDataID = setTimeout(()=>{
+            getData("temperature");
+        }, 1000)
+    })
+
+
     watch(payload,(msg)=> {          
         // LIVE GRAPH
-        params.value = Object.keys(msg.data)
-
+        if(msg.type == 'station')
+            params.value = Object.keys(msg.data)
+        
         if(points.value > 0)
             points.value --;    
         else
             shift.value = true;    
 
-        if(msg.type == "station" && params.value.includes('temperature')  && msg.id == selectedStation.value){              
+        if(msg.type == "station" && params.value.includes('temperature')){    
+            liveData.value.temperature = msg.data.temperature          
             chart.value.setTitle({text: _.toUpper(msg.name)});
-            chart1.value.setTitle({text: _.toUpper(msg.name)})
+            chart1.value.setTitle({text: _.toUpper(msg.name)});
             chart.value.series[0].addPoint({y:parseFloat(msg.data.temperature.toFixed(2)) ,x: msg.timestamp * 1000 }, true, shift.value);   
         }          
     });
@@ -199,29 +227,34 @@
     const CreateCharts = async () => {  
     // TEMPERATURE CHART
     chart.value = Highcharts.chart('container', {
-        chart: { styledMode: true,   zoomType: 'x',height: 300, marginTop: 60 },
+        chart: { styledMode: true,   zoomType: 'x',height: 500, marginTop: 60 },
         title: { text: '', align: 'center' },
         subtitle: { text: 'Temperature', align: 'center' },
         yAxis: { 
             title:null,// title: { text: 'Temperature' , style:{color:'#000000'}},
             labels: { format: '{value} °C' },   
-            // max:50,
-            // min:10        
+            max:50,
+            min:10        
         },
     
         xAxis: {
             type: 'datetime', 
-            title: null, //{ text: 'Time', style:{color:'#000000'} },        
-        },
+            title: null, //{ text: 'Time', style:{color:'#000000'} }, 
+            crosshair: true,
+            labels: { format: '{value:%I:%M %p}' } },  // value:%H:%M  value:%Y-%b-%e
         legend: false,
         navigation: {
             buttonOptions: {
                 verticalAlign: 'top',
-                x: -70
+                x: 0
             }
         },
     
-        tooltip: { shared:true, },
+        tooltip: { 
+            shared:true, 
+            xDateFormat: '%A, %b %e, %I:%M %p',
+            valuePrefix: '',
+            valueSuffix: ' °C' },
     
         plotOptions: {
             series: {
@@ -246,29 +279,35 @@
     });
 
     chart1.value = Highcharts.chart('container1', {
-        chart: { styledMode: true, zoomType: 'x',height: 300, marginTop: 60 },
+        chart: { styledMode: true, zoomType: 'x',height: 500, marginTop: 60 },
         title: { text: '', align: 'center' },
         subtitle: { text: 'Temperature', align: 'center' },
         yAxis: { 
             title:null,// title: { text: 'Temperature' , style:{color:'#000000'}},
             labels: { format: '{value} °C' },   
-            // max:50,
-            // min:10        
+            max:50,
+            min:10        
         },
     
         xAxis: {
             type: 'datetime', 
-            title: null, // { text: 'Time', style:{color:'#000000'} },        
+            title: null, // { text: 'Time', style:{color:'#000000'} }, 
+            crosshair: true,
+            labels: { format: '{value:%I:%M %p}' } ,  // value:%H:%M  value:%Y-%b-%e       
         },
         legend: false,
         navigation: {
             buttonOptions: {
                 verticalAlign: 'top',
-                x: -70
+                x: 0
             }
         },
     
-        tooltip: { shared:true, },
+        tooltip: { 
+            shared:true, 
+            xDateFormat: '%A, %b %e, %I:%M %p',
+            valuePrefix: '',
+            valueSuffix: ' °C' },
     
         plotOptions: {
             series: {
@@ -294,88 +333,7 @@
     }
 </script>
 
-    
+
 <style>
-/*   Style */
-@import url("https://code.highcharts.com/css/highcharts.css");
 
-
-.highcharts-background {
-    transition: all 250ms;
-}
-
-.highcharts-description {
-    margin: 1rem 0;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        /* Colors for data series and points */
-        --highcharts-color-0: #b3597c;
-        --highcharts-color-1: #c4688c;
-        --highcharts-color-2: #78a8d1;
-        --highcharts-color-3: #7991d2;
-        --highcharts-color-4: #7d7bd4;
-        --highcharts-color-5: #977dd5;
-        --highcharts-color-6: #b3597c;
-        --highcharts-color-7: #b27fd6;
-
-        /* UI colors */
-        --highcharts-background-color: #333;
-
-        /*
-            Neutral color variations
-            https://www.highcharts.com/samples/highcharts/css/palette-helper
-        */
-        --highcharts-neutral-color-100: rgb(255, 255, 255);
-        --highcharts-neutral-color-80: rgb(214, 214, 214);
-        --highcharts-neutral-color-60: rgb(173, 173, 173);
-        --highcharts-neutral-color-40: rgb(133, 133, 133);
-        --highcharts-neutral-color-20: rgb(92, 92, 92);
-        --highcharts-neutral-color-10: rgb(71, 71, 71);
-        --highcharts-neutral-color-5: rgb(61, 61, 61);
-        --highcharts-neutral-color-3: rgb(57, 57, 57);
-
-        /* Highlight color variations */
-        --highcharts-highlight-color-100: rgb(122, 167, 255);
-        --highcharts-highlight-color-80: rgb(108, 144, 214);
-        --highcharts-highlight-color-60: rgb(94, 121, 173);
-        --highcharts-highlight-color-20: rgb(65, 74, 92);
-        --highcharts-highlight-color-10: rgb(58, 63, 71);
-    }
-}
-
-.highcharts-dark {
-    /* Colors for data series and points */
-    --highcharts-color-0: #b3597c;
-    --highcharts-color-1: #c4688c;
-    --highcharts-color-2: #78a8d1;
-    --highcharts-color-3: #7991d2;
-    --highcharts-color-4: #7d7bd4;
-    --highcharts-color-5: #977dd5;
-    --highcharts-color-6: #b3597c;
-    --highcharts-color-7: #b27fd6;
-
-    /* UI colors */
-    --highcharts-background-color: #333;
-
-    /* Neutral color variations */
-    --highcharts-neutral-color-100: rgb(255, 255, 255);
-    --highcharts-neutral-color-80: rgb(214, 214, 214);
-    --highcharts-neutral-color-60: rgb(173, 173, 173);
-    --highcharts-neutral-color-40: rgb(133, 133, 133);
-    --highcharts-neutral-color-20: rgb(92, 92, 92);
-    --highcharts-neutral-color-10: rgb(71, 71, 71);
-    --highcharts-neutral-color-5: rgb(61, 61, 61);
-    --highcharts-neutral-color-3: rgb(57, 57, 57);
-
-    /* Highlight color variations */
-    --highcharts-highlight-color-100: rgb(122, 167, 255);
-    --highcharts-highlight-color-80: rgb(108, 144, 214);
-    --highcharts-highlight-color-60: rgb(94, 121, 173);
-    --highcharts-highlight-color-20: rgb(65, 74, 92);
-    --highcharts-highlight-color-10: rgb(58, 63, 71);
-}
-
-    
 </style>

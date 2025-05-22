@@ -82,7 +82,7 @@ const darkMode = {
     errorContainer : "#93000A",
     onError : "#690005",
     onErrorContainer : "#FFDAD6",
-    background : "#262626", //"#1B1B1F"
+    background : "#212121", //"#1B1B1F"
     onBackground : "#E3E2E6",
     surface : "#333333", // "#1B1B1F"
     onSurface : "#E3E2E6",

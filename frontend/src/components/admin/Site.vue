@@ -1,9 +1,9 @@
 <template>
       
     <VContainer class="size-full" align="center"  fluid >
-      <Toast />
+        
       <!-- TOP ROW -->
-      <VRow class="bg- blue-300 gap-3"  style="max-width: 1200px;" >
+      <VRow class=" gap-3 mt-15"  style="max-width: 1200px;" >
         <VCol class=""> 
           <div id="sitemap" class="w-full min-w-[300px] max-w-[594px]  rounded-lg h-[300px]  min-[697px]:h-[826px]"  ></div>
         </VCol> 
@@ -12,7 +12,8 @@
           <VCard  class="bg-neutral-100 dark:bg-neutral-800" flat border  >
             <template #title >
               <div class="flex justify-between" >
-                <span>{{ site.name }}</span> 
+                <span>{{ _.startCase(_.capitalize(site.name)) }}</span> 
+          
                 <VBtn  density="comfortable" icon  @click="setSiteUpdate(); openUpdateSite = true"  class="text-none mr-6" title="Edit" variant="tonal" > 
                   <Icon icon="line-md:edit" width="24" height="24"   />
                 </VBtn>
@@ -39,6 +40,7 @@
                 </VRow>
 
                 <VRow class="mt-10">
+                  <!-- ASSIGNED TO CARD -->
                   <VCol cols="12"  v-if="site.acc_owner.length > 0" >
                     <VCard :title="`${_.capitalize(site.acc_owner[0].firstname)} ${_.capitalize(site.acc_owner[0].lastname)}`" color="onSurface"   variant="tonal" width="100%" rounded="lg" border>
                     
@@ -151,51 +153,49 @@
 
           <VSheet  min-height="220" >
             <VCard  v-if="!!device"   class="my-2 bg-neutral-100 dark:bg-neutral-800" flat border >
-                      <template #title ><p>{{ _.capitalize(device.name) }}</p></template>
-                      <template #subtitle > 
-                        <VContainer>
-                          <VRow  class="gap-2" >
-                            <VCol cols="5" class="pa-0 flex gap-3 align-center "  title="Latitude" >                  
-                                <VBtn      width="36" height="36" variant="text" :elevation="0"  icon  density="compact"    >
-                                  <Icon icon="mingcute:earth-latitude-fill" width="32" height="32"   /> 
-                                </VBtn>   
-                                <p  >{{ device.lat }}</p>
-                            
-                            </VCol>
-                            <VCol cols="5"  class="pa-0 flex align-center  gap-3"  title="Longitude"> 
-                              <VBtn      width="36" height="36" variant="text" :elevation="0"  icon  density="compact"    >
-                                <Icon icon="mingcute:earth-longitude-fill" width="32" height="32"   /> 
-                              </VBtn>   
-                            
-                              <p class="text-center" >{{ device.lon }}</p>
-                            </VCol>
-                          </VRow>
-                        </VContainer>
-                      </template>
-                      <VCardItem>
-                        <VDivider :opacity="100" class="border-neutral-300 dark:border-neutral-600"  />
-                        <VContainer >
-                          <VRow>
-                            <VCol cols="auto" >
-                              <div class=" flex justify-start mb-2 font-medium opacity-60" ><p>Processor</p></div>
-                                <div  class="flex flex-col justify-center" > 
-                                  <VBtn      width="36" height="36" variant="text" :elevation="0" :title="_.capitalize(device.processor)"  icon  density="compact"    >
-                                    <Icon :icon="getDeviceIcon" width="32" height="32"   /> 
-                                  </VBtn>  
-                                </div>
-                            </VCol>
-                            <VCol align="start" class="ml-2" >
-                              <div class=" flex justify-start mb-2 font-medium opacity-60" ><p>Params</p></div>
-                              <VBtn   v-for="param in device.params"     width="36" height="36" variant="text" :elevation="0" :title="_.capitalize(param)"  icon  density="compact"    >
-                                  <Icon :icon="paramDetails[param].icon" width="32" height="32" class=""  /> 
-                              </VBtn> 
-                            </VCol>
-                          </VRow>
-                        </VContainer>
+                  <template #title ><p>{{ _.capitalize(device.name) }}</p></template>
+                  <template #subtitle > 
+                    <VContainer>
+                      <VRow  class="gap-2" >
+                        <VCol cols="5" class="pa-0 flex gap-3 align-center "  title="Latitude" >                  
+                            <VBtn      width="36" height="36" variant="text" :elevation="0"  icon  density="compact"    >
+                              <Icon icon="mingcute:earth-latitude-fill" width="32" height="32"   /> 
+                            </VBtn>   
+                            <p  >{{ device.lat }}</p>
                         
-                      </VCardItem>
-
+                        </VCol>
+                        <VCol cols="5"  class="pa-0 flex align-center  gap-3"  title="Longitude"> 
+                          <VBtn      width="36" height="36" variant="text" :elevation="0"  icon  density="compact"    >
+                            <Icon icon="mingcute:earth-longitude-fill" width="32" height="32"   /> 
+                          </VBtn>   
+                        
+                          <p class="text-center" >{{ device.lon }}</p>
+                        </VCol>
+                      </VRow>
+                    </VContainer>
+                  </template>
+                  <VCardItem>
+                    <VDivider :opacity="100" class="border-neutral-300 dark:border-neutral-600"  />
+                    <VContainer >
+                      <VRow>
+                        <VCol cols="auto" >
+                          <div class=" flex justify-start mb-2 font-medium opacity-60" ><p>Processor</p></div>
+                            <div  class="flex flex-col justify-center" > 
+                              <VBtn      width="36" height="36" variant="text" :elevation="0" :title="_.capitalize(device.processor)"  icon  density="compact"    >
+                                <Icon :icon="getDeviceIcon" width="32" height="32"   /> 
+                              </VBtn>  
+                            </div>
+                        </VCol>
+                        <VCol align="start" class="ml-2" >
+                          <div class=" flex justify-start mb-2 font-medium opacity-60" ><p>Params</p></div>
+                          <VBtn   v-for="param in device.params"     width="36" height="36" variant="text" :elevation="0" :title="_.capitalize(param)"  icon  density="compact"    >
+                              <Icon :icon="paramDetails[param].icon" width="32" height="32" class=""  /> 
+                          </VBtn> 
+                        </VCol>
+                      </VRow>
+                    </VContainer>
                     
+                  </VCardItem>                    
             </VCard>
           </VSheet>
         
@@ -401,6 +401,7 @@
         </VDialog>
 
         <VDialog v-model="openDeleteDevice" max-width="400" persistent transition="dialog-bottom-transition" >
+          <!-- DELETE DEVICE -->
             <VCard   class="border-t-4border-rose-600 dark:border-rose-300 " density="compact"  > 
           
               <template #title >
@@ -420,7 +421,7 @@
             </VCard>
       </VDialog>
 
-        <Toast />
+          
 
 
       </VRow>
@@ -504,7 +505,7 @@ let USDollar = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'US
 const updateSite          = reactive({id:"",name:"", lat:"0",lon:"0", enabled: true});
 const createDevice        = reactive({name:"", lat:"0",lon:"0", processor:"", params :[]});
 const updateDevice        = reactive({siteid:"",deviceid:"", name:"", lat:"0",lon:"0", processor:"", params:[]});
-const paramOptions        = ref(["temperature","humidity","pressure","co2","voc","vocindex","pm2","pm10"]);
+const paramOptions        = ref(["temperature","humidity","pressure","co2","voc","vocindex","pm25","pm10","radiation","uva","uvb","uvc","voltage","current","bat","oxidised","reduced","nh3","lux"]);
 let searchTextID, timeoutVal = 1000; 
 
 const processors = ref([{"name":"esp32", "icon":"simple-icons:espressif"},{"name":"zero", "icon":"cib:raspberry-pi"},{"name":"pimoroni", "icon":"cib:raspberry-pi"}])

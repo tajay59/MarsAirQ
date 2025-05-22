@@ -1,53 +1,72 @@
 <template>
-  <VApp class="bg-surface"   > 
-
-    <!-- <Transition name="fade"  >       -->
-      <!-- <TopAppBar v-if="!['Signup','PasswordReset', 'Login'].includes(route.name) && !smAndDown"  /> -->
-    <!-- </Transition> -->
-   
-
-    <!-- v-if="!['Login','Signup','PasswordReset'].includes(route.name) ||" -->
-    <!-- <NavDrawer  v-if="['Map','Live','Dashboard','Analysis'].includes(route.name)"  /> -->
+  <VApp class="bg-surface relative "   > 
     <Notification/>
+
+    <SpeedDial v-if="smAndUp"  :model="items" pt:menuitem="m-2"    direction="left" style="position: absolute; top: 25px; right: 50px; z-index: 20000;"   > 
+        <template #button="{ toggleCallback }">
+            <VBtn @click="toggleCallback" icon size="50" flat color="transparent" class="" >
+                <Icon icon="gg:menu-grid-o" width="32" height="32" :class="[(route.path == '/analytics/map')?'!text-neutral-100':'!text-neutral-900 dark:!text-neutral-200']" />
+            </VBtn>                 
+        </template>
+        <template #item="{ item, toggleCallback }"> 
+            <VSheet  :class="['rounded-[50%]',(route.path == '/analytics/map')?'!bg-neutral-700':'bg-neutral-100  dark:bg-neutral-700']"   border >
+                <VBtn v-if="item.label == 'Login'" :title="(loggedIn)? 'Logout':'Login'" @click="toggleCallback"  icon size="40" flat color="transparent" variant="outlined" >                    
+                    <Icon v-if="loggedIn" :icon="item.icon" width="24" height="24" :class="[(route.path == '/analytics/map')?'!text-neutral-100':'!text-neutral-500 dark:!text-neutral-300']" />
+                    <Icon v-else :icon="item.icon1" width="24" height="24" :class="[(route.path == '/analytics/map')?'!text-neutral-100':'!text-neutral-500 dark:!text-neutral-300']" />
+                </VBtn>  
+                <VBtn v-else-if="item.label == 'Theme'"  title="Theme"  @click="toggleCallback"  icon size="40" flat color="transparent" variant="outlined" >                    
+                    <Icon v-if="darkmode" :icon="item.icon" width="24" height="24" :class="[(route.path == '/analytics/map')?'!text-neutral-100':'!text-neutral-500 dark:!text-neutral-300']" />
+                    <Icon v-else :icon="item.icon1" width="24" height="24" :class="[(route.path == '/analytics/map')?'!text-neutral-100':'!text-neutral-500 dark:!text-neutral-300']" />
+                </VBtn>    
+                <VBtn v-else  @click="toggleCallback"  :title="item.label"  icon size="40" flat color="transparent" variant="outlined" >                    
+                    <Icon :icon="item.icon" width="24" height="24" :class="[(route.path == '/analytics/map')?'!text-neutral-100':'!text-neutral-500 dark:!text-neutral-300']" />
+                </VBtn>   
+            </VSheet>              
+        </template>
+    </SpeedDial>   
    
     <VMain  > 
       <RouterView v-slot="{ Component, route}"> 
         <transition :name="route.meta.transition || 'fade'" mode="out-in" >
           <component :is="Component" />
         </transition>
-      </RouterView>
+      </RouterView> 
     </VMain>
 
-    <!-- <Footer v-if="route.name !== 'Tour'"  />    -->
-    <BottomNavBar v-if="!['Login','Signup','PasswordReset'].includes(route.name)"  :active="smAndDown" />       
-  
+    <VOverlay v-model="overlay"  :z-index="1000" :opacity="0.7" ></VOverlay>      
+    <BottomNavBar v-if="!['Login','Signup','PasswordReset'].includes(route.name)"  :active="!smAndUp" :items="items" />    
+    <Toast pt:root="!w-[300px]" />
   </VApp>
 </template>
 
 <script setup>
   // IMPORTS
   import { ref,reactive, onMounted,computed, watch,onBeforeMount, onBeforeUnmount, toRaw} from 'vue';
-  import TopAppBar from '@/components/TopAppBar.vue';
   import BottomNavBar from '@/components/BottomNavBar.vue';
-  import Footer from '@/components/Footer.vue';
   import { RouterLink, RouterView } from 'vue-router'
+  import { useToast } from 'primevue/usetoast';
   import { useRoute, useRouter } from "vue-router";
+  import { useAppStore } from '@/stores/appStore';
   import { useUserStore } from '@/stores/userStore';
   import { useMqttStore } from '@/stores/mqttStore'; // Import Mqtt Store
   import { storeToRefs } from "pinia";
   import { useTheme } from 'vuetify';
   import { useDisplay } from 'vuetify';
-  import NavDrawer from './components/NavDrawer.vue';
-
+  import { Icon } from '@iconify/vue';
   
 
 // VARIABLES
+const router            = useRouter();
+const route             = useRoute(); 
+const toast             = useToast(); 
 const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
 const UserStore         = useUserStore();
-const {id,loggedIn,image,suball, darkmode, mqtt_sub_credentials} = storeToRefs(UserStore); 
-const route             = useRoute(); 
+const {id,loggedIn,image,suball, selectedStation, darkmode, mqtt_sub_credentials, layout} = storeToRefs(UserStore); 
+ 
 const theme             = useTheme();
 const Mqtt              = useMqttStore();
+const AppStore          = useAppStore();
+
 const {
   username,
   password,
@@ -55,13 +74,94 @@ const {
    unsubs,
    subTopics,
    connected,
+   isConnected,
    payload,
    payloadTopic } = storeToRefs(Mqtt);
+  const {overlay,
+    openSiteSearch,
+    openCreateSite,
+    openCreateEntity
+  }  = storeToRefs(AppStore)
+
 let subsID = "";
 let unsubsID = "";
+
+const show     = ref(["Home","Dashboard","Graphs","Login","Theme","Profile","Analysis","Map","Save"])
+const items    = ref([]);
+const allItems = ref([
+    {
+        label: 'Login',
+        icon: 'majesticons:login',
+        icon1: 'majesticons:logout', 
+        command: () => { (UserStore.loggedIn)? UserStore.userLogout() : router.push({name:'Login'}) }
+    },
+{
+        label: 'Theme',
+        icon: 'line-md:sun-rising-filled-loop',
+        icon1: 'line-md:sunny-filled-loop-to-moon-filled-loop-transition', 
+        command: () => { darkmode.value = !darkmode.value; }
+    },
+{
+        label: 'Home',
+        icon: 'iconamoon:home-fill', 
+        command: () => { router.push({name:'Home'}); }
+    },
+    {
+        label: 'Profile',
+        icon: 'iconamoon:profile-fill', 
+        command: () => { router.push({name:'Profile'}); }
+    },
+    {
+        label: 'Settings',
+        icon: 'mingcute:settings-3-fill', 
+        command: () => { router.push('/admin/accounts'); }
+    },
+    {
+        label: 'Analysis',
+        icon: 'logos:google-analytics', 
+        command: () => { router.push('/analytics/analysis'); }
+    },
+    {
+        label: 'Map',
+        icon: 'fa6-solid:map-location', 
+        command: () => { router.push('/analytics/map'); }
+    },    
+    {
+        label: 'Add Graphs',
+        icon: 'si:dashboard-customize-fill', 
+        command: () => { dashboardMenu.value = true; }
+    },
+    {
+        label: 'Save Dashboard',
+        icon: 'fluent:save-arrow-right-24-filled', 
+        command: () => { updateDashboard(); }
+    },
+    {
+        label: 'Dashboard',
+        icon: 'material-symbols:dashboard-rounded', 
+        command: () => { router.push('/analytics/dashboard'); }
+    },
+    {
+        label: 'Search Site',
+        icon: 'tdesign:map-search-filled', 
+        command: () => { openSiteSearch.value = true; }
+    },
+    {
+        label: 'Create Entity',
+        icon: 'fluent:organization-48-filled', 
+        command: () => { openCreateEntity.value = true; }
+    },
+]);
+ 
+    
+
 // theme.global.current.value.colors.onSurfaceVariant
 
-// Watchers
+// WATCHERS
+watch(()=>route.fullPath,(route)=> {
+    configSpeedDial(route);
+});
+
 watch(darkmode,  (mode) => {
     // appDarkMode.value = mode;
 
@@ -73,19 +173,6 @@ watch(darkmode,  (mode) => {
     else 
         document.documentElement.classList.replace('dark','light'); 
 });
-
-
-
-
-watch(suball, async (sub)=> { 
-    Mqtt.clearSubs();
-
-   setTimeout(() => { 
-      if(sub){ Mqtt.subTo("/station/data/#"); }
-      else {  Mqtt.subTo(mqtt_sub_credentials.value.topic); } 
-    }, 1000)
-  })
- 
 
 watch(username ,(name) => {
     if(!!name){
@@ -100,11 +187,11 @@ watch(username ,(name) => {
 watch(() => subs.value.size, (list) => { 
   
   setTimeout(() => {      
-          if(Mqtt.isConnected()){ 
-            let topics = toRaw(subs.value); 
-            topics.forEach( topic => Mqtt.subscribe(topic) );
-          }
-        },1000)
+    if(Mqtt.isConnected()){ 
+      let topics = toRaw(subs.value); 
+      topics.forEach( topic => Mqtt.subscribe(topic) );
+    }
+  },1000)
 
 },{ immediate: true })
 
@@ -112,20 +199,67 @@ watch(() => subs.value.size, (list) => {
 watch(() => unsubs.value.size, (list) => { 
 
   setTimeout(() => {      
-          if(Mqtt.isConnected()){ 
-            let unsubtopics = toRaw(unsubs.value); 
-            unsubtopics.forEach( topic => Mqtt.unsubscribe(topic) ); 
-          }
+      if(Mqtt.isConnected()){ 
+        let unsubtopics = toRaw(unsubs.value); 
+        unsubtopics.forEach( topic => Mqtt.unsubscribe(topic) ); 
+      }
         },1000)
 
 },{ immediate: true })
 
 
 // FUNCTIONS
+const configSpeedDial = (route)=> {
+    items.value = [];
+    switch (route) {
+        case "/":
+              show.value = ["Home","Settings","Dashboard","Login","Theme","Profile","Analysis","Map"]
+              break;
+        case "/admin":
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map"]
+              break;
+        case "/admin/entities":
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Search Site","Create Entity"]
+              break;
+        
+        case "/analytics/map":
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Profile","Analysis"]
+            break;
+        case "/profile/devices":
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map"]
+            break;
+        case "/profile/sites":
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Search Site"]
+            break;
+        case "/analytics/dashboard":
+            show.value = ["Home","Settings","Add Graphs","Login","Theme","Profile","Analysis","Map","Save Dashboard"]
+            break;
+        case "/analytics/analysis":
+            show.value = ["Home","Settings","Dashboard" ,"Login","Theme","Profile", "Map"]
+            break;
+            
+        default:
+            break;    
+    }   
+    
+    allItems.value.forEach(button => {
+        if(show.value.includes(button.label)){
+          items.value.push(button);
+        }
+      })
+  }
+
+
 onBeforeMount(()=> {
   // SAVE THEME TO LOCALSTORAGE MAKING IT PERSIST BROWSER REFRESH
   Mqtt.clearSubs();
-  UserStore.getAllSites();
+  
+  if(loggedIn.value){
+    console.log("FETCHING ALL SITES");
+    UserStore.getAllSites();
+  }
+ 
+ 
 
   if(localStorage.getItem("theme") != null){
  
@@ -148,11 +282,14 @@ onBeforeMount(()=> {
     else 
         document.documentElement.classList.add('light');        
   }  
+
+  configSpeedDial(route.fullPath);
+
+    console.log("STARTED APP")
 });
 
 onMounted(() => {
     // THIS FUNCTION IS CALLED AFTER THIS COMPONENT HAS BEEN MOUNTED
-
     if(suball.value){
       Mqtt.subTo("/station/data/#");
     }
@@ -167,16 +304,264 @@ onMounted(() => {
 onBeforeUnmount(()=>{
     // THIS FUNCTION IS CALLED RIGHT BEFORE THIS COMPONENT IS UNMOUNTED
     Mqtt.unsubscribeAll();
-    clearInterval(subsID)
+    clearInterval(subsID);
 });
+
+const updateDashboard = async () => {
+
+  if(!!selectedStation.value){
+    let result = await AppStore.updateDeviceDashboard(layout.value);
+
+    switch (result) {
+        case "updated": 
+            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Dashboard UPDATED!', life: 3000 });  
+            break;
+        
+        case "failed":  
+            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to UPDATED Dashboard', life: 3000 });  
+            break;  
+
+        default:
+            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Dashboard UPDATED request failed!', life: 3000 });  
+            break;
+    }
+  }
+  else{
+    toast.add({ severity: 'warn', summary: 'FAILED', detail: 'Station must be selected', life: 5000 }); 
+  }
+    
+    }
  
 </script>
 
 <style >
+
+/* @import url("./node_modules/highcharts/css/themes/dark-unica.css"); */
+/* @import url("./node_modules/highcharts/css/themes/grid-light.css");  */
+/* @import url("./node_modules/highcharts/css/themes/sand-signika.css"); */
+
+@import url("https://fonts.googleapis.com/css?family=Unica+One");
+@import url("./node_modules/highcharts/css/highcharts.css");
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --highcharts-color-0-light: #b3597c;
+    --highcharts-color-0-dark: #4ca683;
+     /* Colors for data series and points  */
+    --highcharts-color-0: #b3597c;
+    --highcharts-color-1: #c4688c;
+    --highcharts-color-2: #78a8d1;
+    --highcharts-color-3: #7991d2;
+    --highcharts-color-4: #7d7bd4;
+    --highcharts-color-5: #977dd5;
+    --highcharts-color-6: #b3597c;
+    --highcharts-color-7: #b27fd6;
+
+    /* UI colors  */
+    --highcharts-background-color: #c42626;  /* #333;*/
+
+    
+      /* Neutral color variations */
+      /* https://www.highcharts.com/samples/highcharts/css/palette-helper */
+    
+    --highcharts-neutral-color-100:#ffffff;
+    --highcharts-neutral-color-80: #d6d6d6;
+    --highcharts-neutral-color-60: #adadad;
+    --highcharts-neutral-color-40: #858585;
+    --highcharts-neutral-color-20: #5c5c5c;
+    --highcharts-neutral-color-10: #474747;
+    --highcharts-neutral-color-5:  #3d3d3d;
+    --highcharts-neutral-color-3:  #393939;
+
+    /* Highlight color variations  */
+    --highcharts-highlight-color-100:#7aa7ff;
+    --highcharts-highlight-color-80: #6c90d6;
+    --highcharts-highlight-color-60: #5e79ad;
+    --highcharts-highlight-color-20: #414a5c;
+    --highcharts-highlight-color-10: #3a3f47;
+    
+  }
+}
+ 
+.highcharts-light {
+    /* Colors for data series and points #b3597c,#c4688c,#78a8d1,#7991d2,#7d7bd4,#977dd5,#b3597c,#b27fd6 */
+    --highcharts-color-0: #b3597c;
+    --highcharts-color-1: #7d7bd4;
+    --highcharts-color-2: #78a8d1;
+    --highcharts-color-3: #7991d2;
+    --highcharts-color-4: #c4688c;
+    --highcharts-color-5: #977dd5;
+    --highcharts-color-6: #b3597c;
+    --highcharts-color-7: #b27fd6;
+
+    /* UI colors */
+    --highcharts-background-color: #fafafa;  /* Transparent background #fafafa #f4f4f5 #e4e4e7 #d4d4d8*/
+
+    /*
+      Neutral color variations
+      https://www.highcharts.com/samples/highcharts/css/palette-helper
+    */
+    --highcharts-neutral-color-100:#ffffff;
+    --highcharts-neutral-color-80: #d6d6d6;
+    --highcharts-neutral-color-60: #adadad;
+    --highcharts-neutral-color-40: #858585;
+    --highcharts-neutral-color-20: #5c5c5c;
+    --highcharts-neutral-color-10: #474747;
+    --highcharts-neutral-color-5:  #3d3d3d;
+    --highcharts-neutral-color-3:  #393939;
+
+    /* Highlight color variations */
+    --highcharts-highlight-color-100:#7aa7ff;
+    --highcharts-highlight-color-80: #6c90d6;
+    --highcharts-highlight-color-60: #5e79ad;
+    --highcharts-highlight-color-20: #414a5c;
+    --highcharts-highlight-color-10: #3a3f47;
+
+    --highcharts-color-td: #00B4FF;
+    --highcharts-color-ts: #1E90FF;
+
+    --highcharts-color-cat1: #3CB371;
+    --highcharts-color-cat2: #FFD700;
+    --highcharts-color-cat3: #FF8C00;
+    --highcharts-color-cat4: #DC143C;
+    --highcharts-color-cat5: #B22222;
+
+    /** CUSTTOM VARIABLES */
+    --highcharts-title-color: hsl(0, 0%, 30%);
+    --highcharts-subtitle-color: #ffffff;
+    --highcharts-axis-label-color: hsl(0, 0%, 30%);
+    --highcharts-border-radius-color: hsl(0, 0%, 80%);
+  }
+
+.highcharts-dark {
+  /* Colors for data series and points */
+  --highcharts-color-0: #4ca683; /*#b3597c; Line colour */
+  --highcharts-color-1: #82842b; /*Background  */
+  --highcharts-color-2: #87572e;
+  --highcharts-color-3: #866e2d;
+  --highcharts-color-4: #3b9773;
+  --highcharts-color-5: #68822a;
+  --highcharts-color-6: #4ca683;
+  --highcharts-color-7: #4d8029;
+
+  /* UI colors */
+  --highcharts-background-color: #27272a;  /* Transparent background #3f3f46  #27272a #18181b*/   
+
+  /* Neutral color variations */
+  --highcharts-neutral-color-100:#ffffff;
+  --highcharts-neutral-color-80: #d6d6d6;
+  --highcharts-neutral-color-60: #adadad;
+  --highcharts-neutral-color-40: #858585;
+  --highcharts-neutral-color-20: #5c5c5c;
+  --highcharts-neutral-color-10: #474747;
+  --highcharts-neutral-color-5:  #3d3d3d;
+  --highcharts-neutral-color-3:  #393939;
+
+  /* Highlight color variations */
+  --highcharts-highlight-color-100:#7aa7ff;
+  --highcharts-highlight-color-80: #6c90d6;
+  --highcharts-highlight-color-60: #5e79ad;
+  --highcharts-highlight-color-20: #414a5c;
+  --highcharts-highlight-color-10: #3a3f47;
+
+  --highcharts-color-td: #00C8FF; /*#b3597c; Line colour */
+  --highcharts-color-ts: #3A9AFF;
+
+  --highcharts-color-cat1: #4CAF50;
+  --highcharts-color-cat2: #FFC107;
+  --highcharts-color-cat3: #FF7043;
+  --highcharts-color-cat4: #F44336;
+  --highcharts-color-cat5: #D32F2F;
+
+  /** CUSTTOM VARIABLES */
+--highcharts-title-color: hsl(0, 0%, 70%);
+--highcharts-subtitle-color: #ffffff;
+--highcharts-axis-label-color: hsl(0, 0%, 70%);
+--highcharts-border-radius-color: hsl(0, 0%, 30%);
+}
+
+
+.highcharts-series-inactive { /** Prevent graying out of chart when hovering */
+    opacity: 1 !important;
+}
+
+
+.highcharts-background { 
+  transition: all 250ms;
+}
+
+.highcharts-description {
+  margin: 10px;
+}
+
+.controls {
+  margin: 10px;
+}
+
+.highcharts-yaxis-grid .highcharts-grid-line {
+    stroke-width: 1px;
+    stroke: var(--highcharts-line-color-0);
+}
+
+.highcharts-yaxis .highcharts-tick {
+    stroke-width: 1px;
+    stroke: var(--highcharts-line-color-0);
+}
+
+/* .highcharts-xaxis-grid .highcharts-grid-line {
+    stroke-width: 2px;
+    stroke: #d8d8d8;
+}
+
+.highcharts-xaxis .highcharts-tick {
+    stroke-width: 2px;
+    stroke: #d8d8d8;
+} */
+
+.highcharts-tooltip-box {
+    fill: black;
+    fill-opacity: 0.8;
+    stroke-width: 0;
+}
+
+.highcharts-tooltip text {
+    fill: white;
+    text-shadow: 0 0 3px black;
+}
+
+
+  /*
+  ::-webkit-scrollbar { width: 5px; height: 5px; }  SCROLLBAR SETTING 
+  ::-webkit-scrollbar-track { box-shadow: inset 0 0 5px grey; border-radius: 10px; }    Track 
+  ::-webkit-scrollbar-thumb { background: rgb(var(--v-theme-primary)) ; border-radius: 10px; }     Handle 
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--v-theme-secondary)); }    Handle on hover 
+  */
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; } /* SCROLLBAR SETTING */
+  ::-webkit-scrollbar-track { box-shadow: inset 0 0 5px grey; border-radius: 10px; }   /* Track */
+  ::-webkit-scrollbar-thumb { background: var(--highcharts-color-0) ; border-radius: 10px; }    /* Handle */ 
+  ::-webkit-scrollbar-thumb:hover { background: var(--highcharts-color-0); }   /* Handle on hover */
+
+
+  .scrolleffect{
+    overflow-y: scroll;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrolleffect::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrolleffect {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 /* Remove autofill background/ box shadow color on Input fields */
@@ -318,11 +703,6 @@ onBeforeUnmount(()=>{
   /* position: absolute; */
 }
 
-  
-  ::-webkit-scrollbar { width: 5px; height: 5px; } /* SCROLLBAR SETTING */
-  ::-webkit-scrollbar-track { box-shadow: inset 0 0 5px grey; border-radius: 10px; }   /* Track */
-  ::-webkit-scrollbar-thumb { background: rgb(var(--v-theme-primary)) ; border-radius: 10px; }    /* Handle */ 
-  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--v-theme-secondary)); }   /* Handle on hover */
 
   .roboto-thin {
   font-family: "Roboto", sans-serif;

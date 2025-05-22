@@ -26,6 +26,9 @@ const text              = ref("");
 const changedText       = ref("");
 
 
+// EMITTERS
+const emit = defineEmits(["currentRoute"]);
+
 // PROPS
 const props = defineProps({
     item:{type:String,default:""},

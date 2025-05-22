@@ -507,7 +507,100 @@ class DB:
             return pages
 
 
+    @defaultDecorator(db="marsairq",collection="entities")
+    def searchPaginationPageCountEntity(self,searchtext, owner='' ,role='', remotedb = None):
+        # RETURNS A COUNT OF HOW MANY SITES MATCHES WITH THE QUERY PARAMETERS
+        pageSize = 30
+        try: 
+            query = {'name': { '$regex': f'^{searchtext}', '$options': 'i' } }    
 
+            if role in ['staff','admin']:
+                query = {'name': { '$regex': f'^{searchtext}', '$options': 'i' } }
+             
+            # SEARCH PAGINATION-FINAL COUNT 
+            number  = remotedb.count_documents(query)    
+            pages   = 0      
+           
+            if number > 0:
+                if (number % pageSize) > 0:
+                    pages      = self.ceil(number / pageSize)
+                else:
+                    pages = self.floor(number / pageSize)                
+             
+        except Exception as e:
+            msg = str(e)
+            print("searchPaginationPageCountEntity error ",msg)
+            return None
+        else:            
+            return pages
+        
+
+    @defaultDecorator(db="marsairq",collection="entities") # xuser
+    def getSearchPaginationEntity(self,searchtext,page, owner='', role='', remotedb = None):
+        # RETURN A SPECIFIC PAGE FOR A SPECIFIC PRODUCT TYPE
+        try:
+            pageSize = 30   
+            query = {'name': { '$regex': f'^{searchtext}', '$options': 'i' }    }   
+
+            if role in ['staff','admin']:
+                query = {f'name': { '$regex': f'{searchtext}', '$options': 'i' }   }    
+
+            #  SEARCH PAGINATION-FINAL            
+            result      = list(remotedb.aggregate([{ '$match': query }, { '$sort': { 'number': 1 } }, { '$skip':  pageSize * page }, { '$limit': pageSize }, { '$project': { '_id': 0 } } ])) 
+        
+        except Exception as e:
+            msg = str(e)
+            print("getSearchPaginationEntity error ",msg)
+            return None
+        else:             
+            return result
+ 
+
+    @defaultDecorator(db="marsairq",collection="entities") # xuser
+    def paginationPageEntity(self,page,owner='', role='', remotedb = None):
+        # RETURN A SPECIFIC PAGE FOR A SPECIFIC PRODUCT TYPE
+        try:
+            pageSize = 5 #30      
+            query = { } 
+
+            if role in ['staff','admin']:
+                query = { "type": "site"  }    
+            #  PAGINATION FINAL
+            result      = list(remotedb.aggregate([ { '$match': query }, { '$skip': pageSize * page }, { '$limit': pageSize }, { '$project': { '_id': 0 } } ])) 
+                  
+        except Exception as e:
+            msg = str(e)
+            print("paginationPageEntity error ",msg)
+            return None
+        else:             
+            return result
+
+    @defaultDecorator(db="marsairq",collection="entities")
+    def paginationPageCountEntity(self, owner='' ,role='', remotedb = None):
+        # RETURNS A COUNT OF HOW MANY SITES MATCHES WITH THE QUERY PARAMETERS
+        pageSize = 5  #30
+        try: 
+            query = { }    
+
+            if role in ['staff','admin']:
+                query = { "type": "site"}
+           
+            # SEARCH PAGINATION-FINAL COUNT 
+            number  = remotedb.count_documents(query)     
+            pages   = 0      
+           
+            if number > 0:
+                if (number % pageSize) > 0:
+                    pages      = self.ceil(number / pageSize)
+                else:
+                    pages = self.floor(number / pageSize)                
+             
+        except Exception as e:
+            msg = str(e)
+            print("paginationPageCountEntity error ",msg)
+            return None
+        else:            
+            return pages
    
         
     @defaultDecorator(db="marsairq",collection="misc")
@@ -633,6 +726,10 @@ class DB:
         else:                  
             return result
 
+
+    #########################
+    #          TEMP         #
+    #########################
     @defaultDecorator(db="marsairq",collection="temp")
     def createTempDoc(self,query, remotedb = None):
         # CREATE TEMPORARY DOCUMENT IN TEMP COLLECTION
@@ -836,10 +933,10 @@ class DB:
             return True
 
     @defaultDecorator(db="marsairq",collection="mqtt_users")
-    def mqttUserExist(self,id="", remotedb = None):
+    def mqttUserExist(self,id="", site="", remotedb = None):
         # CHECKS IF MQTT USER EXIST USING ID PROVIDED
         try: 
-            result      = remotedb.count_documents({"id":id})
+            result      = remotedb.count_documents({"$or":[{"id":id},{"site":site}]})
         except Exception as e:
             msg = str(e)
             print("mqttUserExist error ",msg)
@@ -889,12 +986,24 @@ class DB:
         else:                  
             return True
         
+    @defaultDecorator(db="marsairq",collection="sites")
+    def deleteSite(self,query, remotedb = None):
+        # DELETE SITE FROM COLLECTION
+        try:
+            result      = remotedb.delete_one(query)
+        except Exception as e:
+            print("deleteSite error ",str(e))
+            return 0
+        else:                  
+            return result.deleted_count
 
     @defaultDecorator(db="marsairq",collection="sites")
     def findAllSites(self,query, remotedb = None):
         # RETURN LIST OF EXTERNAL MEMBERS FOR /ADMIN ROUTE
         try: 
-            result      = list(remotedb.find(query,{"_id":0}))
+            # result      = list(remotedb.find(query,{"_id":0}))
+            # [ { '$match': { 'type': 'site', '$or': [ { 'owner': owner }, { 'secondaryowners': { '$in': [ owner ] } } ] } }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ]
+            result      = list(remotedb.aggregate([ { '$match': query }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ]))
         except Exception as e:
             msg = str(e)
             print("findAllSites error ",msg)
@@ -944,10 +1053,88 @@ class DB:
             return result
 
 
+    @defaultDecorator(db="marsairq",collection="sites")
+    def getSitesForOwner(self,owner, remotedb = None):
+        # GET ALL SITES THAT IS ASSIGNED TO A SPECIFIC USER. 
+        try: 
+            # GET ALL SITES FOR OWNER WITH MQTT
+            result      = list(remotedb.aggregate([ { '$match': { 'type': 'site', '$or': [ { 'owner': owner }, { 'secondaryowners': { '$in': [ owner ] } } ] } }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ]))
+             
+        except Exception as e:
+            msg = str(e)
+            print("getSitesForOwner error ",msg)
+            return None
+        else: 
+            return result
+
+
+    ###############################################################
+    #                           ENTITY                            #
+    ###############################################################
+    @defaultDecorator(db="marsairq",collection="entities")
+    def addEntity(self,query, remotedb = None):
+        # ADD NEW USER ACCOUNT TO DATABASE
+        try: 
+            result      = remotedb.insert_one(query)
+        except Exception as e:
+            msg = str(e)
+            print("addEntity error ",msg)
+            return False
+        else:                  
+            return True
+        
+    @defaultDecorator(db="marsairq",collection="entities")
+    def findAllEntities(self,project={"_id":0}, remotedb = None):
+        # RETURN LIST OF ENTITIES
+        try: 
+            # result      = list(remotedb.find({},project))
+            result      = list(remotedb.aggregate([ { '$match': {} }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': { '_id': 0, 'web': 0, 'device': 0 } } ]))
+            
+        except Exception as e:
+            msg = str(e)
+            print("findAllEntities error ",msg)
+            return None
+        else: 
+            return result
 
 
 
-
+    @defaultDecorator(db="marsairq",collection="entities")
+    def findEntity(self,id="", remotedb = None):
+        # FIND A SINGLE ENTITY
+        try: 
+            result      = remotedb.find_one({"id":id},{"_id":0}) 
+        except Exception as e:
+            msg = str(e)
+            print("findEntity error ",msg)
+            return None
+        else: 
+            return result
+        
+    @defaultDecorator(db="marsairq",collection="entities")
+    def deleteEntity(self,query, remotedb = None):
+        # SEARCH FOR A TEMPORARY DOCUMENT IN TEMP COLLECTION
+        try:
+            result      = remotedb.delete_one(query)
+        except Exception as e:
+            print("deleteEntity error ",str(e))
+            return 0
+        else:                  
+            return result.deleted_count
+        
+    @defaultDecorator(db="marsairq",collection="entities")
+    def entityExist(self,id="", name="", remotedb = None):
+        # CHECKS IF MQTT USER EXIST USING ID PROVIDED
+        try: 
+            result      = remotedb.count_documents({"$or":[{"id":id},{"name": name}]})
+        except Exception as e:
+            msg = str(e)
+            print("entityExist error ",msg)
+            return (False,"error")
+        else: 
+            if result > 0:
+                return (True,"success")                 
+            return (False,"success")
 
 
 
