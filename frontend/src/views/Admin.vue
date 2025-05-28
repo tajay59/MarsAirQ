@@ -42,7 +42,10 @@
 
           <VListItem v-for="route in routeItems" class="mr-10" style="text-decoration: none;"   :title="route.title" :value="route.name" :to="route.route">
             <template #prepend >
-              <Icon  :icon="route.icon" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300 mr-5" /> 
+              <VBadge  v-if="route.name == 'AdminRequests'" floating :content="requests.length" color="!bg-green-500 dark:!bg-green-700" class="" :offset-y="7" >
+                  <Icon  :icon="route.icon" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" /> 
+              </VBadge>             
+              <Icon v-else :icon="route.icon" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300 mr-3" /> 
             </template>
           </VListItem>        
         
@@ -70,7 +73,7 @@ const UserStore         = useUserStore();
 const AppStore          = useAppStore();
 const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
 const {id,loggedIn,image, darkmode}       = storeToRefs(UserStore);
-const {newRegistrations, staffs, users, selectedAccount}   = storeToRefs(AppStore);
+const {newRegistrations, staffs, users, selectedAccount, requests}   = storeToRefs(AppStore);
 const myWorker          = ref(null);
 const siteWorker        = ref(null);
 

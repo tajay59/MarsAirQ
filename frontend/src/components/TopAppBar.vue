@@ -134,10 +134,10 @@ import Modal from "./Modal.vue";
  
 // Highcharts, Load the exporting module and Initialize exporting module.
 import Highcharts from 'highcharts';
-import more from 'highcharts/highcharts-more';
-import Exporting from 'highcharts/modules/exporting';
-Exporting(Highcharts); 
-more(Highcharts);
+import  'highcharts/highcharts-more';
+import  'highcharts/modules/exporting';
+
+
  
 
 

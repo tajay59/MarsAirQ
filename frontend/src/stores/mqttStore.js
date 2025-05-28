@@ -55,16 +55,16 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
         console.log(`Connected to: ${URI} , Reconnect: ${reconnect} `); 
         connected.value = true;  
 
-       
+        // let topics = toRaw(subTopics); 
+        // topics.forEach( topic => {subs.add(topic); subTopics.delete(topic)} );
         let topics = toRaw(subs); 
-        topics.forEach( topic => subscribe(topic) );
-        
+        topics.forEach( topic => {subscribe(topic)} );
 
-        // const topics = toRaw(subTopics);                 
-        // topics.values().forEach((topic)=>{ subscribe(topic); });  
-        // topics.values().forEach((topic) => { subs.add(topic); });  
-        // topics.clear();
-             
+        if(reconnect){
+            let topics = toRaw(subTopics); 
+            topics.forEach( topic => {subs.add(topic); subTopics.delete(topic)} );
+        }
+        
     }
  
     const onConnectionLost = (response)=> {
@@ -109,8 +109,7 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
     const sub_onSuccess = (response) => {   
         // called when the subscribe acknowledgement has been received from the server.          
         const topic = response.invocationContext.topic;  
-        console.log(`MQTT: Subscribed  to - ${topic}`);  
-        // console.log(`MQTT: Subscribed  to a topics`);  
+        console.log(`MQTT: Subscribed  to - ${topic}`);   
         subTopics.add(topic);
         subs.delete(topic);
         }
@@ -119,8 +118,7 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
         // called when the subscribe request has failed or timed out.     
         // console.log(response)    
         const topic = response.invocationContext.topic;  
-        console.log(`MQTT: Failed to subscribe to - ${topic} \nError message : ${response.errorMessage}`);  
-        // console.log(`MQTT: Failed to subscribe to -  \nError message : ${response.errorMessage}`);  
+        console.log(`MQTT: Failed to subscribe to - ${topic} \nError message : ${response.errorMessage}`);   
         }
 
     const subscribe = (topic) => {

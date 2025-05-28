@@ -10,32 +10,32 @@
             
             <VRow class=" w-full  bg-neutral-200 dark:bg-neutral-800 pa-7 pl-10"   >
                 <!-- <VCol cols="12" > <p  class="text-xl font-medium">Site Details</p></VCol> -->
+                
                 <VCol class=""  :cols="(mdAndUp)? 5 : 12"  >
-                    <VCard class="pa-3 bg-neutral-100 dark:bg-neutral-700/[0.5] " flat rounded="lg"  >
-                        
+                    <!-- LEFT PANEL -->
+                    <VCard class="pa-3 bg-neutral-100 dark:bg-neutral-700/[0.5] " flat rounded="lg"  >                        
                         <div :id="mapcontainer" class="size-full rounded-lg " :class="[(mdAndUp)? 'min-h-[600px]':'min-h-[200px]']"  ></div>
-                        <VCardItem v-if="!!spss" class="px-0" > 
+                        <VCardItem  class="px-0" > 
                             <VContainer fluid class="pa-0" >
                                 <VRow align="center" class="pa-0 ma-0 mb-1"  >
                                     <VCol cols="4" class="pa-0"  ><p>Latitude</p></VCol>
-                                    <VCol cols="8" class="pa-0"  ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2 " >{{ spss.lat }}</p></VCol>
+                                    <VCol cols="8" class="pa-0"  ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2 " >{{ latitude }}</p></VCol>
                                 </VRow>
                                 
                                 <VRow align="center" class="pa-0 ma-0"  >
                                     <VCol cols="4"  class="pa-0" ><p>Longitude</p></VCol>
-                                    <VCol cols="8"  class="pa-0" ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2" >{{ spss.lon }}</p></VCol>
+                                    <VCol cols="8"  class="pa-0" ><p class=" bg-neutral-200 dark:bg-neutral-700 rounded-lg text-sm pa-1 pl-2" >{{  longitude  }}</p></VCol>
                                 </VRow>
-                            </VContainer>
-                        
+                            </VContainer>                        
                         </VCardItem>
                     </VCard>
                 </VCol>
 
-                <VCol class="mt-" :cols="(mdAndUp)? 7 : 12" >       
-               
-                <!-- ENTITY LIST  -->
-                    <VCard class="pa-3 flex flex-col place-items-center  bg-neutral-100 dark:bg-neutral-700/[0.5] relative !overflow-y-scroll" flat rounded="lg"  min-height="712" max-height="713"  >
-                                         
+                <VCol class="mt-" :cols="(mdAndUp)? 7 : 12" >         
+                    <!-- RIGHT PANEL -->
+                    
+                    <VCard v-if="Object.keys(entityPages.pages).length > 0" class="pa-3 flex flex-col place-items-center  bg-neutral-100 dark:bg-neutral-700/[0.5] relative !overflow-y-scroll" flat rounded="lg"  min-height="712" max-height="713"  >
+                        <!-- ENTITY LIST  -->          
                         <PanelMenu :model="menuItems" multiple class="w-full md:w-96"  >
                              <template #item="{ item }">
                                 <a v-if="item.type == 'main'" v-ripple class="flex justify-between align-center px-4 py-2 cursor-pointer group">
@@ -50,9 +50,6 @@
                                         <VBtn @click="openUpdateEntity = true; updateEntityReq.id = item.id; updateEntityReq.name = item.label; updateEntityReq.country = item.country; updateEntityReq.organization = item.organization" icon flat density="compact" variant="text"> 
                                             <Icon icon="tabler:edit" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
                                         </VBtn>
-                                        <VBtn @click="openUserSearch = true; assignEntity.entity = item.id" icon flat density="compact" variant="text"> 
-                                            <Icon icon="iconamoon:profile-fill" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
-                                        </VBtn>
                                         <VBtn @click="openDeleteEntity = true; deleteEntityReq.name = _.toUpper(item.label);  deleteEntityReq.id = item.id" icon flat density="compact" variant="text"> 
                                             <Icon icon="ic:baseline-delete" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
                                         </VBtn>
@@ -61,8 +58,7 @@
                                 <a v-else-if="item.type == 'countryLabel'" v-ripple class="flex items-center px-4 py-2 cursor-pointer group border-b">     
                                     <span  >{{ item.label }}</span>
                                 </a>
-                                <a v-else-if="item.type == 'mainitems'" v-ripple class="flex items-center px-4 py-2 cursor-pointer group">                 
-                                       
+                                <a v-else-if="item.type == 'mainitems'" v-ripple class="flex items-center px-4 py-2 cursor-pointer group">                                       
                                     <Icon :icon="item.icon" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
                                     <span :class="['ml-2', { 'font-semibold': item.items }]">{{ item.label }}</span>                                
                                     <Badge v-if="item.badge" class="ml-auto" :value="item.badge" />
@@ -73,7 +69,7 @@
                                      <div class="flex justify-between  w-full" >
                                         <span :class="['ml-2', { 'font-semibold': item.items }]">{{ item.label }}</span>
                                         <div class="flex gap-3">
-                                            <VBtn @click="router.push({name:'Site',params:{id: item.site}})" icon flat density="compact" variant="text"> 
+                                            <VBtn @click="router.push({name:'ProfileSite',params:{entity: item.name, id: item.site }})" icon flat density="compact" variant="text"> 
                                                 <Icon :icon="item.icon" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
                                             </VBtn>
                                             <VBtn @click="openDeleteSite = true; deleteSiteReq.name = _.toUpper(item.label); deleteSiteReq.entity = _.toUpper(item.name); deleteSiteReq.id = item.site" icon flat density="compact" variant="text"> 
@@ -93,24 +89,50 @@
                             <VPagination v-model=" entityPages.page" v-if=" entityPages.count > 0" :length=" entityPages.count" density="compact" @click="AppStore.getPageEntity( entityPages.page)"  :total-visible="7"></VPagination>
                         </VCardItem>
                     </VCard>
+                     
+                    <VCard v-else class="pa-3  bg-neutral-100 dark:bg-neutral-700/[0.5] flex place-content-center" flat rounded="lg"  min-height="712" >                        
+                        <VCardItem  class=" mx-auto w-full"     >
+                            <div v-if="!!userEntity == false" class="  flex flex-col place-items-center "   >
+                                 <p class="!max-w-[230px] text-pretty my-3" >To submit a request for a new Entity </p>  
+                                <VSheet class="flex gap-3 align-center justify-center  rounded-lg my-3 pa-5" border width="230"  >
+                                    <span class="flex place-content-center" >Click</span>
+                                    <Icon  icon="gg:menu-grid-o" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" /> 
+                                    <Icon  icon="garden:chevron-right-fill-12" width="12" height="12" class="!text-neutral-500 dark:!text-neutral-300" /> 
+                                    <Icon  icon="fluent:organization-48-filled" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" />
+                                </VSheet>
+                                <Divider align="center" type="dotted"   :dt="{border:{color:'{neutral.500}'}, content:{background:'{neutral.100}'} }" >
+                                     <span>Or</span>
+                                </Divider>
+                                <p class="!max-w-[230px] text-pretty my-3" > Contact Admin to assign you to an exiting Entity </p>     
+                                                    
+                            </div>
+
+                            <div v-else class="  flex flex-col place-items-center "   >
+                                <VSheet class="flex gap-3 align-center justify-center  rounded-lg my-3 pa-5" border width="230"  >
+                                    <span class="flex place-content-center" >Click</span>
+                                    <Icon  icon="gg:menu-grid-o" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" /> 
+                                    <Icon  icon="garden:chevron-right-fill-12" width="12" height="12" class="!text-neutral-500 dark:!text-neutral-300" /> 
+                                    <Icon  icon="line-md:map-marker-plus-filled" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" />
+                                </VSheet>
+                                
+                                <p class="!max-w-[230px] text-pretty my-3" >To submit a request for a new Site </p>                                
+                            </div>
+                        </VCardItem>
+                    </VCard>
                 </VCol>
             </VRow>
             
- 
+
             <VRow  >
                 <VDialog v-model="openSiteSearch" transition="dialog-bottom-transition" width="500" persistent >
-                    <!-- SEARCH SITE -->
                     <template v-slot:default="{ isActive }">
                         <VCard >
                             <VToolbar >
-                                <VTextField v-model="siteSearchPages.search" clearable variant="solo-inverted" rounded="lg" placeholder="Search for a Site ..." class="text-caption mx-1" hide-details >
+                                <VTextField v-model="siteSearchPages.search" variant="solo-inverted" rounded="lg" placeholder="Search for a Site ..." class="text-caption mx-1" hide-details >
                                     <template #append-inner >
                                         <Icon icon="tdesign:map-search-filled" width="24" height="24" />
                                     </template>
                                 </VTextField>
-                                <template #clear >
-                                        <VIcon icon="mdi:mdi-close-circle" @click="siteSearchPages.search = ''" size="16"></VIcon>
-                                    </template>
                             </VToolbar>
 
                             <VCardItem>
@@ -127,91 +149,13 @@
                                             <VIcon v-else icon="mdi:mdi-map-marker-multiple" class="text-red-700 dark:text-red-400" title="Disabled"  />
                                         </template>
                                         <template #append>        
-                                            <VBtn  flat rounded="lg" variant="tonal" color="tertiary" @click="router.push({name:'Site',params:{id: site.id}})" icon="mdi:mdi-open-in-new" density="compact" class="text-none text-sm" />
+                                            <VBtn  flat rounded="lg" variant="tonal" color="tertiary" @click="router.push({name:'ProfileSite',params:{id: site.id}})" icon="mdi:mdi-open-in-new" density="compact" class="text-none text-sm" />
                                         </template>
                                     </VListItem>
                                 </VList>
                             </VCardItem>
-                            <VCardItem >
-                                
+                            <VCardItem >                                
                                 <VPagination v-model="siteSearchPages.page"  v-if="siteSearchPages.count > 0" :length="siteSearchPages.count" density="compact" @click="AppStore.getPage(siteSearchPages.page)"  :total-visible="7"></VPagination>
-                            </VCardItem>
-
-                            <VCardActions class="justify-end">
-                                <VBtn text="Close" @click="isActive.value = false" ></VBtn>
-                            </VCardActions>
-                        </VCard>
-                    </template>
-                </VDialog>
-
-                <VDialog v-model="openEntitySearch" transition="dialog-bottom-transition" width="500" persistent >
-                    <!-- SEARCH ENTITY -->
-                    <template v-slot:default="{ isActive }">
-                        <VCard >
-                            <VToolbar >                               
-                                <VTextField v-model="entitySearchPages.search" clearable variant="solo-inverted" rounded="lg" placeholder="Search for a Site ..." class="text-caption mx-1" hide-details >
-                                    <template #append-inner >
-                                        <Icon icon="mdi:home-search" width="24" height="24" />
-                                    </template>
-                                    <template #clear >
-                                        <VIcon icon="mdi:mdi-close-circle" @click="entitySearchPages.search = ''" size="16"></VIcon>
-                                    </template>
-                                </VTextField>
-                            </VToolbar>
-
-                            <VCardItem>
-                                 <PanelMenu :model="searchMenuItems" multiple class="w-full md:w-96"  >
-                                    <template #item="{ item }">
-                                        <a v-if="item.type == 'main'" v-ripple class="flex justify-between align-center px-4 py-2 cursor-pointer group">
-                                            <div class="ml-2 flex gap-3 place-content-center">
-                                                <Icon :icon="item.icon" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
-                                                <span :class="[{ 'font-semibold': item.items }]">{{ item.label  }}</span>  
-                                            </div>   
-
-                                            <div class="flex gap-3 place-content-center">
-                                                <span v-if="item.shortcut" class="ml-auto border border-surface rounded bg-emphasis text-muted-color text-xs p-1">{{ item.shortcut }}</span>
-                                                <Badge v-if="item.badge" class="ml-auto" :value="item.badge" />
-                                                <VBtn @click="openUpdateEntity = true; updateEntityReq.id = item.id; updateEntityReq.name = item.label; updateEntityReq.country = item.country" icon flat density="compact" variant="text"> 
-                                                    <Icon icon="tabler:edit" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
-                                                </VBtn>
-                                                <VBtn @click="openDeleteEntity = true; deleteEntityReq.name = _.toUpper(item.label);  deleteEntityReq.id = item.id" icon flat density="compact" variant="text"> 
-                                                    <Icon icon="ic:baseline-delete" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
-                                                </VBtn>
-                                            </div>  
-                                        </a>
-                                        <a v-else-if="item.type == 'countryLabel'" v-ripple class="flex items-center px-4 py-2 cursor-pointer group border-b">     
-                                            <span  >{{ item.label }}</span>
-                                        </a>
-                                        <a v-else-if="item.type == 'mainitems'" v-ripple class="flex items-center px-4 py-2 cursor-pointer group">                 
-                                            
-                                            <Icon :icon="item.icon" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
-                                            <span :class="['ml-2', { 'font-semibold': item.items }]">{{ item.label }}</span>                                
-                                            <Badge v-if="item.badge" class="ml-auto" :value="item.badge" />
-                                            <span v-if="item.shortcut" class="ml-auto border border-surface rounded bg-emphasis text-muted-color text-xs p-1">{{ item.shortcut }}</span>
-                                        </a>
-                                        <!-- AppStore.setSPSS(site) -->
-                                        <a v-else v-ripple class="flex items-center px-4 py-2 cursor-pointer group" @click="setMarkerOnListMap(item.lat,item.lon)">
-                                            <div class="flex justify-between  w-full" >
-                                                <span :class="['ml-2', { 'font-semibold': item.items }]">{{ item.label }}</span>
-                                                <div class="flex gap-3">
-                                                    <VBtn @click="router.push({name:'Site',params:{id: item.site}})" icon flat density="compact" variant="text"> 
-                                                        <Icon :icon="item.icon" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
-                                                    </VBtn>
-                                                    <VBtn @click="openDeleteSite = true; deleteSiteReq.name = _.toUpper(item.label); deleteSiteReq.entity = _.toUpper(item.name); deleteSiteReq.id = item.site" icon flat density="compact" variant="text"> 
-                                                        <Icon icon="ic:baseline-delete" class="!text-neutral-600 dark:!text-neutral-400" width="24" height="24"  />
-                                                    </VBtn>
-                                                </div>
-                                            </div>                                    
-                                        
-                                            <Badge v-if="item.badge" class="ml-auto" :value="item.badge" />
-                                            <span v-if="item.shortcut" class="ml-auto border border-surface rounded bg-emphasis text-muted-color text-xs p-1">{{ item.shortcut }}</span>
-                                        </a>
-                                    </template>
-                                </PanelMenu> 
-                            </VCardItem>
-                            <VCardItem >
-                                
-                                <VPagination v-model="entitySearchPages.page"  v-if="entitySearchPages.count > 0" :length="entitySearchPages.count" density="compact" @click="AppStore.getPageEntity(entitySearchPages.page)"  :total-visible="7"></VPagination>
                             </VCardItem>
 
                             <VCardActions class="justify-end">
@@ -225,7 +169,7 @@
                     <template v-slot:default="{ isActive }">
                         <VCard  > 
                             <VCardTitle class="h-[300px] pa-2 rounded-lg" >
-                                <div :id="sitemapcontainer" class="size-full rounded-lg"  ></div>
+                                <div id="sitemap" class="size-full rounded-lg"  ></div>
                             </VCardTitle>
 
                             <VCardSubtitle class=" px-2 pt-3">
@@ -239,7 +183,7 @@
                             </VCardText>
 
                             <VCardActions class="justify-end pa-4">
-                                <VBtn text="Submit" @click="addSite()" class="text-none font-bold"  :disabled="enableSiteCreateBtn" :loading="createSiteLoading"  ></VBtn>
+                                <VBtn text="Submit" @click="siteRequest()" class="text-none font-bold"  :disabled="enableSiteCreateBtn" :loading="createSiteRequestLoading"  ></VBtn>
                                 <VBtn text="Cancel" @click="isActive.value = false"   class="text-none"></VBtn>                          
                             </VCardActions>
                         </VCard>
@@ -250,13 +194,14 @@
                     <!-- CREATE ENTITY -->
                     <template v-slot:default="{ isActive }">
                         <VCard  > 
+
                             <VCardSubtitle class=" px-2 pt-3">
-                                <p class=" text-2xl font-light"  style="font-family: Nunito;" >Create Entity</p>
+                                <p class=" text-2xl font-light"  style="font-family: Nunito;" >New Entity Request</p>
                             </VCardSubtitle>
 
-                            <VCardText class="pb-0 px-2 flex flex-col gap-2 [&>*]:min-h-[50px]">
-                                <VTextField v-model="createEntity.name" label="Name" :rules = "rules('Name')"  class="rounded-lg border border-neutral-600 dark:border-neutral-50 overflow-clip" density="compact" variant="solo-inverted"  flat clearable />    
-                                <VTextField v-model="createEntity.organization" label="Organization" class="rounded-lg border border-neutral-600 dark:border-neutral-50 overflow-clip" density="compact" variant="solo-inverted"  flat hide-details clearable />                             
+                            <VCardText class="px-2 flex flex-col gap-2 [&>*]:min-h-[50px] ">
+                                <VTextField v-model="createEntity.name" label="Name" :rules = "rules('Name')"   class="rounded-lg border  border-neutral-600 dark:border-neutral-50  overflow-clip" density="compact" variant="solo-inverted"  flat  clearable />    
+                                <VTextField v-model="createEntity.organization" label="Organization" class="rounded-lg border   border-neutral-600 dark:border-neutral-50 overflow-clip" density="compact" variant="solo-inverted"  flat hide-details clearable />                             
                                 <Select v-model="createEntity.country" :options="caribbeanCountries" optionLabel="name" optionValue="code"  checkmark :highlightOnSelect="false" placeholder="Select a Country" class="w-full" pt:overlay="!z-[5000]" />
                             </VCardText>
 
@@ -272,8 +217,9 @@
                     <!-- UPDATE ENTITY -->
                     <template v-slot:default="{ isActive }">
                         <VCard  > 
+
                             <VCardSubtitle class=" px-2 pt-3">
-                                <p class=" text-2xl font-light"  style="font-family: Nunito;" >Update Entity</p>
+                                <p class=" text-2xl font-light"  style="font-family: Nunito;" >Update Entity Request</p>
                             </VCardSubtitle>
 
                             <VCardText class="pb-0 px-2 flex flex-col gap-2  [&>*]:min-h-[50px]">
@@ -290,27 +236,6 @@
                     </template>
                 </VDialog>
 
-                <VDialog v-model="openDeleteSite" class="mx-5" transition="dialog-bottom-transition" width="100%" max-width="400"  persistent  >
-                <!-- DELETE SITE -->
-                    <VCard   class="border-t-4border-rose-600 dark:border-rose-300 " density="compact"  > 
-                
-                    <template #title >
-                        <div class="flex place-content-center" >
-                            <Icon icon="mdi:delete-empty" class="!text-neutral-600 dark:!text-neutral-400" width="64" height="64"  />
-                        </div>
-                    
-                    </template>
-                    <template #text >
-                        <p >You are about to  <strong class="font-bold text-rose-700" > Delete </strong> {{ _.toUpper(deleteSiteReq.name) }} from {{ _.toUpper(deleteSiteReq.entity) }}. Are you sure you want to continue?</p>
-                    </template>
-
-                        <template v-slot:actions>
-                        <VBtn text="Delete" class="text-subtitle-2" color="onSurface" width="100" :loading="deleteSiteLoading" @click="deleteSite()" />
-                        <VBtn text="Cancel" class="text-subtitle-2" color="onSurface" width="100"    @click="openDeleteSite = false" />  
-                        </template>
-                    </VCard>
-                </VDialog>
-
                 <VDialog v-model="openDeleteEntity" class="mx-5" transition="dialog-bottom-transition" width="100%" max-width="400"  persistent  >
                     <!-- DELETE ENTITY -->
                         <VCard   class="border-t-4border-rose-600 dark:border-rose-300 " density="compact"  > 
@@ -322,7 +247,7 @@
                         
                         </template>
                         <template #text >
-                            <p >You are about to  <strong class="font-bold text-rose-700" > Delete </strong> {{ _.toUpper(deleteEntityReq.name) }} along with all associated Sites. Are you sure you want to continue?</p>
+                            <p >You are about to submit a request to <strong class="font-bold text-rose-700" > Delete </strong> {{ _.toUpper(deleteEntityReq.name) }} along with all associated Sites. Are you sure you want to continue?</p>
                         </template>
 
                             <template v-slot:actions>
@@ -332,58 +257,25 @@
                         </VCard>
                 </VDialog>
 
-                <VDialog v-model="openUserSearch" transition="dialog-bottom-transition" width="500" persistent >
-                <!-- SEARCH FOR A USER TO ASSIGN -->
-                    <template v-slot:default="{ isActive }">
-                        <VCard >
-                            <VToolbar >
-                                <VTextField v-model="userSearch.text" variant="solo-inverted" rounded="lg" :loading="accSearchLoading" placeholder="Search for a Site ..." class="text-caption mx-1" hide-details >
-                                    <template #append-inner >
-                                        <Icon icon="tdesign:map-search-filled" width="24" height="24" />
-                                    </template>
-                                </VTextField>
-                            </VToolbar>
+                <VDialog v-model="openDeleteSite" class="mx-5" transition="dialog-bottom-transition" width="100%" max-width="400"  persistent  >
+                    <!-- DELETE ENTITY -->
+                        <VCard   class="border-t-4border-rose-600 dark:border-rose-300 " density="compact"  > 
+                    
+                        <template #title >
+                            <div class="flex place-content-center  " >
+                                <Icon icon="mdi:delete-empty" class="!text-neutral-600 dark:!text-neutral-400" width="64" height="64"  />
+                            </div>
+                        
+                        </template>
+                        <template #text >
+                            <p >You are about to submit a request to <strong class="font-bold text-rose-700" > Delete</strong> the {{ _.toUpper(deleteSiteReq.name) }} site from your {{ _.toUpper(deleteSiteReq.entity) }} entity. Are you sure you want to continue?</p>
+                        </template>
 
-                            <VCardItem>
-                                <VList rounded="lg" density="compact"   variant="flat" class="relative mx-auto"  >
-                                
-                                    <div v-for="user in userSearch.result" >
-                                        <VHover>
-                                        <template v-slot:default="{ isHovering, props }">
-                                            <VListItem v-bind="props"  variant="text" :active="false" class="bg-neutral-100 dark:bg-neutral-600/[0.3] mb-2"   :key="user.id" :value="user.id"  border rounded="lg" >
-                                                <template #title >
-                                                    <div class="flex justify-start" >
-                                                        <span class="text-sm font-bold" >{{`${user.firstname}  ${user.lastname}`}}</span>                            
-                                                    </div>    
-                                                </template>
-                                                <template #subtitle >
-                                                    <div class="flex justify-start" >
-                                                        <span class="text-xs" >{{`${user.organization}, ${user.country}`}}</span>                            
-                                                    </div>    
-                                                </template>
-                                                
-                                                <template #prepend>        
-                                                    <!-- <VIcon v-if="site.enabled" icon="mdi:mdi-map-marker-multiple" class="text-green-700 dark:text-green-500" title="Enabled"  />
-                                                    <VIcon v-else icon="mdi:mdi-map-marker-multiple" class="text-red-700 dark:text-red-400" title="Disabled"  /> -->
-                                                </template>
-                                                <template #append>        
-                                                    <VBtn v-show="isHovering"  flat rounded="lg" text="Assign" variant="tonal" color="tertiary" @click="assignEntity.user = user.id; assignUsertoEntity($event)" :loading="assignLoading"  density="compact" class="text-none text-sm" />
-                                                </template>
-                                            </VListItem>
-                                        </template>
-                                        </VHover>
-                                    </div>
-                                    
-                                
-                                
-                                </VList>
-                            </VCardItem> 
-
-                            <VCardActions class="justify-end">
-                                <VBtn text="Close" @click="isActive.value = false" ></VBtn>
-                            </VCardActions>
+                            <template v-slot:actions>
+                            <VBtn text="Delete" class="text-subtitle-2" color="onSurface" width="100" :loading="deleteSiteLoading" @click="siteDeletionRequest" />
+                            <VBtn text="Cancel" class="text-subtitle-2" color="onSurface" width="100"    @click="openDeleteSite = false" />  
+                            </template>
                         </VCard>
-                    </template>
                 </VDialog>
             </VRow>
             
@@ -396,7 +288,7 @@
      
 </template>
 
-<script setup>
+<script setup >
 // IMPORTS   
 import { storeToRefs } from 'pinia';
 import { useAppStore } from '@/stores/appStore';
@@ -422,23 +314,18 @@ const UserStore         = useUserStore();
 const AppStore          = useAppStore();
 const toast             = useToast(); 
 const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
+const {userEntity,userEntities}    = storeToRefs(UserStore);
 const {
     spss,
     sitePages,
-    siteSearchPages,    
+    siteSearchPages,
     entityPages,
     entitySearchPages,
     createSiteLoading,
-    createEntityLoading,
     openCreateEntity,
     openSiteSearch,
-    openEntitySearch,
     openCreateSite,
-    entities,
-    userSearch,
-    accSearchLoading, 
     caribbeanCountries}   = storeToRefs(AppStore);
-const openDeleteSite    = ref(false);
 const compToRender      = ref({"selected": "registering","init":false, "list":[{"text":"New Registrations","name":"registering","component":"NewAccounts"}, {"text":"Accounts","name":"accounts","component":"Accounts"}]})
 const tab               = ref(""); 
 const blueIcon          = ref(null);
@@ -450,85 +337,32 @@ const createSiteMarker  = shallowRef(null);
 const listSiteMarker    = shallowRef(null);
 const mymap             = shallowRef(null);
 const listmap           = shallowRef(null);
-const deleteSiteReq     = ref({"id":"","name":"","entity":""});
-const deleteEntityReq   = ref({"id":"","name":""});
-const deleteSiteLoading = ref(false);
-const deleteEntityLoading = ref(false);
-const updateEntityLoading = ref(false);
-const openUpdateEntity    = ref(false);
-const openUserSearch    = ref(false);
-const assignLoading     =  ref(false);
+ 
 const mapcontainer      = ref(`container${_.random(0,100000)}`);
-const sitemapcontainer  = ref(`container${_.random(0,100000)}`);
 const mtLayer           = new MaptilerLayer( {
                                 apiKey: 'MacqP5qqahFSZdWB6tSq', // https://cloud.maptiler.com/maps/landscape/    https://docs.maptiler.com/leaflet/examples/vector-tiles-in-leaflet-js/
                                 style: MaptilerStyle.STREETS.DARK //https://docs.maptiler.com/sdk-js/examples/built-in-styles/
                             } ); 
-const assignEntity      = reactive({user:"",  entity:""}); 
+const deleteEntityReq   = ref({"id":"","name":""});
+const deleteSiteReq     = reactive({"id":"","name":"","entity":""});
+const deleteSiteLoading = ref(false);
+const deleteEntityLoading = ref(false);
+const updateEntityLoading = ref(false);
+const createEntityLoading = ref(false);
+const openUpdateEntity  = ref(false);
+const openDeleteSite    = ref(false);
+const createEntity      = reactive({name:"", country:"", organization: "" });  
 const createSite        = reactive({name:"", lat:"0",lon:"0", entity:""}); 
-const createEntity      = reactive({name:"", country:"", organization: "" });   
 const updateEntityReq   = reactive({name:"", country:"", organization: "", id:""});  
-const openDeleteEntity  = ref(false);
-let searchTextID, timeoutVal = 1000; 
-let entitySearchTextID, entityTimeoutVal = 1000; 
 
+const openDeleteEntity  = ref(false);
 const enableEntitySubmitButton  = ref(false); 
 const enableEntityUpdateSubmitButton  = ref(false); 
 
-const items = ref([
-    {
-        label: 'cimh',
-        icon: 'pi pi-file',
-        items: [
-            { label: 'Add Site', icon:"fluent:slide-add-32-filled", command: () => { openCreateSite.value = true; createSite.entity = "one"} },
-            {
-                label: 'Debbles',
-                icon: 'pi pi-file',
-            },
-            {
-                label: 'Ragged',
-                icon: 'pi pi-image',
-            }
-        ]
-    },
-    {
-        label: 'Massey Distr',
-        icon: 'pi pi-cloud',
-        items: [
-            {
-                label: 'Warrens',
-                icon: 'pi pi-cloud-upload'
-            },
-            {
-                label: 'Bridgetown',
-                icon: 'pi pi-cloud-download'
-            },
-            {
-                label: 'Holetown',
-                icon: 'pi pi-refresh'
-            }
-        ]
-    },
-    {
-        label: 'Caves',
-        icon: 'pi pi-desktop',
-        items: [
-            {
-                label: 'Harrisons',
-                icon: 'pi pi-mobile'
-            },
-            {
-                label: 'Chukka',
-                icon: 'pi pi-desktop'
-            },
-            {
-                label: 'YS Falls',
-                icon: 'pi pi-tablet'
-            }
-        ]
-    }
-]);
+let searchTextID, timeoutVal = 1000; 
 
+const createSiteRequestLoading = ref(false);
+const requestLoading     = ref(false);
 
 // VALIDATION CONFIG 
 const errors      = reactive({name:"", errors: []}); 
@@ -536,7 +370,7 @@ let entitySchema = object({
   name: string().required(' required!').min(3, 'Minimum 3 characters').required().matches(/^[A-Za-z]+$/, 'Letters only. No space'),
 });
 
-
+ 
 
 // PROPS
 const props = defineProps({
@@ -577,11 +411,13 @@ watch(()=> updateEntityReq.name,async (entity)=> {
        
 })
 
+
+
 watch(openCreateSite,  (state) => {
     if(state){
 
         setTimeout(()=> {
-            mymap.value = map(sitemapcontainer.value,{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
+            mymap.value = map('sitemap',{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
             
             // /*
             tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -636,38 +472,6 @@ watch( () => siteSearchPages.value.search, async (text) => {
     }
 });
 
-watch( () => entitySearchPages.value.search, async (text) => {   
-   
-    clearTimeout(searchTextID); // prevent errant multiple timeouts from being generated
-    if(!!text || text == ''){   
-        if(text.length > 0){
-            entitySearchTextID = setTimeout(async () => {
-            // SEND QUERY ONLY IF TEXT PASSES REGEX. THIS FILTERS OUT INVALID TEXT QUERIES
-            if(/^[A-Za-z0-9]*$/.test(text) ){
-                entitySearchPages.page = 0;
-                await AppStore.getPageCountEntity(true);
-                await AppStore.getPageEntity(1,true);
-            }
-                }, entityTimeoutVal);
-        }     
-    }
-});
-
-watch( () => userSearch.value.text, async (text) => {   
-    console.log(text)
-    clearTimeout(searchTextID); // prevent errant multiple timeouts from being generated
-    if(!!text || text == ''){   
-        if(text.length > 0){
-            searchTextID = setTimeout( async () => {
-            // SEND QUERY ONLY IF TEXT PASSES REGEX. THIS FILTERS OUT INVALID TEXT QUERIES
-            if(/^[A-Za-z0-9]*$/.test(text) ){               
-                await AppStore.searchUser(text);                
-            }
-                }, timeoutVal);
-        }     
-    }
-});
-
 // COMPUTED PROPERTIES 
 const menuItems = computed(() =>{
     let list = [];
@@ -677,7 +481,7 @@ const menuItems = computed(() =>{
         allEntity.forEach((entity) => {
             let item = {"label": entity.name, "type":"main","country":entity.code,"organization": entity.organization,"icon":"iconamoon:location-pin-duotone","id": entity.id,"items":[{ label: entity.country, type:"countryLabel"},{ label: 'Add Site',"type":"mainitems","country":entity.country, icon:"fluent:slide-add-32-filled", command: () => { openCreateSite.value = true; createSite.entity = entity.id} }]}
             
-            entity.sites.forEach( site => item.items.push({"label": site.name, "icon": "eva:external-link-outline","type":"site", "site": site.id,"name": entity.name, "lat": site.lat,"lon": site.lon}));  // command: ()=> {router.push({name:'Site',params:{id: site.id}}) }
+            entity.sites.forEach( site => item.items.push({"label": site.name, "icon": "eva:external-link-outline","type":"site", "site": site.id,"name": entity.name, "lat": site.lat,"lon": site.lon}));  
             
             item["badge"] = (item.items.length > 2)? item.items.length -2 : 0
             list.push(item);
@@ -702,7 +506,6 @@ const searchMenuItems = computed(() =>{
         }); 
     return list
 })
-
 const enableSiteCreateBtn = computed(() => 
      {
        
@@ -714,8 +517,7 @@ const enableSiteCreateBtn = computed(() =>
      } 
   ) 
 
-
-  const enableEntityCreateBtn = computed(() =>  {       
+const enableEntityCreateBtn = computed(() =>  {       
       if(!!createEntity.name && !!createEntity.country && !!createEntity.organization && !!enableEntitySubmitButton.value ){
         if(createEntity.name.length >= 3 && createEntity.country.length == 2 && createEntity.organization.length >= 3 )
             return false
@@ -733,7 +535,6 @@ const enableSiteCreateBtn = computed(() =>
      } 
   ) 
 
-  
 const renderComp = computed(() => 
      {
       if(compToRender.value.selected == 'registering')
@@ -751,115 +552,50 @@ const activeState = computed(() => {
         if(selectedAccount.value.id == id){
             return true
         }
-    }    
+    }
+    
     return false
     }
 }); 
 
+const longitude = computed(()=> {
+    let res = "";
+    if(!!spss.value){
+        if(!!spss.value.lon)
+            return spss.value.lon
+    }
+    return res
+})
+
+const latitude = computed(()=> {
+    let res = "";
+    if(!!spss.value){
+        if(!!spss.value.lat)
+            return spss.value.lat
+    }
+    return res
+})
+
 
 // FUNCTIONS
-const deleteSite = async () => {
-    let result = await AppStore.removeSite(deleteSiteReq.value.id,deleteSiteLoading);
- 
-    switch (result) {
-        case "deleted":   
-            AppStore.getPageCountEntity();
-            AppStore.getPageEntity(1);
-            // AppStore.getEntities();                    
-            openDeleteSite.value = false;
-            deleteSiteReq.value.entity = "";
-            deleteSiteReq.value.id = "";
-            deleteSiteReq.value.name = "";
-            
-            toast.add({ severity: 'success', summary: 'DELETED', detail: 'Successfully deleted SITE!', life: 3000 });             
-            break;
-        
-        case "failed":             
-            openDeleteSite.value = false;
-            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to delete SITE!', life: 3000 });         
-            break;  
-
-        default:
-            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Request failed!', life: 3000 });  
-            break;
-    }
-}
-
-const deleteEntity = async () => {
-    let result = await AppStore.removeEntity(deleteEntityReq.value.id,deleteEntityLoading);
- 
-    switch (result) {
-        case "deleted":   
-            AppStore.getPageCountEntity();
-            AppStore.getPageEntity(1);
-            // AppStore.getEntities();                    
-            openDeleteEntity.value = false; 
-            deleteEntityReq.value.id = "";
-            deleteEntityReq.value.name = "";
-            
-            toast.add({ severity: 'success', summary: 'DELETED', detail: 'Successfully deleted ENTITY!', life: 3000 });             
-            break;
-        
-        case "failed":             
-            openDeleteEntity.value = false;
-            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to delete ENTITY!', life: 3000 });         
-            break;  
-
-        default:
-            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Request failed!', life: 3000 });  
-            break;
-    }
-}
-
-const addSite = async () => {
-    let result = await AppStore.createSite(createSite.name, createSite.lat, createSite.lon, createSite.entity);
-
-    switch (result) {
-        case "added":
-            AppStore.getPageCountEntity();
-            AppStore.getPageEntity(1);
-            AppStore.getEntities();
-            openCreateSite.value = false;
-            createSite.name  = "";
-            createSite.lat  = "0";
-            createSite.lon  = "0";
-            createSite.entity = "";
-            toast.add({ severity: 'success', summary: 'CREATED', detail: 'Successfully created new SITE!', life: 3000 });             
-            break;
-        
-        case "failed":
-            openCreateSite.value = false;
-            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to create new SITE!', life: 3000 });         
-            break;  
-
-        default:
-            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Request failed!', life: 3000 });  
-            break;
-    }
-}
-
-
 const addEntity = async () => {
-    let result = await AppStore.createEntity(createEntity.name, createEntity.country, createEntity.organization);
+    let result = await AppStore.submitRequest("createentity",createEntity,requestLoading);
  
     switch (result) {
-        case "created":
-            AppStore.getPageCountEntity();
-            AppStore.getPageEntity(1);
-            // AppStore.getEntities();  
+        case "submitted": 
             openCreateEntity.value      = false;
             createEntity.name           = "";
             createEntity.country        = ""; 
             createEntity.organization   = "";
-            toast.add({ severity: 'success', summary: 'CREATED', detail: 'Successfully created new Entity!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Entity! request submitted', life: 3000 });             
             break;
         
         case "exist":
-            openCreateEntity.value      = false;
+            openCreateSite.value        = false;
             createEntity.name           = "";
             createEntity.country        = ""; 
             createEntity.organization   = "";
-            toast.add({ severity: 'success', summary: 'EXIST', detail: 'ENTITY already exist!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'EXIST', detail: 'Request already exist!', life: 3000 });             
             break;
 
         case "failed":
@@ -872,25 +608,30 @@ const addEntity = async () => {
             break;
     }
 }
- 
+
 const updateEntity = async () => {
-    let result = await AppStore.updateEntity(updateEntityReq.name, updateEntityReq.country, updateEntityReq.id,updateEntityReq.organization, updateEntityLoading);
+    let result = await AppStore.submitRequest("updateentity", updateEntityReq, updateEntityLoading);
  
     switch (result) {
-        case "updated":
-            AppStore.getPageCountEntity();
-            AppStore.getPageEntity(1);
-            // AppStore.getEntities();  
-            openUpdateEntity.value = false;
-            updateEntityReq.name  = "";
-            updateEntityReq.country  = ""; 
-            updateEntityReq.id = "";
-            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Successfully updated Entity!', life: 3000 });             
+        case "submitted":
+            openUpdateEntity.value      = false;
+            updateEntityReq.name        = "";
+            updateEntityReq.country     = ""; 
+            updateEntityReq.id          = "";
+            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Successfully submitted Entity! updated request', life: 3000 });             
             break;
-     
+
+        case "exist":
+            openUpdateEntity.value      = false;
+            updateEntityReq.name        = "";
+            updateEntityReq.country     = ""; 
+            updateEntityReq.id          = "";
+            toast.add({ severity: 'success', summary: 'EXIST', detail: 'ENTITY updated request already exist!', life: 3000 });             
+            break;
+
         case "failed":
             openUpdateEntity.value = false;
-            toast.add({ severity: 'success', summary: 'FAILED', detail: 'Unable to update new Entity!', life: 3000 });         
+            toast.add({ severity: 'success', summary: 'FAILED', detail: 'Unable to submit update Entity! request', life: 3000 });         
             break;  
 
         default:
@@ -899,23 +640,27 @@ const updateEntity = async () => {
     }
 }
 
-const assignUsertoEntity = async () => {
-    let result = await AppStore.assignUserToEntity(assignEntity.user,assignEntity.entity, assignLoading);
+const deleteEntity = async () => {
+    let result = await AppStore.submitRequest("deleteentity",deleteEntityReq.value,deleteEntityLoading);
  
     switch (result) {
-        case "assigned":                       
-            openUserSearch.value = false;
-            toast.add({ severity: 'success', summary: 'COMPLETED', detail: 'Successfully ASSIGNED/UNASSIGNED user to Entity!', life: 3000 });             
+        case "submitted":                     
+            openDeleteEntity.value      = false; 
+            deleteEntityReq.value.id    = "";
+            deleteEntityReq.value.name  = "";            
+            toast.add({ severity: 'success', summary: 'DELETED', detail: 'Successfully submitted ENTITY! deletion request', life: 3000 });             
             break;
         
-        case "deassigned":                       
-            openUserSearch.value = false;
-            toast.add({ severity: 'success', summary: 'COMPLETED', detail: 'Successfully ASSIGNED/UNASSIGNED user to Entity', life: 3000 });             
+        case "exist":
+            openDeleteEntity.value      = false; 
+            deleteEntityReq.value.id    = "";
+            deleteEntityReq.value.name  = "";
+            toast.add({ severity: 'success', summary: 'EXIST', detail: 'ENTITY deletion request already exist!', life: 3000 });             
             break;
-        
+
         case "failed":             
-            openUserSearch.value = false;
-            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to ASSIGN/UNASSIGN user account', life: 3000 });         
+            openDeleteEntity.value = false;
+            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to submit deletion ENTITY!', life: 3000 });         
             break;  
 
         default:
@@ -924,6 +669,59 @@ const assignUsertoEntity = async () => {
     }
 }
 
+const siteRequest = async () => {
+    createSite.entity = userEntity.value
+    let result = await AppStore.submitRequest("createsite" ,createSite , createSiteRequestLoading);
+ 
+    switch (result) {
+        case "submitted":
+            // AppStore.getPageCount();
+            // AppStore.getPage(1);
+            openCreateSite.value = false;
+            createSite.name  = "";
+            createSite.lat  = "0";
+            createSite.lon  = "0";
+            createSite.entity = ""
+            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Successfully submitted request for new SITE!', life: 3000 });             
+            break;
+        
+        case "failed":
+            // AppStore.getPageCount();
+            // AppStore.getPage(1);
+            openCreateSite.value = false;
+            toast.add({ severity: 'success', summary: 'FAILED', detail: 'Unable to submit new SITE request', life: 3000 });         
+            break;  
+
+        default:
+            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Request failed!', life: 3000 });  
+            break;
+    }
+}
+
+const siteDeletionRequest = async () => {
+    createSite.entity = userEntity.value
+    let result = await AppStore.submitRequest("deletesite" , deleteSiteReq , createSiteRequestLoading);
+ 
+    switch (result) {
+        case "submitted": 
+            openDeleteSite.value    = false;
+            deleteSiteReq.name      = "";
+            deleteSiteReq.entity    = "";
+            deleteSiteReq.id        = "";
+            
+            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Successfully submitted request for SITE! deletion', life: 3000 });             
+            break;
+        
+        case "failed": 
+            openDeleteSite.value = false;
+            toast.add({ severity: 'success', summary: 'FAILED', detail: 'Unable to submit SITE deletion request', life: 3000 });         
+            break;  
+
+        default:
+            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Request failed!', life: 3000 });  
+            break;
+    }
+}
 
 const createIcon = (name) => {      
     return new L.Icon({
@@ -957,7 +755,10 @@ const setMarkerOnListMap = (lat, lon) => {
        
 }
 
-onBeforeMount(()=>{
+onBeforeMount(()=> {
+    // AppStore.getEntities();
+    // AppStore.getPageCount();
+    // AppStore.getPage(1);
     AppStore.getEntities();
     AppStore.getPageCountEntity();
     AppStore.getPageEntity(1);
@@ -982,20 +783,21 @@ onMounted(() => {
     
     // /*
     tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'tedwardsuwi/cl0d2e6io000t14qntylpu4j4',
-                tileSize: 512,
-                zoomOffset: -1,
-                accessToken: 'pk.eyJ1IjoidGVkd2FyZHN1d2kiLCJhIjoiY2x3Y3RqMXY1MHpuNTJxcDA4emQ0ejQycCJ9.t-ENJ58Apo7e4gfhEidE8A'
-            }).addTo(listmap.value);
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'tedwardsuwi/cl0d2e6io000t14qntylpu4j4',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: 'pk.eyJ1IjoidGVkd2FyZHN1d2kiLCJhIjoiY2x3Y3RqMXY1MHpuNTJxcDA4emQ0ejQycCJ9.t-ENJ58Apo7e4gfhEidE8A'
+    }).addTo(listmap.value);
     // */    
     // mtLayer.addTo(mymap.value) 
 
  
 })
 
- const rules =  (name) => {   
+ 
+const rules =  (name) => {   
     if(name == "Name"){     
           if(errors.name == "name"){
             return errors.errors
@@ -1012,6 +814,7 @@ onMounted(() => {
 body {
     font-family: Nunito;
 }
+
 
  
 </style>

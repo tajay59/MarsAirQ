@@ -106,7 +106,7 @@ const getAllSites = async (userID, cookie) => {
             else if(data == "aborted") {
                 console.log(`${funcName}: Request aborted`);
                 // PUSH NOTIFICATION 
-                setTimeout( () => { getAllSites(userID, cookie,name)} ,5000); 
+                setTimeout( () => { getAllSites(userID, cookie)} ,5000); 
             }
         } 
 

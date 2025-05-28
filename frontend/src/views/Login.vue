@@ -261,7 +261,7 @@ const userLogin = async ()=>{
            
                 if( data['status'] === "loggedIn"  ){ 
                     
-                  router.replace(route.query.redirect || {name:"Home"});                       
+                                       
                     // UPDATE PINIA STOREs
                     UserStore.loggedIn  = true;
                     UserStore.user      = data['username'];
@@ -271,6 +271,8 @@ const userLogin = async ()=>{
                     UserStore.suball    = data['suball'];
                     UserStore.image     = data['image'];
                     UserStore.mqtt_sub_credentials = data['web'];
+                    UserStore.userEntities = [...data['entities']];
+                    UserStore.userEntity = data["entity"]
                     Mqtt.username = data['web']['username'];
                     Mqtt.password = data['web']['password'];
                     // Mqtt.connect();
@@ -282,14 +284,13 @@ const userLogin = async ()=>{
                   
 
                     // REDIRECT TO EXPLORE PAGE SINCE LOGIN IS SUCCESSFUL 
-                    // setTimeout(()=>{router.replace(route.query.redirect || {name:"Home"});}, 1000);
+                    router.replace(route.query.redirect || {name:"Home"});  
                     
                 }
                 
                 else if(data['status'] === "failed" ){    
                   // PUSH NOTIFICATION  
-                  toast.add({ severity: 'error', summary: 'Signin Failed', detail: '', life: 3000 });    
-                  
+                  toast.add({ severity: 'error', summary: 'Signin Failed', detail: '', life: 3000 });                 
                     
                 } 
                 else if(data['status'] === "accountDoesNotExist"  ){   

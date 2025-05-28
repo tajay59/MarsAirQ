@@ -158,8 +158,11 @@ const POST = async ( URL, body, headers) => {
     let allHeaders      = { "X-CSRF-TOKEN": cookie ,"X-User": UserStore.userType, ...headers }
 
     let user = UserStore.user
-        
-    if(user === undefined || user === null || !!!user){
+    
+    if(['/api/get/signup/entities'].includes(URL)){
+      //Allow on Signup routes
+    }
+    else if(user === undefined || user === null || !!!user){
         controller.abort();
         localLogout();
     }

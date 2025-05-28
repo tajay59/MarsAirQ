@@ -74,17 +74,18 @@ const routes = [
   { path: '/login', name: 'Login', component: () => import('@/views/Login.vue'), },
   { path: '/signup', name: 'Signup', component: () => import('@/views/Signup.vue'), }, 
   { path: '/pr', name: 'PasswordReset', component: () => import('@/views/PasswordReset.vue'), meta:{ transition: 'fade'} },  
+  
   { path: '/profile', name: 'Profile', 
     component: () => import('@/components/Profile.vue'), 
     meta:{ resquiresAuth: true, transition: 'fade'},
     children: [
       { path: 'edit', name: 'Edit', component: () => import('@/components/profile/UserProfile.vue'), meta:{ resquiresAuth: true, transition: 'fade'} },
       { path: 'notifications', name: 'Notifications', component: () => import('@/components/profile/UserNotifications.vue'), meta:{resquiresAuth: true,  transition: 'fade'} }, 
-      { path: 'sites', name: 'ProfileSites', component: () => import('@/components/profile/Sites.vue'), meta:{ resquiresAuth: true, transition: 'fade'} },
+      { path: 'entities', name: 'ProfileEntities', component: () => import('@/components/profile/Entities.vue'), meta:{ resquiresAuth: true, transition: 'fade'} },
       { path: 'devices', name: 'Devices', component: () => import('@/components/profile/UserDevices.vue'), meta:{ resquiresAuth: true, transition: 'fade'} }, 
       { path: 'requests', name: 'Requests', component: () => import('@/components/profile/UserRequests.vue'), meta:{resquiresAuth: true,  transition: 'fade'} }, 
     ] },  
-    { path: '/profile/sites/:id', name: "ProfileSite", component: () => import('@/components/profile/Site.vue'), meta:{ resquiresAuth: true, transition: 'fade'} },
+    { path: '/profile/sites/:entity/:id', name: "ProfileSite", component: () => import('@/components/profile/Site.vue'), meta:{ resquiresAuth: true, transition: 'fade'} },
   /*
   {
     path: '/',

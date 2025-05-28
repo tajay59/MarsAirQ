@@ -3,7 +3,7 @@
   <VRow class="fill-height pa-0" >
     <VCol v-if="!smAndDown" cols="4" class="bg-neutral-800" >    
       
-      <Toast  position="bottom-right" />
+      
       <div class="my-10 h-[250px]" >
         <Transition name="fade" :duration="5000" >   
           <div class="" v-show="page >= 0 && page <= 1" >
@@ -44,7 +44,7 @@
     </VCol>
 
     <VCol :cols="(smAndDown)? '12': '8'" class="bg-blue pa-0" >
-      <VCarousel v-model="page" height="100%" hide-delimiter-background :show-arrows="false">
+      <VCarousel v-model="page" height="100%" hide-delimiter-background hide-delimiters :show-arrows="false">
         <VCarouselItem   key="0" >
           <VSheet height="100%" >
             <div class="d-flex flex-col fill-height justify-center align-center">
@@ -55,30 +55,58 @@
                   <template v-slot:subtitle>
                     <div class="nunito text-center text-sm">All fields are required</div>
                   </template>
-                  <VCardItem class="mt-15"  >
+                  <VCardItem class="mt-15"  > 
                     <form  @submit.prevent="onSubmit" id="signupForm" class="mt-1">     
                       <div v-for="field in signupForm" :key="field.label"   >
                         <VSelect
-                          v-if          = " field.label == 'Country'" 
-                          :items        = "countries" 
-                          border
-                            clearable
-                            flat 
-                            class         = "text-caption py-1 "
-                            rounded       = "xl"
-                            density       = "compact"
-                            :rules        = "rules(field.name)" 
-                            :label        = "field.label"     
-                            :variant      = "field.variant"                            
-                            :type         = "((field.name == 'Password' && showPasscode) || (field.name == 'PasswordConfirm' && showPasscodeConfirm) )? 'text':field.type"
-                            :name         = "field.name"              
-                            v-model       = "field.data"  
-                        >
-                        <template v-slot:clear>
-                          <VIcon icon="mdi:mdi-close-circle" @click="field.data = ''" size="16"></VIcon>
-                        </template>
-                      
-                      </VSelect>
+                            v-if          = " field.label == 'Country'" 
+                            :items        = "countries" 
+                            border
+                              clearable
+                              flat 
+                              class         = "text-caption py-1 "
+                              rounded       = "xl"
+                              density       = "compact"
+                              :rules        = "rules(field.name)" 
+                              :label        = "field.label"     
+                              :variant      = "field.variant"                            
+                              :type         = "((field.name == 'Password' && showPasscode) || (field.name == 'PasswordConfirm' && showPasscodeConfirm) )? 'text':field.type"
+                              :name         = "field.name"              
+                              v-model       = "field.data"  
+                          >
+                          <template v-slot:clear>
+                            <VIcon icon="mdi:mdi-close-circle" @click="field.data = ''" size="16"></VIcon>
+                          </template>                        
+                        </VSelect>
+
+                        <VSheet v-else-if= "field.label == 'Organization'" class=" mb-5"   >
+                          <FloatLabel variant="on">
+                            <AutoComplete   v-model="selectedOrganizations" optionLabel="organization" fluid dropdown placeholder="                        search" :suggestions="filteredOrganizations" @complete="search"  :pt="{root:'!text-purple-300 dark:!text-purple-200',dropdown: '!rounded-r-[50%]', chipItem: '!rounded-l-[50%] !text-purple-300 dark:!text-purple-200'}" style="width: 100%;" >
+                              <template #option="slotProps">
+                                  <div class="flex gap-2 place-content-center">
+                                    
+                                    <Icon :icon="getCountryIcon(slotProps.option.code)"  with="24" height="24"></Icon>
+                                    <span class="text-sm" >{{ slotProps.option.organization }}</span>
+                                  </div>
+                              </template>
+                              <template #header>
+                                  <div class="font-medium px-3 py-2">Available Companies</div>
+                              </template>
+                              <template #dropdownicon>         
+                                    <Icon icon="stash:search-split"  with="24" height="24"></Icon>
+                              </template>
+                              <template #footer>
+                                  <div class="px-3 py-3">
+                                      <!-- <Button label="Add New" fluid severity="secondary" text size="small" icon="pi pi-plus" /> -->
+                                  </div>
+                              </template>
+                          </AutoComplete>
+                            <label for="on_label">Organization</label>
+                        </FloatLabel>
+                          
+                        </VSheet>
+
+                     
 
                         <VTextField   
                             v-else                    
@@ -215,6 +243,7 @@
   import  type { InferType } from 'yup';
   import { useRoute, useRouter } from "vue-router";
   import { ref,reactive, onMounted,onBeforeMount,computed, watch} from 'vue'; 
+  import { Icon } from '@iconify/vue';
 
   // PINIA STORES
   import { storeToRefs } from 'pinia';
@@ -222,6 +251,7 @@
   import { useUserStore} from '@/stores/userStore';
   import { fa } from 'vuetify/lib/iconsets/fa.mjs'; 
   import { useToast } from 'primevue/usetoast';
+import { InputText } from 'primevue';
   
   
   // VARIABLES 
@@ -244,22 +274,25 @@
   const department        = ref("");  
   const verifying         = ref(false);
   const {darkmode}        = storeToRefs(UserStore);
-  const {caribbeanCountries} = storeToRefs(AppStore);
+  const {caribbeanCountries, signupEntities} = storeToRefs(AppStore);
   const snackbar           = reactive({"show":ref(false),"text":ref(""),"timeout": ref(3000),"color": ref("success")});
   const showPasscode          = ref(false);  
   const showPasscodeConfirm   = ref(false);  
   const enableSubmitButton  = ref(false); 
   const errors        = reactive({name:"", errors: []}); 
   const finished    = ref(false); 
+  // const organizations = ref();
+  const selectedOrganizations = ref();
+  const filteredOrganizations = ref();
 
 
-
- 
+  
+    
   const signupForm = reactive({
       "firstname": ref({"icon":"fa:fas fa-user","label":"First Name","hint":"Enter your first name", "type":"text","name":"Firstname","data":"","variant":variant}),
       "lastname": ref({"icon":"mdi","label":"Last Name","hint":"Enter your last name", "type":"text","name":"Lastname","data":"","variant":variant}),
       "email": ref({"icon":"mdi:mdi-email-variant","label":"E-mail","hint":"Enter your account E-mail address ", "type":"email","name":"Email","data":"","variant":variant}),
-      "organization": ref({"icon":"mdi mdi-office-building","label":"Organization","hint":"Enter the name your Organization", "type":"text","name":"Organization","data":"","variant":variant}),
+      "organization": ref({"icon":"mdi mdi-office-building","label":"Organization","hint":"Enter the name of your Organization", "type":"text","name":"Organization","data":"","variant":variant}),
       "country": ref({"icon":"mdi:mdi-earth","label":"Country","hint":"Select your Country", "type":"text","name":"Country","data":"","variant":variant}),
       "password": ref({"icon":"mdi:mdi","label":"Password","hint":"Enter your super secret password", "type":"password","name":"Password","data":"","variant":variant}),
       "passwordconfirm": ref({"icon":"mdi:mdi","label":"Confirm Password","hint":"Re-Enter your super secret password", "type":"password","name":"PasswordConfirm","data":"","variant":variant})
@@ -277,7 +310,7 @@
     firstname:  string;
     lastname: string;
     email: string;
-    organization: string;
+    // organization: string; 
     country: string;
     password: string;
     passwordconfirm:  string;
@@ -287,7 +320,7 @@
     passwordconfirm: string().required('Confirm password required!').min(8, 'Minimum 8 characters').matches(/[~`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Minimum 1 special character').matches(/.*[A-Z].*/, 'Minimum 1 capitalized letter'),
     password: string().required('No password provided.').min(8, 'Minimum 8 characters').matches(/[~`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Minimum 1 special character').matches(/.*[A-Z].*/, 'Minimum 1 capitalized letter'),
     country: string().min(2, 'Minimum 2 characters').optional().required("Country required!"),
-    organization: string().optional(),
+    // organization: string().optional(), 
     email: string().email('Please enter a valid E-mail').required("E-mail required!").matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, 'Enter a valid E-mail address'), //.test('staff email', 'Enter a valid E-mail address', (value) => { return value && !value.includes("cimh.edu.bb"); }),
     lastname: string().min(2, 'Minimum 2 characters').required("Lastname required!"),        
     firstname: string().min(2, 'Minimum 2 characters').required("Firstname required!")
@@ -302,8 +335,9 @@
   
   
  onBeforeMount(()=>{
-  theme.global.name.value = darkmode.value ?  'darkMode' : 'lightMode';
-  localStorage.setItem("theme",darkmode.value ? 'darkMode' : 'lightMode');  
+    theme.global.name.value = darkmode.value ?  'darkMode' : 'lightMode';
+    localStorage.setItem("theme",darkmode.value ? 'darkMode' : 'lightMode');  
+    AppStore.getEntitiesForSignup(); 
  });
   
   onMounted(() => {  
@@ -324,6 +358,16 @@ const countries = computed(() => {
   return list
 })
 
+const getCountryIcon = computed(() => {
+  return (code)=> {
+    let icon = "";
+    caribbeanCountries.value.forEach((country) => {
+      if(country.code == code)
+        icon = country.icon
+    });
+    return icon
+  }
+})
 
 // WATCHERS 
 
@@ -334,10 +378,13 @@ watch(verification,  (code) => {
   }
 });
 
+
+
 watch(signupForm,  async (form) => {
   // VERIFY CODE EMAILED TO USER
-   const person: Person = {firstname: form.firstname.data, lastname:form.lastname.data, email:form.email.data,organization:form.organization.data, country: form.country.data, password:form.password.data,  passwordconfirm: form.passwordconfirm.data}
 
+   const person: Person = {firstname: form.firstname.data, lastname:form.lastname.data, email:form.email.data, country: form.country.data, password:form.password.data,  passwordconfirm: form.passwordconfirm.data}
+    
    try {
     const user = await schema.validate(person, { strict: true });
     enableSubmitButton.value = true;
@@ -433,6 +480,18 @@ const seconds = computed(()=>{
 
   
 // FUNCTIONS
+const search = (event) => {
+    setTimeout(() => { 
+        if (!event.query.trim().length) {
+            filteredOrganizations.value = [...signupEntities.value];
+        } else {
+            filteredOrganizations.value = signupEntities.value.filter((entity) => {
+                return entity.organization.toLowerCase().startsWith(event.query.toLowerCase());
+            });
+        }
+    }, 250);
+}
+
 const onClickFinish = ()=> {
         finished.value = true
 
@@ -460,8 +519,13 @@ const onSubmit =  ()=> {
      
     let lForm           = document.querySelector<HTMLFormElement>("#signupForm") ;
     let form            = new FormData(lForm);  
-    // const request       = Object.fromEntries(form_data.entries());   
- 
+  
+    let entity          = (!!selectedOrganizations.value)? selectedOrganizations.value.id : ""
+    let organization    = (!!selectedOrganizations.value)? selectedOrganizations.value.organization : ""
+
+    form.set("Entity", entity);
+    form.set("Organization", organization);
+
     const URL           = '/api/verification' ; 
 
     // FETCH REQUEST WILL TIMEOUT AFTER 60 SECONDS 
@@ -549,6 +613,13 @@ const onSubmit =  ()=> {
     let lForm           = document.querySelector<HTMLFormElement>("#signupForm") ;
     let form            = new FormData(lForm);     
     const URL           = '/api/register' ; 
+
+    let entity          = (!!selectedOrganizations.value)? selectedOrganizations.value.id : ""
+    let organization    = (!!selectedOrganizations.value)? selectedOrganizations.value.organization : ""
+
+
+    form.set("Entity", entity);
+    form.set("Organization", organization);
     form.set("Code", verification.value)
 
     // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS 

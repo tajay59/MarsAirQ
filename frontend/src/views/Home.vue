@@ -4,8 +4,11 @@
   <VRow  justify="center" class="bg- red  size-full">
       <VCol v-if="smAndUp" cols="12" class="bg- green pa-0" align-self="start" justify="center" align="start" >
        <div class="bg- green flex align-center mt-7 ">
-        <VImg v-if="!darkmode" src="@/assets/logo6_light.png" width="200" min-width="200" height="30" min-height="30"   />
-        <VImg v-else src="@/assets/logo6_white.png" width="200" min-width="200" height="30" min-height="30"   />
+        <!-- <VImg v-if="!darkmode" src="@/assets/logo6_light.png" width="200" min-width="200" height="30" min-height="30"   />
+        <VImg v-else src="@/assets/logo6_white.png" width="200" min-width="200" height="30" min-height="30"   /> -->
+        <VImg v-if="!darkmode" src="@/assets/KS_Final.png" width="300" min-width="300" height="50" min-height="50"   />
+        <VImg v-else src="@/assets/KS_Final.png" width="300" min-width="300" height="50" min-height="50"   />
+        
 
         <VBtn v-for="route in routeItems"   color="black" density="compact"   variant="text" :to="route.route" class="no-underline !text-neutral-950 dark:!text-neutral-200 [&>*]:!text-sm mt-1  hover:no-underline " >
           <span class="text-none nunito-route  no-underline" >{{  route.title }}</span>
@@ -28,29 +31,7 @@
           </div>
          </div>
 
-        <!-- <div class=" bg- red flex flex-col justify-end align-center" >
-          <VCard  border class="glass !rounded-[30px]"    rounded="md" density="compact" self-align="end" > 
-            <div  class=" flex h-full pa-5 flex-wrap gap-10 " >       
-                <div class="  flex-1 min-w-[300px] " > 
-                  <p class="text-3xl font-bold mb-5">What We Are About</p>
-                  <p class="text-xl font-semibold" >Information on air quality is provided by sensors installed across the region.</p>
-                </div>
-                <div class=" flex-1 flex justify-center align-center gap-5" >
-                  <VCard v-for="(item, index) in heroCards" :key="index" width="140" height="200" border flat class="!rounded-[30px] py-5  bg-neutral-200 dark:bg-neutral-800">
-                    <VCardItem>
-                    <VSheet rounded="xl" class="bg-neutral-300 dark:bg-neutral-600 flex justify-center align-center"  width="80" height="80" >
-                        <Icon  :icon="item.icon" width="60" height="60" class="!text-neutral-600 dark:!text-neutral-400"  />      
-                    </VSheet>
-                    </VCardItem>
-                    <VCardItem>
-                      <p class="text-sm" >{{ item.title }}</p>
-                      <p class="text-sm" >{{ item.subtitle }}</p>
-                    </VCardItem>
-                  </VCard>
-                </div>       
-              </div>
-          </VCard>       
-        </div> -->
+
 
         <div class=" bg- red flex flex-col justify-end align-center" >
           <VCard  border class="glass !rounded-[30px]"    rounded="md" density="compact" self-align="end" > 

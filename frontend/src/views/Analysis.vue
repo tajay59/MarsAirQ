@@ -1,6 +1,6 @@
 <template>
     <VContainer align="center" fluid>
-        <VRow style="max-width: 1200px;" class="mb-5"  >
+        <VRow style="max-width: 1200px;" class="mb-5 mt-15"  >
        
              <VCard border rounded="md"  density="compact" width="300" >
                 <template #subtitle>
@@ -64,12 +64,13 @@ import { useAppStore } from '@/stores/appStore';
  
 // Highcharts, Load the exporting module and Initialize exporting module.
 import Highcharts from 'highcharts';
-import more from 'highcharts/highcharts-more';
-import Exporting from 'highcharts/modules/exporting';
-import Accessibility from 'highcharts/modules/accessibility'
-Exporting(Highcharts); 
-more(Highcharts);
-Accessibility(Highcharts);
+import  'highcharts/highcharts-more';
+import  'highcharts/modules/exporting';
+import  'highcharts/modules/accessibility';
+
+
+
+
 
 // VARIABLES
 const router      = useRouter();

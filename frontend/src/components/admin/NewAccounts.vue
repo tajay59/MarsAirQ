@@ -66,7 +66,7 @@ const AppStore          = useAppStore();
 const {newRegistrations, aodLoading} = storeToRefs(AppStore);
 const dialog            = ref(false);
 const toast             = useToast();
-const denyOrApprove     = reactive({"id":"","decision":""})
+const denyOrApprove     = reactive({"id":"","decision":""});
 const firstname         = ref("John");
 const lastname          = ref("Doe");
 const text              = ref("");
@@ -94,7 +94,7 @@ const fullname = computed(()=>{
 
 
 const sendAODRequest = async () => {
-    let result = await AppStore.approveOrDenyRequest(denyOrApprove.id, denyOrApprove.decision);
+    let result = await AppStore.approveOrDeny(denyOrApprove.id, denyOrApprove.decision);
  
     switch (result) {
         case "approved":

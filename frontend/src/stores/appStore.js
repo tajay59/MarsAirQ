@@ -36,7 +36,7 @@ export const useAppStore =  defineStore('app', ()=>{
     const profileRouteItems   = ref([
         {"icon":"mage:edit-fill","title":"Edit Profile","route":"/profile/edit","name":"Edit"},  
         {"icon":"ion:notifications","title":"Notifications","route":"/profile/notifications","name":"Notifications"}, 
-        {"icon":"mdi:map-markers","title":"sites","route":"/profile/sites","name":"Sites"}, 
+        {"icon":"mdi:map-markers","title":"Entities","route":"/profile/entities","name":"ProfileEntities"}, 
         {"icon":"ph:device-mobile-camera-fill","title":"Devices","route":"/profile/devices","name":"Devices"}, 
         {"icon":"fluent:branch-request-16-filled","title":"Requests","route":"/profile/requests","name":"Requests"}, 
         // {"icon":"mdi:mdi-lock","title":"Analytics","route":"/analytics/map","name":"Analytics"},   
@@ -63,7 +63,7 @@ export const useAppStore =  defineStore('app', ()=>{
     const updateDeviceLoading = ref(false);
     const deleteDeviceLoading = ref(false);
     const getEntitiesLoading  = ref(false);
-    const uddLoading = ref(false); // update Device Dashboard Loading
+    const uddLoading        = ref(false); // update Device Dashboard Loading
     const historyLoading    = ref(false);
     const accSearchLoading  = ref(false);
     const assignUserLoading = ref(false);
@@ -73,15 +73,18 @@ export const useAppStore =  defineStore('app', ()=>{
     const sites             = ref([]);
     const sitePages         = ref({"count": 0,"page":1,"pages":{}});
     const siteSearchPages   = ref({"count": 0,"search":"","page":1,"pages":{}});
-    const sitePagesEntity         = ref({"count": 0,"page":1,"pages":{}});
-    const siteSearchPagesEntity   = ref({"count": 0,"search":"","page":1,"pages":{}});
+    const entityPages       = ref({"count": 0,"page":1,"pages":{}});
+    const entitySearchPages = ref({"count": 0,"search":"","page":1,"pages":{}});
     const dashboardMenu     = ref(false);
     const openSiteSearch    = ref(false);
+    const openEntitySearch  = ref(false);
     const openCreateSite    = ref(false);  
     const openCreateEntity  = ref(false); 
     const createEntityLoading = ref(false);
     const requests          = ref([]);
-    const entities          = ref([])
+    const entities          = ref([]);
+    const signupEntities    = ref([]);
+    const selectedSiteEntity = ref(null);
     
     const paramDetails      = ref({
         "temperature":{"units":"°C", "icon":"fluent:temperature-20-regular","max":40,"min":0, "htmlUnits":'<small class="text-xs"> °C</small>'},
@@ -342,9 +345,33 @@ export const useAppStore =  defineStore('app', ()=>{
         month.value     = [];
     }
 
-    
+    /*
+  const getCountryIcon = (country) => {
+        let found = caribbeanCountries.value.filter((name)=> name == country)
+        let result = "";
+        if(found.length > 0){
+            result = found[0].icon
+        }
+        
+    return result
+    }  */
  
-	
+const getCountryIcon = computed(() => {
+    // Since getters do not take arguments a dynamic getter should be used instead
+    // This is a dynamic getter, which is a function that returns another function
+    // The returned function takes an argument, which is the only way a getter can 
+    // take an argument
+    return (code)=> {
+        let icon = "";
+        caribbeanCountries.value.forEach((country) => {
+        if(country.code == code)
+            icon = country.icon
+        });
+        return icon
+    }
+})
+
+
     const getData = async (start,end) => {
         // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
         const controller = new AbortController();
@@ -506,10 +533,10 @@ export const useAppStore =  defineStore('app', ()=>{
         selectedAccEdited.value = null;
     }
 
-    const approveOrDenyRequest = async (id, decision)=> {
+    const approveOrDeny = async (id, decision)=> {
         // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
         aodLoading.value    = true;
-        let funcName        = "approveOrDenyRequest";
+        let funcName        = "approveOrDeny";
         const form          = new FormData();   
         const URL           = '/api/aod';
   
@@ -556,6 +583,70 @@ export const useAppStore =  defineStore('app', ()=>{
               }
               else if(data == "token refreshed") {
                   console.log(`${funcName}: Retrying in in 1 seconds`);
+                  setTimeout( () => { approveOrDeny(id, decision) } ,1000); 
+              }
+              else if(data == "unknown") {
+                  console.log(`${funcName}: Unknown response`);
+                  return "unknown"  // Empty object
+              }
+              else if(data == "aborted") {
+                  console.log(`${funcName}: Request aborted`);
+                  // PUSH NOTIFICATION 
+                  setTimeout( () => { approveOrDeny(id, decision)} ,5000); 
+              }
+          } 
+
+          return "failed"
+      }
+      catch(err){  
+        console.error(`${funcName} error: ${err.message}`);             
+      }   
+
+   
+            }
+
+    const approveOrDenyRequest = async (id, decision)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        aodLoading.value    = true;
+        let funcName        = "approveOrDenyRequest";
+        const form          = new FormData();   
+        const URL           = '/api/aod/requests';
+  
+        form.set("id", id)
+        form.set("account", UserStore.getID)
+        form.set("decision", decision) 
+                
+        try {
+          
+          const [status, data] = await FetchStore.POST(URL, form, {  } );
+          aodLoading.value    = false;
+
+          if(status){
+                  
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+  
+              if(["approved","created","added","updated","deleted"].includes(data["status"])){         
+                return   "approved";                   
+              }
+              else if(data["status"] == "exist"){         
+                return   data["status"];                  
+              }
+              else if(data["status"] == "denied"){         
+                return   data["status"];                  
+              }
+             else if(data["status"] == "failed" ){  
+                return   data["status"];  
+                        }    
+            }
+          }
+          else {
+              if(data == "unauthorized") {
+                  console.log(`${funcName}: Unauthorized User`);
+                  return "unauthorized"  // Empty object
+              }
+              else if(data == "token refreshed") {
+                  console.log(`${funcName}: Retrying in in 1 seconds`);
                   setTimeout( () => { approveOrDenyRequest(id, decision) } ,1000); 
               }
               else if(data == "unknown") {
@@ -577,6 +668,7 @@ export const useAppStore =  defineStore('app', ()=>{
 
    
             }
+
 
     const removeAccount = async () => {
         // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
@@ -835,17 +927,18 @@ export const useAppStore =  defineStore('app', ()=>{
         
                 }
 
-    const createEntity = async (name, country ) => { 
+    const createEntity = async (name, country, organization) => { 
         // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
         createEntityLoading.value = true; 
-        let funcName        = "createEntity";
-        const form          = new FormData();   
-        const URL           = '/api/create/entity';
+        let funcName            = "createEntity";
+        const form              = new FormData();   
+        const URL               = '/api/create/entity';
      
-        let query            = {}
-        query["account"]     = UserStore.getID;
-        query["name"]        = name;
-        query["code"]        = country; 
+        let query               = {}
+        query["account"]        = UserStore.getID;
+        query["name"]           = name;
+        query["code"]           = country; 
+        query["organization"]   = organization; 
                 
         try {
             
@@ -878,7 +971,7 @@ export const useAppStore =  defineStore('app', ()=>{
                 }
                 else if(data == "token refreshed") {
                     console.log(`${funcName}: Retrying in in 1 seconds`);
-                    setTimeout( () => { createEntity(name, country, loading) } ,1000); 
+                    setTimeout( () => { createEntity(name, country, organization) } ,1000); 
                 }
                 else if(data == "unknown") {
                     console.log(`${funcName}: Unknown response`);
@@ -887,7 +980,70 @@ export const useAppStore =  defineStore('app', ()=>{
                 else if(data == "aborted") {
                     console.log(`${funcName}: Request aborted`);
                     // PUSH NOTIFICATION 
-                    setTimeout( () => { createEntity(name, country, loading)} ,5000); 
+                    setTimeout( () => { createEntity(name, country, organization)} ,5000); 
+                }
+            } 
+
+            return "failed"
+        }
+        catch(err){  
+        console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+    
+            }
+
+    const updateEntity = async (name, country, entity, organization, loading ) => { 
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value       = true; 
+        let funcName        = "updateEntity";
+        const form          = new FormData();   
+        const URL           = '/api/update/entity';
+     
+        let query            = {}
+        query["account"]     = UserStore.getID;
+        query["name"]        = name;
+        query["code"]        = country;
+        query["id"]          = entity;  
+        query["organization"] = organization;  
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), {'Accept': 'application/json', 'Content-Type': 'application/json'} );
+            loading.value = false;
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] == "updated"){        
+                    return   "updated";                 
+                } 
+                 
+                else if(data["status"] == "failed" ){                            
+                    // USER MUST SIGNIN FIRST                
+                    console.log("Request failed"); 
+                    return   "failed"; 
+                        } 
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return "unauthorized"  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { updateEntity(name, country, entity, organization, loading) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return "unknown"  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { updateEntity(name, country, entity, organization, loading)} ,5000); 
                 }
             } 
 
@@ -978,11 +1134,18 @@ export const useAppStore =  defineStore('app', ()=>{
             if(keys.includes("status")){                    
     
                 if(data["status"] == "ok"){    
-                    entities.value = [...data["entities"]];      
+                    entities.value             = [...data["entitiesData"]];     
+                    UserStore.userEntity       = data["entity"];  
+                    UserStore.userEntities     = [...data["entities"]];  
+                    UserStore.userEntitiesData = [...data["entitiesData"]];  
+                    UserStore.email
                     return   "ok";                 
                 } 
                 if(data["status"] == "exist"){    
-                    entities.value = [...data["entities"]];      
+                    entities.value             = [...data["entitiesData"]];   
+                    UserStore.userEntity       = data["entity"];  
+                    UserStore.userEntities     = [...data["entities"]];  
+                    UserStore.userEntitiesData = [...data["entitiesData"]];  
                     return   "exist";                 
                 } 
             }
@@ -1004,6 +1167,61 @@ export const useAppStore =  defineStore('app', ()=>{
                     console.log(`${funcName}: Request aborted`);
                     // PUSH NOTIFICATION 
                     setTimeout( () => { getEntities()} ,5000); 
+                }
+            } 
+
+            return "failed"
+        }
+        catch(err){  
+        console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+    
+            }
+
+    const getEntitiesForSignup = async ( ) => { 
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        // getEntitiesLoading.value = true; 
+        let funcName        = "getEntitiesForSignup";
+        const form          = new FormData();   
+        const URL           = '/api/get/signup/entities';
+     
+        let query            = {}
+        query["account"]     = ""; // USER SIGNING UP TO THEY WOULDN'T HAVE AN ACCOUNT NUMBER
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), {'Accept': 'application/json', 'Content-Type': 'application/json'} );
+            // getEntitiesLoading.value = false;
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] == "ok"){    
+                    signupEntities.value = [...data["entities"]];      
+                    return   "ok";                 
+                } 
+               
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return "unauthorized"  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getEntitiesForSignup() } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return "unknown"  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getEntitiesForSignup()} ,5000); 
                 }
             } 
 
@@ -1261,6 +1479,65 @@ export const useAppStore =  defineStore('app', ()=>{
 
     
             }
+    
+    const submitRequest = async (reqType,params, loading) => { 
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value = true; 
+        let funcName        = "submitRequest"; 
+        const URL           = '/api/site/request';
+    
+        const query         = {"type":reqType,"account": UserStore.getID, "data": {...params}}
+    
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), { 'Accept': 'application/json', 'Content-Type': 'application/json' } );
+            loading.value = false;
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] == "submitted"){                          
+                    return   "submitted"                    
+                } 
+                if(data["status"] == "exist"){                          
+                    return   "exist"                   
+                } 
+                else if(data["status"] == "failed" ){                            
+                    // USER MUST SIGNIN FIRST      
+                    return   "failed"  
+                        }  
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return "unauthorized"  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { submitRequest(reqType,params, loading) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return "unknown"  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { submitRequest(reqType,params, loading)} ,5000); 
+                }
+            } 
+
+            return "failed"
+        }
+        catch(err){  
+        console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+    
+            }
 
     const updateDeviceDashboard = async (device) => {  
         // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
@@ -1467,7 +1744,7 @@ export const useAppStore =  defineStore('app', ()=>{
         const URL           = '/api/get/entity/pagecount';    
         
         form.set("account", UserStore.getID)
-        form.set("search", siteSearchPagesEntity.value.search) 
+        form.set("search",  entitySearchPages.value.search) 
         form.set("ops",  (search)? 'search' : '')   
                 
         try {
@@ -1481,10 +1758,10 @@ export const useAppStore =  defineStore('app', ()=>{
          
                     if(data["status"] == "ok"){     
                         if(search == true){
-                            siteSearchPagesEntity.value.count = data["count"]; 
+                             entitySearchPages.value.count = data["count"]; 
                         }                        
                         else{
-                            sitePagesEntity.value.count = data["count"]; 
+                             entityPages.value.count = data["count"]; 
                         }     
                         
                         // PUSH NOTIFICATION                   
@@ -1493,10 +1770,10 @@ export const useAppStore =  defineStore('app', ()=>{
                         // USER MUST SIGNIN FIRST                
                         console.log("Request failed");   
                         if(search == true){
-                            siteSearchPagesEntity.value.count = 0; 
+                             entitySearchPages.value.count = 0; 
                         }                        
                         else{
-                            sitePagesEntity.value.count = 0; 
+                             entityPages.value.count = 0; 
                         }                  
                         // PUSH NOTIFICATION
                             }    
@@ -1559,10 +1836,10 @@ export const useAppStore =  defineStore('app', ()=>{
     
                 if(data["status"] == "ok"){    
                     if(search){
-                        siteSearchPages.value.pages[data["page"]] =  data["data"]; 
+                        siteSearchPages.value.pages[data["page"]] =  [...data["data"]]; 
                     }
                     else {
-                        sitePages.value.pages[data["page"]] =  data["data"]; 
+                        sitePages.value.pages[data["page"]] =  [...data["data"]]; 
                     }     
                     
                   
@@ -1625,7 +1902,7 @@ export const useAppStore =  defineStore('app', ()=>{
         const URL           = '/api/get/entity/page';    
         
         form.set("account", UserStore.getID) 
-        form.set("search", siteSearchPages.value.search) 
+        form.set("search", entitySearchPages.value.search) 
         form.set("ops",  (search)? 'search' : '')   
         form.set("page", page - 1) 
                 
@@ -1640,10 +1917,10 @@ export const useAppStore =  defineStore('app', ()=>{
     
                 if(data["status"] == "ok"){    
                     if(search){
-                        siteSearchPagesEntity.value.pages[data["page"]] =  data["data"]; 
+                         entitySearchPages.value.pages[data["page"]] =  data["data"]; 
                     }
                     else {
-                        sitePagesEntity.value.pages[data["page"]] =  data["data"]; 
+                         entityPages.value.pages[data["page"]] =  data["data"]; 
                     }     
                     
                   
@@ -1653,10 +1930,10 @@ export const useAppStore =  defineStore('app', ()=>{
                     // USER MUST SIGNIN FIRST                
                     console.log("Request failed"); 
                     if(search){
-                        siteSearchPagesEntity.value.pages  =  {}; 
+                         entitySearchPages.value.pages  =  {}; 
                     }
                     else {
-                        sitePagesEntity.value.pages =  {}; 
+                         entityPages.value.pages =  {}; 
                     }   
                     
                     // PUSH NOTIFICATION
@@ -1720,7 +1997,7 @@ export const useAppStore =  defineStore('app', ()=>{
     
                 if(data["status"] == "ok"){    
                    site.value = {...data["site"]};     
-                    
+                   selectedSiteEntity.value = {...data["entity"]} 
                     
                     // PUSH NOTIFICATION                   
                 } 
@@ -1960,6 +2237,67 @@ export const useAppStore =  defineStore('app', ()=>{
                     console.log(`${funcName}: Request aborted`);
                     // PUSH NOTIFICATION 
                     setTimeout( () => { assignUser(siteID,userID)} ,5000); 
+                }
+            } 
+
+            return "failed"
+        }
+        catch(err){  
+        console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+    
+            }
+
+    const assignUserToEntity = async (userID, entityID,loading) => {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value = true; 
+        let funcName        = "assignUserToEntity";
+        const form          = new FormData();   
+        const URL           = '/api/assign/user/entity';
+    
+        
+        form.set("account", UserStore.getID) 
+        form.set("entity", entityID)
+        form.set("user", userID)
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, form, {  } );
+            loading.value = false;
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] == "assigned"){   
+                    return   data["status"];                   
+                } 
+                if(data["status"] == "deassigned"){   
+                    return   data["status"];                   
+                } 
+                else if(data["status"] == "failed" ){   
+                    return   data["status"];  
+                        }
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return "unauthorized"  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { assignUserToEntity(userID, entityID,loading) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return "unknown"  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { assignUserToEntity(userID, entityID,loading)} ,5000); 
                 }
             } 
 
@@ -2441,8 +2779,9 @@ export const useAppStore =  defineStore('app', ()=>{
     entities,
     spss,
     site,
-    siteSearchPagesEntity,
-    sitePagesEntity,
+    selectedSiteEntity,
+     entitySearchPages,
+     entityPages,
     openCreateEntity,
     userSites,
     device,
@@ -2462,6 +2801,13 @@ export const useAppStore =  defineStore('app', ()=>{
     caribbeanCountries,
     userAccount,
     requests,
+    openEntitySearch,
+    signupEntities,
+    getCountryIcon,
+    assignUserToEntity,
+    submitRequest,
+    getEntitiesForSignup,
+    updateEntity,
     getPageEntity, 
     getPageCountEntity,
     removeEntity,
@@ -2500,6 +2846,7 @@ export const useAppStore =  defineStore('app', ()=>{
     setAdminAccountVariables,
     setSelectedAccount,
     clearSelectedAccount,
+    approveOrDeny,
     approveOrDenyRequest,
     createEntity
         

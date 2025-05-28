@@ -43,6 +43,9 @@ export const useUserStore =  defineStore('user', ()=>{
     const selectedStation   = ref(null);
     const siteLoading       = ref(false);
     const userSites         = ref([]);
+    const userEntity        = ref(null);
+    const userEntities      = ref([]);
+    const userEntitiesData  = ref([]);
 
     // CONFIGURATIONS
     const modelTab          = ref("");
@@ -521,6 +524,9 @@ const getUserSuball = async () => {
       mqtt_sub_credentials,
       userSites,
       layout,
+      userEntities,
+      userEntity,
+      userEntitiesData, 
       getUserSuball,
       getAllSites,
       setSelectedStation,

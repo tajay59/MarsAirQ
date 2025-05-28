@@ -77,10 +77,13 @@ const {
    isConnected,
    payload,
    payloadTopic } = storeToRefs(Mqtt);
+
   const {overlay,
     openSiteSearch,
+    openEntitySearch,
     openCreateSite,
-    openCreateEntity
+    openCreateEntity,
+    dashboardMenu
   }  = storeToRefs(AppStore)
 
 let subsID = "";
@@ -147,9 +150,19 @@ const allItems = ref([
         command: () => { openSiteSearch.value = true; }
     },
     {
+        label: 'Search Entity',
+        icon: 'mdi:home-search', 
+        command: () => { openEntitySearch.value = true; }
+    },
+    {
         label: 'Create Entity',
         icon: 'fluent:organization-48-filled', 
         command: () => { openCreateEntity.value = true; }
+    },
+    {
+        label: 'Create Site',
+        icon: 'line-md:map-marker-plus-filled', 
+        command: () => { openCreateSite.value = true; }
     },
 ]);
  
@@ -219,7 +232,7 @@ const configSpeedDial = (route)=> {
               show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map"]
               break;
         case "/admin/entities":
-              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Search Site","Create Entity"]
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Search Site","Create Entity","Search Entity"]
               break;
         
         case "/analytics/map":
@@ -228,8 +241,8 @@ const configSpeedDial = (route)=> {
         case "/profile/devices":
             show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map"]
             break;
-        case "/profile/sites":
-            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Search Site"]
+        case "/profile/entities":
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Search Site","Create Site","Create Entity"]
             break;
         case "/analytics/dashboard":
             show.value = ["Home","Settings","Add Graphs","Login","Theme","Profile","Analysis","Map","Save Dashboard"]
@@ -252,7 +265,7 @@ const configSpeedDial = (route)=> {
 
 onBeforeMount(()=> {
   // SAVE THEME TO LOCALSTORAGE MAKING IT PERSIST BROWSER REFRESH
-  Mqtt.clearSubs();
+  // Mqtt.clearSubs();
   
   if(loggedIn.value){
     console.log("FETCHING ALL SITES");
@@ -284,8 +297,6 @@ onBeforeMount(()=> {
   }  
 
   configSpeedDial(route.fullPath);
-
-    console.log("STARTED APP")
 });
 
 onMounted(() => {
@@ -294,6 +305,7 @@ onMounted(() => {
       Mqtt.subTo("/station/data/#");
     }
     else {
+    
       if(!!mqtt_sub_credentials.value)
         Mqtt.subTo(mqtt_sub_credentials.value.topic);
     }

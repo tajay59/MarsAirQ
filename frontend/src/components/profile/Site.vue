@@ -3,24 +3,30 @@
     <VContainer class="size-full" align="center"  fluid >
         
       <!-- TOP ROW -->
-      <VRow class="bg- blue-300 mt-15"  style="max-width: 1200px;" >
+      <VRow class=" gap-3 mt-15"  style="max-width: 1200px;" >
         <VCol class=""> 
           <div id="sitemap" class="w-full min-w-[300px] max-w-[594px]  rounded-lg h-[300px]  min-[697px]:h-[826px]"  ></div>
         </VCol> 
 
-        <VCol v-if="!!site" class="flex flex-col justify-start min-w-[350px] bg-green">
+        <VCol v-if="!!site" class="  flex flex-col justify-between min-w-[350px]">
           <VCard  class="bg-neutral-100 dark:bg-neutral-800" flat border  >
             <template #title >
-              <div class="flex justify-between" >
-                <span>{{ site.name }}</span> 
+              <div class="flex justify-between" > 
+                <div class="flex justify-center align-center" >
+                    <span class=" " >{{ entitySiteName.entity }} </span> 
+                    <Icon icon="fa-solid:chevron-right" width="16" height="16" class="mx-1"  />
+                    <span> {{ entitySiteName.site }}</span> 
+                </div>
+          
                 <VBtn  density="comfortable" icon  @click="setSiteUpdate(); openUpdateSite = true"  class="text-none mr-6" title="Edit" variant="tonal" > 
                   <Icon icon="line-md:edit" width="24" height="24"   />
                 </VBtn>
               </div>
             </template>
 
+
             <VCardItem >
-              <VDivider :opacity="100" class="border-neutral-300 dark:border-neutral-600 "  />
+              <VDivider :opacity="100" class="border-neutral-300 dark:border-neutral-600 mb-5"  />
               <VContainer >
                 <VRow>
                   <VCol class="pa-0 flex gap-3 align-center" title="Latitude" > 
@@ -35,14 +41,73 @@
                     </VBtn>   
                     <p>{{ site.lon }}</p>
                   </VCol>
-                </VRow>              
+                </VRow>
+
+                <!-- <VRow class="mt-10">
+                  ASSIGNED TO CARD
+                  <VCol cols="12"  v-if="site.acc_owner.length > 0" >
+                    <VCard :title="`${_.capitalize(site.acc_owner[0].firstname)} ${_.capitalize(site.acc_owner[0].lastname)}`" color="onSurface"   variant="tonal" width="100%" rounded="lg" border>
+                    
+                    <template #subtitle >
+                      <div class="flex flex-col" >
+                        <p class="text-xs" >{{ site.acc_owner[0].organization }}</p>
+                        <p class="text-xs" >{{ site.acc_owner[0].country }}</p>
+                      </div>
+                    </template>
+                    
+                    
+                      <template #prepend >
+                      <div class="flex flex-col justify-center" >
+                        <Icon icon="iconamoon:profile" width="48" height="48" class="!text-neutral-600 dark:!text-neutral-400 justify-center" />
+                        <p class="text-xs" >Assigned to:</p>
+                      </div>
+                    </template>
+
+                    <template #append >
+                      <VBtn    density="comfortable" icon @click="openSearch = true" class="text-none" title="Assign/Reassign user" variant="tonal" > 
+                        <Icon icon="line-md:edit" width="24" height="24"   />
+                      </VBtn>
+
+                      <VBtn    density="comfortable" icon @click="assignUser('')" class="text-none ml-1" title="Unassign" variant="text" > 
+                        <Icon icon="ic:baseline-delete" width="24" height="24"   />
+                      </VBtn>
+                    </template>
+                  </VCard>
+                  </VCol>
+
+                  <VCol v-else cols="12" >
+                    <VCard   color="onSurface" variant="tonal" width="100%" rounded="lg" border>
+                      <template #title >
+                        <p>Site not assigned to a user</p>
+                      </template>
+                    <template #prepend >
+                      <div class="flex flex-col justify-center" >
+                        <Icon icon="mdi:account-alert" width="48" height="48" class="!text-rose-600 dark:!text-rose-400 justify-center" />                  
+                      </div>
+                    </template>
+
+
+                    <template #append >
+                      <VBtn    density="comfortable" icon @click="openSearch = true" class="text-none" title="Assign to user" variant="tonal" > 
+                        <Icon icon="line-md:edit" width="24" height="24"   />
+                      </VBtn>
+                    </template>
+                  </VCard>
+                  </VCol>
+                </VRow> -->
+              
               </VContainer>
+
             </VCardItem>
           </VCard>
 
           <VCard  class="my-2 bg-neutral-100 dark:bg-neutral-800" flat border >
-            <template #prepend > <p class="" >Status</p> </template>            
-            <template #title > <p>{{ (site.enabled)? 'Enabled' : 'Disabled' }}</p></template>            
+            <template #prepend >
+              <p class="" >Status</p>
+            </template>
+            
+            <template #title > <p>{{ (site.enabled)? 'Enabled' : 'Disabled' }}</p></template>
+            
           </VCard>
 
           <VCard   class="bg-neutral-100 dark:bg-neutral-800" flat border  max-height="240" >
@@ -56,7 +121,7 @@
                     </VBtn>   
                   </div>
               </VToolbar> 
-
+              
               <VCardItem>
                   <VList  v-if="!!site" rounded="lg" density="compact"   variant="flat" class="relative mx-auto" max-height="150"  >
                       <VListItem  variant="text" :active ="(!!device)? device.id == dev.id : false"  class="bg-neutral-100 dark:bg-neutral-600/[0.3] mb-2 mx-5"  v-for="dev in site.devices" :key="dev.id" :value="dev.id" @click="setMarkerOnListMap(dev.lat,dev.lon);AppStore.setDevice(dev)"  border rounded="lg" >
@@ -77,7 +142,7 @@
                                     <VListItem  key="update" value="update"  @click="openUpdateDevice = true" >
                                       <VListItemTitle>Update</VListItemTitle>
                                     </VListItem>
-                                    <VListItem  key="delete" value="delete" @click="deleteDeviceID = dev.id;openDeleteDevice = true" >
+                                    <VListItem  key="delete" value="delete" @click="deleteDevice.siteid = site.id; deleteDevice.id = dev.id; deleteDevice.name = dev.name; openDeleteDevice = true" >
                                       <VListItemTitle>Delete</VListItemTitle>
                                     </VListItem>
                                   </VList>
@@ -89,7 +154,7 @@
               </VCardItem>                 
           </VCard>
 
-          <VSheet  min-height="220" class="mt-2">
+          <VSheet  min-height="220" >
             <VCard  v-if="!!device"   class="my-2 bg-neutral-100 dark:bg-neutral-800" flat border >
                   <template #title ><p>{{ _.capitalize(device.name) }}</p></template>
                   <template #subtitle > 
@@ -141,7 +206,7 @@
         </VCol> 
 
         <VDialog v-model="openUpdateSite" class="mx-5" transition="dialog-bottom-transition" width="100%" max-width="400"  persistent >
-            <!-- UPDATE SITE -->
+          <!-- UPDATE SITE -->
             <template v-slot:default="{ isActive }">
                 <VCard  > 
                     <VCardTitle class="h-[300px] pa-2 rounded-lg" >
@@ -149,7 +214,7 @@
                     </VCardTitle>
 
                     <VCardSubtitle class=" px-2 pt-3">
-                        <p class=" text-2xl font-light"  style="font-family: Nunito;" >Update Site</p>
+                        <p class=" text-2xl font-light"  style="font-family: Nunito;" >Update Site Request</p>
                     </VCardSubtitle>
 
                     <VCardText class="pb-0 px-2">
@@ -157,16 +222,16 @@
                         <VTextField v-model="updateSite.lat" label="Latitude" step="0.000001"  type="number" class="my-2 rounded-lg border border-neutral-600 dark:border-neutral-50 overflow-clip" density="compact" variant="solo-inverted"  flat hide-details  clearable />
                         <VTextField v-model="updateSite.lon" label="Longitude" step="0.000001" type="number"  class="rounded-lg border border-neutral-600 dark:border-neutral-50 overflow-clip" density="compact" variant="solo-inverted"  flat hide-details  clearable />
                         
-                        <VSelect v-model="updateSite.enabled" :items="[{'name':'Enable','value': true}, {'name':'Disable','value': false}]" item-title="name" item-value="value" label="Status" class="my-2 rounded-lg border border-neutral-600 dark:border-neutral-50 overflow-clip"  density="compact" variant="solo-inverted"   flat hide-details  clearable  >
+                        <!-- <VSelect v-model="updateSite.enabled" :items="[{'name':'Enable','value': true}, {'name':'Disable','value': false}]" item-title="name" item-value="value" label="Status" class="my-2 rounded-lg border border-neutral-600 dark:border-neutral-50 overflow-clip"  density="compact" variant="solo-inverted"   flat hide-details  clearable  >
                           <template v-slot:item="{ props, item }">
                             <VListItem v-bind="props" :title="_.capitalize(item.raw.name)"  class="ml-5">                                
                             </VListItem>
                           </template>
-                        </VSelect>
-                    </VCardText>
+                        </VSelect> -->
+                      </VCardText>
 
                     <VCardActions class="justify-end pa-4">
-                        <VBtn text="Submit" @click="updateSingleSiteRequest()" class="text-none font-bold"   :loading="updateSiteLoading"  ></VBtn>
+                        <VBtn text="Submit" @click="updateSingleSite()" class="text-none font-bold"   :loading="updateSiteLoading"  ></VBtn>
                         <VBtn text="Cancel" @click="isActive.value = false"   class="text-none"></VBtn>                          
                     </VCardActions>
                 </VCard>
@@ -236,7 +301,7 @@
                     </VCardTitle>
 
                     <VCardSubtitle class=" px-2 pt-3">
-                        <p class=" text-2xl font-light"  style="font-family: Nunito;" >Update Device</p>
+                        <p class=" text-2xl font-light"  style="font-family: Nunito;" >Update Device Request</p>
                     </VCardSubtitle>
 
                     <VCardText class="pb-0 px-2">
@@ -282,7 +347,7 @@
         </VDialog>
 
         <VDialog v-model="openSearch" transition="dialog-bottom-transition" width="500" persistent >
-            <!-- SEARCH FOR A USER TO ASSIGN -->
+          <!-- SEARCH FOR A USER TO ASSIGN -->
             <template v-slot:default="{ isActive }">
                 <VCard >
                     <VToolbar >
@@ -336,26 +401,25 @@
         </VDialog>
 
         <VDialog v-model="openDeleteDevice" max-width="400" persistent transition="dialog-bottom-transition" >
-            <!-- DELETE DEVICE -->
-            <VCard   class="border-t-4border-rose-600 dark:border-rose-300 " density="compact"  >           
+          <!-- DELETE DEVICE -->
+            <VCard   class="border-t-4border-rose-600 dark:border-rose-300 " density="compact"  > 
+          
               <template #title >
                 <div class="text-center" >
                     <VIcon icon="mdi:mdi-router-network-wireless"    size="100" />
-                </div>              
+                </div>
+              
               </template>
               <template #text >
                 <p >You are about to  <strong class="font-bold text-rose-700" > Delete </strong> this device from the site. Are you sure you want to continue?</p>
               </template>
 
-              <template v-slot:actions>
-                <VBtn text="Delete" class="text-subtitle-2" color="onSurface" width="100" :loading="deleteDeviceLoading" @click="deleteSingleDevice()" />
-                <VBtn text="Cancel" class="text-subtitle-2" color="onSurface" width="100"    @click="openDeleteDevice = false" />  
-              </template>
+                <template v-slot:actions>
+                  <VBtn text="Delete" class="text-subtitle-2" color="onSurface" width="100" :loading="deleteDeviceLoading" @click="deleteSingleDevice()" />
+                  <VBtn text="Cancel" class="text-subtitle-2" color="onSurface" width="100"    @click="openDeleteDevice = false" />  
+                </template>
             </VCard>
-        </VDialog>
-
-          
-
+      </VDialog>
 
       </VRow>
 
@@ -438,9 +502,9 @@ let USDollar = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'US
 const updateSite          = reactive({id:"",name:"", lat:"0",lon:"0", enabled: true});
 const createDevice        = reactive({name:"", lat:"0",lon:"0", processor:"", params :[]});
 const updateDevice        = reactive({siteid:"",deviceid:"", name:"", lat:"0",lon:"0", processor:"", params:[]});
+const deleteDevice        = reactive({siteid:"",id:"", name:""});
 const paramOptions        = ref(["temperature","humidity","pressure","co2","voc","vocindex","pm25","pm10","radiation","uva","uvb","uvc","voltage","current","bat","oxidised","reduced","nh3","lux"]);
 let searchTextID, timeoutVal = 1000; 
-const updateSiteRequestLoading = ref(false);
 
 const processors = ref([{"name":"esp32", "icon":"simple-icons:espressif"},{"name":"zero", "icon":"cib:raspberry-pi"},{"name":"pimoroni", "icon":"cib:raspberry-pi"}])
  
@@ -633,6 +697,18 @@ watch(siteLoading, (loading) => {
 
 
 // COMPUTED PROPERTIES
+const entitySiteName = computed(()=>{
+  let entity = "";
+  let sitename = "";
+
+  if (!!route.params.entity)
+      entity = route.params.entity
+  if(!!site.value)
+    sitename = site.value.name
+  return {"entity": entity, "site": sitename}
+})
+
+
 const enableSiteUpdateBtn  = computed(() => 
      {       
       if(!!updateSite.lat && !!updateSite.lon  && !!updateSite.name){
@@ -721,10 +797,11 @@ const  toggleUpdate = () => {
     }
 
 const addDevice = async () => {
-    let result = await AppStore.createDevice(createDevice, site.value.id);
+    // let result = await AppStore.createDevice(createDevice, site.value.id);
+    let result = await AppStore.submitRequest("createdevice" , {"siteid": site.value.id, ...createDevice} , createDeviceLoading);
  
     switch (result) {
-        case "added":
+        case "submitted":
             // AppStore.getSite(route.params.id);
             openCreateDevice.value = false;
             createDevice.name  = "";
@@ -733,13 +810,12 @@ const addDevice = async () => {
             createDevice.params  = [];
             createDevice.processor  = "";
 
-            toast.add({ severity: 'success', summary: 'CREATED', detail: 'Successfully created new DEVICE!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'CREATED', detail: 'Successfully sent new DEVICE! request', life: 3000 });             
             break;
         
-        case "failed":
-            // getSites();
+        case "failed": 
             openCreateDevice.value = false;
-            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to create new DEVICE!', life: 3000 });         
+            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to send new DEVICE! request', life: 3000 });         
             break;  
 
         default:
@@ -749,19 +825,16 @@ const addDevice = async () => {
 }
 
 const updateSingleDevice = async () => {
-    let result = await AppStore.updateDevice(updateDevice);
+    // let result = await AppStore.updateDevice(updateDevice);
+    let result = await AppStore.submitRequest("updatedevice" , updateDevice , updateDeviceLoading);
  
     switch (result) {
-        case "updated":
-            // AppStore.getSite(route.params.id);
-            
+        case "submitted":
             openUpdateDevice.value = false;
-
-            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Successfully updated DEVICE!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Successfully sent update DEVICE! request', life: 3000 });             
             break;
         
-        case "failed":
-            // getSites();
+        case "failed": 
             openUpdateDevice.value = false;
             toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to update DEVICE!', life: 3000 });         
             break;  
@@ -772,18 +845,39 @@ const updateSingleDevice = async () => {
     }
 }
 
-const updateSingleSiteRequest = async () => {
-    let result = await AppStore.updateSiteRequest(updateSite,updateSiteRequestLoading );
+const deleteSingleDevice = async () => {
+    // let result = await AppStore.deleteDevice(site.value.id,deleteDeviceID.value);
+    let result = await AppStore.submitRequest("deletedevice" , deleteDevice , deleteDeviceLoading);
  
     switch (result) {
-        case "submitted":
-            updateSiteRequestLoading.value = false;
-            toast.add({ severity: 'success', summary: 'Submitted', detail: 'Site update request submitted!', life: 3000 });             
+        case "submitted":                       
+            openDeleteDevice.value = false;
+            toast.add({ severity: 'success', summary: 'DELETED', detail: 'Successfully sent DEVICE! deletion request', life: 3000 });             
             break;
         
-        case "failed":
-            updateSiteRequestLoading.value = false;
-            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to submit site update request', life: 3000 });         
+        case "failed":             
+            openDeleteDevice.value = false;
+            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to send DEVICE! deletion request', life: 3000 });         
+            break;  
+
+        default:
+            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Request failed!', life: 3000 });  
+            break;
+    }
+}
+
+const updateSingleSite = async () => { 
+    let result = await AppStore.submitRequest("updatesite" , updateSite , updateSiteLoading);
+ 
+    switch (result) {
+        case "submitted":                        
+            openUpdateSite.value = false;
+            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Successfully sent update SITE! request', life: 3000 });             
+            break;
+        
+        case "failed": 
+            openUpdateSite.value = false;
+            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to send update SITE! request', life: 3000 });         
             break;  
 
         default:
@@ -812,25 +906,7 @@ const assignUser = async (id) => {
     }
 }
 
-const deleteSingleDevice = async () => {
-    let result = await AppStore.deleteDevice(site.value.id,deleteDeviceID.value);
- 
-    switch (result) {
-        case "deleted":                       
-            openDeleteDevice.value = false;
-            toast.add({ severity: 'success', summary: 'DELETED', detail: 'Successfully deleted DEVICE!', life: 3000 });             
-            break;
-        
-        case "failed":             
-            openDeleteDevice.value = false;
-            toast.add({ severity: 'error', summary: 'FAILED', detail: 'Unable to delete DEVICE!', life: 3000 });         
-            break;  
 
-        default:
-            toast.add({ severity: 'error', summary: 'Request Failed', detail: 'Request failed!', life: 3000 });  
-            break;
-    }
-}
 
 const setDeviceUpdate = (dev) => {  
     updateDevice.siteid = site.value.id;
