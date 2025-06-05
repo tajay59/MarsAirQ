@@ -1,32 +1,37 @@
 <template>
-<div class="relative" >
+<div class="relative bg- blue h-dvh"  >
  <p class="text-none font-light text-4xl max-w-[1000px] w-full mx-auto" >Account Details</p>
-  
- <VFab text="Edit"  @click="edit = !edit" variant="plain" color="onSurface" :ripple="false" class=" top-1 right-14"   size="large" absolute offset>
-   <div class="flex flex-col justify-center" >
-    <TransitionGroup name="slide-right" >
-        <VIcon  v-if="!edit"  icon="mdi:mdi-account-edit" size="30" />
-        <VIcon v-else icon="mdi:mdi-pencil" size="30" />
-    </TransitionGroup>
-     
-    <TransitionGroup name="slide-right" >
-        <p v-if="!edit" class="text-none" style="font-size: xx-small;" >EDIT</p>
-        <p v-else class="text-none" style="font-size: xx-small;" >EDITING...</p>
-    </TransitionGroup>   
-   </div>
- </VFab>
-
- <VFab text="Edit" v-if="!!selectedAccount"  @click="dialog = true" variant="plain"  color="tertiary"  class="mr-15 top-1 right-20" :ripple="false"   size="large" absolute offset>
-  <div class="flex flex-col justify-center" >
-    <VIcon   icon="mdi:mdi-account-remove" size="30" />
-    <p class="text-none" style="font-size: xx-small;" >DELETE</p>
-  </div>
- </VFab>
- 
- <VCard v-if="!!selectedAccount" border  class="pb-5 mt-15 bg-neutral-100 dark:bg-neutral-700/[0.5] mx-auto " flat width="100%" max-width="1000"  >
+   
+ <VCard v-if="!!selectedAccount" border  class="pb-5 mt-15 bg-neutral-100 dark:bg-neutral-700/[0.5] mx-auto " flat width="100%" max-width="1000" min-width="390"  >
     <template #title> <p class="" >{{ _.capitalize(selectedAccount.firstname) }} {{ _.capitalize(selectedAccount.lastname) }}</p></template>
     <template #subtitle> <p class="" >{{ selectedAccount.email }}</p></template>
-    <template #append > <Icon :icon="selectedAccount.icon" width="30" height="30"   /> </template>
+    <template #append >
+       <div class="flex gap-10 place-content-center">      
+        <div class="flex gap-4 place-content-center">
+          <VBtn icon @click="edit = !edit" density="compact" flat variant="text" >
+            <template #default >
+              <div class="flex " >
+                <TransitionGroup name="lists" >
+                  <Icon v-if="!edit"  icon="material-symbols:person-edit-rounded" width="30" height="30" class="!text-neutral-500 dark:!text-neutral-300" /> 
+                  <Icon v-else icon="mynaui:edit-solid" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" />  
+                </TransitionGroup>
+                
+              </div>
+            </template>
+          </VBtn>
+
+          <VBtn  v-if="!!selectedAccount" icon @click="dialog = true" density="compact" flat variant="text" >
+            <template #default >
+              <div class="flex " >
+               <Icon   icon="ic:round-delete" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" />              
+              </div>
+            </template>
+          </VBtn>
+        </div>
+
+          <Icon :icon="selectedAccount.icon" width="30" height="30"   /> 
+       </div>
+    </template>
 
     <Transition name="slide-right" >
       <VCardItem class="py-3 ml-2" v-if="edit" >

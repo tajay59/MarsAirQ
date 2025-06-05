@@ -24,7 +24,7 @@
      /** JAVASCRIPT HERE */
  
      // IMPORTS
-     import { ref,reactive,watch ,onMounted,onBeforeUnmount,computed } from "vue";  
+     import { ref,reactive,watch ,onMounted,onBeforeMount,onBeforeUnmount,computed } from "vue";  
      import { useRoute ,useRouter } from "vue-router";
      import { useAppStore } from '@/stores/appStore';
      import { useMqttStore } from '@/stores/mqttStore'; // Import Mqtt Store
@@ -51,7 +51,7 @@
      const UserStore      = useUserStore(); 
      const Mqtt           = useMqttStore();
      const { connected, payload, payloadTopic } = storeToRefs(Mqtt);
-     const { selectedStation, darkmode, layout}  = storeToRefs(UserStore);
+     const { selectedStation, darkmode,userSites, layout}  = storeToRefs(UserStore);
      const { liveData,paramDetails } = storeToRefs(AppStore);
      const chart          = ref(null); // Chart object
      const points         = ref(300); // Specify the quantity of points to be shown on the live graph simultaneously.
@@ -68,12 +68,21 @@
      const menu = ref();    
      const items = ref([{ label: 'Params', items: [] }, { label: 'Actions',  items: [ {label: "Delete", icon:"ic:baseline-delete", command: () => { emit('delete'); } }]}  ]);
       
-     const parameters = Object.keys(paramDetails.value)
-     parameters.forEach( item => items.value[0]["items"].push({ label: _.capitalize(item), icon: paramDetails.value[item].icon }))
- 
      const toggle = (event) => {
          menu.value.toggle(event);
      };
+
+     // COMPUTED
+     const getParams = computed(()=> {
+        let site =  userSites.value.filter( site => site.id == layout.value.site )
+        let result = []
+        if(site.length > 0){
+            let device =  site[0].devices.filter( device => device.id == layout.value.device)
+            if(device.length > 0)
+                result = device[0].params            
+        }
+        return result
+     })
  
      // WATCHERS
      watch(()=> param.value, (item)=> { 
@@ -94,10 +103,12 @@
          id :{type:String,default:""}
      })
      
-     // FUNCTIONS
- 
-  
-    
+     // FUNCTIONS 
+
+    onBeforeMount(()=> {
+        // UPDATES items.value VARIABLE TO ENSURE ONLY PARAMS ASSIGNED TO STATION SHOWS IN GRAPH MENU
+        getParams.value.forEach( item => items.value[0]["items"].push({ label: _.capitalize(item), icon: paramDetails.value[item].icon }));
+     })
  
        
      onMounted(() => {

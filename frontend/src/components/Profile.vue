@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-neutral-100 dark:bg-neutral-800 size-full pa-10" > 
+  <div class="bg-neutral-100 dark:bg-neutral-800 size-full" :class="[(!smAndDown)?'pa-10':'pa-0']"> 
       <RouterView />
      
 
 
-      <VNavigationDrawer width="200" permanent :floating="false" v-if="mdAndUp" >
+      <VNavigationDrawer v-model="profileDrawer" width="270"   :floating="false"   >
       <template #prepend >
         <div class="my-3 my-15 flex justify-center align-center  "  >
           <VImg v-if="!darkmode" src="@/assets/logo6_light.png" max-width="130"    />
@@ -29,7 +29,10 @@
 
           <VListItem v-for="route in profileRouteItems" class="mr-1 " style="text-decoration: none;" :title="route.title" :value="route.name" :to="route.route">
             <template #prepend >
-              <Icon :icon="route.icon" width="24" height="24" class="!text-neutral-600 dark:!text-neutral-400 mr-3"  />  
+              <VBadge  v-if="route.name == 'Requests'" floating :content="requests.length" color="!bg-green-500 dark:!bg-green-700" class="" :offset-y="7" >
+                  <Icon  :icon="route.icon" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300" /> 
+              </VBadge>             
+              <Icon v-else :icon="route.icon" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-300 mr-3" />  
             </template>
           </VListItem>        
         
@@ -59,7 +62,8 @@
   const UserStore         = useUserStore(); 
   const AppStore          = useAppStore();
   const {id,loggedIn,image, darkmode}           = storeToRefs(UserStore);
-  const {profileRouteItems}  = storeToRefs(AppStore);
+  const {profileRouteItems,profileDrawer, requests}  = storeToRefs(AppStore);
+  const requestLoading = ref(false);
 
  
 
@@ -87,6 +91,7 @@
       AppStore.getAccount();
       AppStore.getPageCount();
       AppStore.getPage(1);
+      AppStore.getRequests(requestLoading);
       // pingPong();
   })
   

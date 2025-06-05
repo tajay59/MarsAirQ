@@ -43,6 +43,7 @@ export const useAppStore =  defineStore('app', ()=>{
         // {"icon":"mdi:mdi-lock","title":"Admin","route":"/admin","name":"Admin"},   
     ])
 
+    const liveData          = reactive({temperature:0, humidity:0, pressure:0, windspeed:0,winddirection:0,radiation:0, rainfall:0,uva:0,uvb:0,uvc:0, co2:0, bat:0, voltage:0,current:0,power:0});
     const month             = ref([]);
     const threedays         = ref([]);
     const sevendays         = ref([]);
@@ -69,6 +70,8 @@ export const useAppStore =  defineStore('app', ()=>{
     const assignUserLoading = ref(false);
     const siteLoading       = ref(false);
     const edit              = ref(false); // Edit user account details
+    const adminDrawer       = ref(false); 
+    const profileDrawer     = ref(false);
     const userSearch        = ref({"text":"","result":[]})
     const sites             = ref([]);
     const sitePages         = ref({"count": 0,"page":1,"pages":{}});
@@ -86,6 +89,7 @@ export const useAppStore =  defineStore('app', ()=>{
     const signupEntities    = ref([]);
     const selectedSiteEntity = ref(null);
     
+    /*
     const paramDetails      = ref({
         "temperature":{"units":"°C", "icon":"fluent:temperature-20-regular","max":40,"min":0, "htmlUnits":'<small class="text-xs"> °C</small>'},
         "dewpoint":{"units":"°C", "icon":"mdi:water-temperature","max":40,"min":0, "htmlUnits":'<small class="text-xs"> °C</small>'},
@@ -112,7 +116,7 @@ export const useAppStore =  defineStore('app', ()=>{
 
         // NEED CORRECT ICONS FOR BELOW
         "voltage":{"units":"V", "icon":"ix:voltage-filled","max":4.2,"min":2.8, "htmlUnits":'<small class="text-xs"> V</small>'},
-        "current":{"units":"mA", "icon":"mdi:current-dc","max":1000,"min":0, "htmlUnits":'<small class="text-xs"> mA</small>'},
+        "current":{"units":"mA", "icon":"mdi:current-dc","max":3000,"min":-3000, "htmlUnits":'<small class="text-xs"> mA</small>'},
         "bat":{"units":"%", "icon":"mdi:battery-high","max":100,"min":0, "htmlUnits":'<small class="text-xs"> %</small>'},
         "oxidised":{"units":"ppm", "icon":"iconoir:nitrogen","max":5000,"min":0, "htmlUnits":'<small class="text-xs"> ppm</small>'}, // nitrogen dioxide (oxidising), 
         "reduced":{"units":"ppm", "icon":"mdi:carbon-monoxide","max":5000,"min":0, "htmlUnits":'<small class="text-xs"> ppm</small>'}, // carbon monoxide (reducing),
@@ -122,9 +126,12 @@ export const useAppStore =  defineStore('app', ()=>{
         "default":{"units":"", "icon":"line-md:car-light","max":100,"min":0, "htmlUnits":'<small class="text-xs"> </small>'},
     
     });
+    */
 
-    const userSites        = ref([]);
-    const userAccount      = ref({});
+    const paramDetails      = ref({}); 
+
+    const userSites         = ref([]);
+    const userAccount       = ref({});
     const emailList         = reactive({registration:[], cancellation:[]});
     const allStaffAccounts  = ref([]);
     const spss              = ref(null); // Sites page selected site
@@ -1233,6 +1240,8 @@ const getCountryIcon = computed(() => {
 
     
             }
+
+    
 
     const createSiteRequest = async (name, lat, lon, loading) => { 
         // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
@@ -2738,6 +2747,686 @@ const getCountryIcon = computed(() => {
     
             }
 
+    const getParamsList = async () => {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS  
+        let funcName        = "getParamsList";
+        const   id          = UserStore.getID;  
+        const URL           = `/api/misc/paramslist`;    
+            
+        try {
+            const [status, data] = await FetchStore.GET(URL);      
+            
+            if(status){
+                let keys        = Object.keys(data);
+
+                if(keys.includes("status")){
+
+                    if(data["status"] == "found"){   
+                        paramDetails.value  = {...data["data"] };                          
+                        }
+                    if(data["status"] == "none found" ){  
+                            console.log(`${funcName}: No Variable Paratmeters found`);            
+                        }  
+                }        
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getParamsList() } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                     setTimeout( () => { getParamsList()} ,5000); 
+                }
+            } 
+        }
+        catch(err){     
+            console.error(`${funcName} error: ${err.message}`);         
+        }           
+    }
+
+
+    //#####################
+    //#    GRAPH ROUTES   #
+    //#####################
+    const getDataRange = async () => {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        const controller = new AbortController();
+        const signal = controller.signal;
+        const id = setTimeout(()=>{controller.abort()},60000);
+        const URL = "/api/data/datarange";
+        try {
+            const response = await fetch(URL,{ method: 'GET', signal: signal });
+            if (response.ok){
+                const data = await response.json();
+                let keys = Object.keys(data);
+                if(keys.includes("status")){
+                    if(data["status"] == "found" ){
+                        // console.log(data["data"] )
+                        datarange.value.start =  data["data"]["start"];
+                        datarange.value.end =  data["data"]["end"];
+                    }
+                    if(data["status"] == "failed" ){
+                        console.log("No data returned");
+                    }
+                }
+            }
+            else{
+            const data = await response.text();
+            console.log(data);
+            }
+        }
+        catch(err){
+            console.error('getData error: ', err.message);
+        }
+        return []
+        }
+           
+    const getData1 = async ( param, start,end, resolution)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        getDataLoading.value = true;
+        let funcName        = "getData";
+        const form          = new FormData();   
+        const URL           = '/api/get/data';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        form.set("start", start)
+        form.set("end", end) 
+        form.set("resolution", resolution)
+        form.set("param", param)
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, form, {  } );
+            getDataLoading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+                }
+                if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+                if(data["status"] == "formErrors" ){                            
+                // USER MUST SIGNIN FIRST
+                console.log("Form Errors"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }  
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return []  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getData(param, start,end) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return []  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getData(param, start,end)} ,5000); 
+                }
+            } 
+        }
+        catch(err){ 
+            getDataLoading.value = false; 
+            console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+        return []  // Empty object
+            }
+
+    const getColumnDrilldownData = async ( param, start, loading)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value = true;
+        let funcName        = "getColumnDrilldownData";
+        const form          = new FormData();   
+        const URL           = '/api/get/data/drilldown';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        form.set("start", start) 
+        form.set("param", param)
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, form, {  } );
+            loading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+                }
+                if(data["status"] == "nonefound" ){                            
+                    // USER MUST SIGNIN FIRST                
+                    console.log("Found NO Results"); 
+                    return []  // Empty object
+                    // PUSH NOTIFICATION
+                            } 
+                if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return []  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getColumnDrilldownData(param, start) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return []  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getColumnDrilldownData(param, start)} ,5000); 
+                }
+            } 
+        }
+        catch(err){ 
+            loading.value = false; 
+            console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+        return []  // Empty object
+            }
+
+    const getMultiData = async ( params, start, loading)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value = true;
+        let funcName        = "getMultiData";
+        const form          = new FormData();   
+        const URL           = '/api/get/data/multi';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        let query = {"start": start, "params": params}
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), { 'Accept': 'application/json', 'Content-Type': 'application/json'  } );
+            loading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+                }
+                if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+                if(data["status"] == "formErrors" ){                            
+                // USER MUST SIGNIN FIRST
+                console.log("Form Errors"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }  
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return []  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getMultiData(params, start,loading) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return []  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getMultiData(params, start,loading)} ,5000); 
+                }
+            } 
+        }
+        catch(err){ 
+            loading.value = false; 
+            console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+        return []  // Empty object
+            }
+
+    const getDailyMultiData = async ( params, start,end, loading)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value = true;
+        let funcName        = "getDailyMultiData";
+        const form          = new FormData();   
+        const URL           = '/api/get/data/daily/multi';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        let query = {"start": start, "params": params, "end": end}
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), { 'Accept': 'application/json', 'Content-Type': 'application/json'  } );
+            loading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+                }
+                if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+                if(data["status"] == "formErrors" ){                            
+                // USER MUST SIGNIN FIRST
+                console.log("Form Errors"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }  
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return []  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getMultiData(params, start,loading) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return []  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getMultiData(params, start,loading)} ,5000); 
+                }
+            } 
+        }
+        catch(err){ 
+            loading.value = false; 
+            console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+        return []  // Empty object
+            }
+    
+    const getMultiParamData = async ( params, start,end,resolution, loading)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value = true;
+        let funcName        = "getMultiParamData";
+        const form          = new FormData();   
+        const URL           = '/api/get/data/multiparams';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        let query = {"start": start, "params": params, "end": end, "resolution": resolution}
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), { 'Accept': 'application/json', 'Content-Type': 'application/json'  } );
+            loading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+                }
+                if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+                if(data["status"] == "formErrors" ){                            
+                // USER MUST SIGNIN FIRST
+                console.log("Form Errors"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }  
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return []  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getMultiParamData(params, start,end,resolution,loading) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return []  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getMultiParamData(params, start,end,resolution,loading)} ,5000); 
+                }
+            } 
+        }
+        catch(err){ 
+            loading.value = false; 
+            console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+        return []  // Empty object
+            }
+
+
+    const getMMAData = async ( param, start, loading)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        loading.value = true;
+        let funcName        = "getMMAData";
+        const form          = new FormData();   
+        const URL           = '/api/get/data/mma';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        form.set("start", start) 
+        form.set("param", param)
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, form, {  } );
+            loading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+                }
+                if(data["status"] == "nonefound" ){                            
+                    // USER MUST SIGNIN FIRST                
+                    console.log("Found NO Results"); 
+                    return []  // Empty object
+                    // PUSH NOTIFICATION
+                            } 
+                if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return []  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return []  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getMMAData(param, start) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return []  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getMMAData(param, start)} ,5000); 
+                }
+            } 
+        }
+        catch(err){ 
+            loading.value = false; 
+            console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+        return []  // Empty object
+            }
+        
+
+    const downloadData = async ( param, start,end) => {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        downloadFileLoading.value = true;
+        let funcName        = "downloadData";
+        const form          = new FormData();   
+        const URL           = '/api/download/data';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        form.set("start", start)
+        form.set("end", end)
+        form.set("param", param)
+                
+        try {
+            
+            const [status, data] = await FetchStore.getFile(URL, form, {  }, "data.csv" );
+            downloadFileLoading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){   
+                if(data["status"] == "failed" ){                            
+                // DOWNLOAD FAILED             
+                console.log("Unable to download data"); 
+                 
+                        }  
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);                   
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { downloadData(param, start,end) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);                
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { downloadData(param, start,end)} ,5000); 
+                    }
+                } 
+            }
+        }
+        catch(err){  
+            downloadFileLoading.value = false;
+            console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+    
+            }
+
+    const getMapHistoryData1 = async (start,end, param)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        let funcName        = "getMapHistoryData";
+        const form          = new FormData();   
+        const URL           = '/api/map/data/history';
+  
+        form.set("id", UserStore.getSelectedStation)
+        form.set("account", UserStore.getID)
+        form.set("start", start)
+        form.set("end", end)
+        form.set("param", param)
+                
+        try {
+          
+          const [status, data] = await FetchStore.POST(URL, form, {  } );
+  
+          if(status){
+                  
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+  
+              if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+              }
+              if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return {}  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+              if(data["status"] == "formErrors" ){                            
+                // USER MUST SIGNIN FIRST
+                console.log("Form Errors"); 
+                return {}  // Empty object
+                // PUSH NOTIFICATION
+                        }  
+            }
+          }
+          else {
+              if(data == "unauthorized") {
+                  console.log(`${funcName}: Unauthorized User`);
+                  return {}  // Empty object
+              }
+              else if(data == "token refreshed") {
+                  console.log(`${funcName}: Retrying in in 1 seconds`);
+                  setTimeout( () => { getMapHistoryData(start,end, param) } ,1000); 
+              }
+              else if(data == "unknown") {
+                  console.log(`${funcName}: Unknown response`);
+                  return {}  // Empty object
+              }
+              else if(data == "aborted") {
+                  console.log(`${funcName}: Request aborted`);
+                  // PUSH NOTIFICATION 
+                  setTimeout( () => { getMapHistoryData(start,end, param)} ,5000); 
+              }
+          } 
+      }
+      catch(err){  
+        console.error(`${funcName} error: ${err.message}`);             
+      }   
+
+      return {}  // Empty object
+            }
+
+    const getWindRoseData = async (start)=> {
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+        windroseDataLoading.value = true;
+        let funcName        = "getWindRoseData";
+        const form          = new FormData();   
+        const URL           = '/api/data/windrose';
+    
+        // form.set("id", UserStore.getSelectedStation)
+        // form.set("account", UserStore.getID)
+        form.set("start", start)     
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, form, {  } );
+            windroseDataLoading.value = false;
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] === "found"){         
+                return   data; 
+                // PUSH NOTIFICATION                   
+                }
+                if(data["status"] == "failed" ){                            
+                // USER MUST SIGNIN FIRST                
+                console.log("Found NO Results"); 
+                return {}  // Empty object
+                // PUSH NOTIFICATION
+                        }    
+                if(data["status"] == "formErrors" ){                            
+                // USER MUST SIGNIN FIRST
+                console.log("Form Errors"); 
+                return {}  // Empty object
+                // PUSH NOTIFICATION
+                        }  
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return {}  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getWindRoseData(start) } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return {}  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getWindRoseData(start)} ,5000); 
+                }
+            } 
+        }
+        catch(err){  
+            windroseDataLoading.value = false;
+        console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+        return {}  // Empty object
+            }
+    
+
     return { 
     // EXPORTS	
     drawerItems,
@@ -2752,7 +3441,7 @@ const getCountryIcon = computed(() => {
     getMapHistoryData, 
     appDarkMode,
 
-    // ADMIN EXPORTS
+    // ADMIN EXPORTS 
     uddLoading, 
     newRegistrations,
     staffs,
@@ -2779,6 +3468,9 @@ const getCountryIcon = computed(() => {
     entities,
     spss,
     site,
+    adminDrawer,
+    profileDrawer,
+    liveData,
     selectedSiteEntity,
      entitySearchPages,
      entityPages,
@@ -2804,6 +3496,7 @@ const getCountryIcon = computed(() => {
     openEntitySearch,
     signupEntities,
     getCountryIcon,
+    getParamsList,
     assignUserToEntity,
     submitRequest,
     getEntitiesForSignup,

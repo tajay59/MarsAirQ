@@ -85,13 +85,12 @@ const GET = async ( URL) => {
 
 
   let user = UserStore.user
-        
-  if(user === undefined || user === null || !!!user){
-      
-      if(URL !== "/api/some/metradar/10") {
-        controller.abort();        
-      }    
-      localLogout(); 
+  if(['/api/misc/paramslist'].includes(URL)){
+      //Allow without checking user variable in UserStore
+    }
+  else if(user === undefined || user === null || !!!user){  
+      controller.abort();
+      UserStore.userLogout(); 
   }
  
   try { 
@@ -164,7 +163,7 @@ const POST = async ( URL, body, headers) => {
     }
     else if(user === undefined || user === null || !!!user){
         controller.abort();
-        localLogout();
+        UserStore.userLogout();
     }
    
     try { 

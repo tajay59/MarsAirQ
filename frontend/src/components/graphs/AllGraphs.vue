@@ -1,28 +1,26 @@
 <template>
     <VContainer align="center" class="h-full " fluid>         
         <VRow class=" fill-height" >
-            <VCol cols="12" class="flex align-center justify-end gap-3 pa-0  h-[50px] pr-5" >
+            <VCol cols="12" class="flex flex-wrap align-start sm:justify-end justify-center  gap-3 pa-0" >
                 <SelectButton v-model="selected" :options="options"  optionLabel="name" class=""   aria-labelledby="basic"  :allowEmpty="false" @click="graphType =  selected.type"  size="small" >
                     <template #option="slotProps" >
                         <p class="text-sm font-semibold font-[Roboto]" >{{ slotProps.option.name }}</p>
                     </template>
                 </SelectButton>
 
-                <VBtn    title="Refresh Graphs" icon size="35" flat class="dark:!bg-[hsl(0,0%,3%)] !bg-[hsl(0,0%,90%)]  !text-black dark:!text-white !text-small h-[37px]  border"  @click="getDataToggle = !getDataToggle">      
-                    <svg  width="30" height="30" viewBox="0 0 24 24"  class="dark:text-neutral-200 text-neutral-800"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4m-4 4a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>            
-                    <!-- <svg   width="24" height="24" viewBox="0 0 24 24" class="dark:text-neutral-200 text-neutral-800"><path fill="currentColor" fill-rule="evenodd" d="M3.464 3.464C2 4.93 2 7.286 2 12s0 7.071 1.464 8.535C4.93 22 7.286 22 12 22s7.071 0 8.535-1.465C22 19.072 22 16.714 22 12s0-7.071-1.465-8.536C19.072 2 16.714 2 12 2S4.929 2 3.464 3.464m1.997 7.62A6.59 6.59 0 0 1 12.01 5.25c1.982 0 3.76.875 4.967 2.257a.75.75 0 0 1-1.13.986A5.08 5.08 0 0 0 12.01 6.75a5.09 5.09 0 0 0-5.037 4.333h.364a.75.75 0 0 1 .53 1.281l-1.169 1.167a.75.75 0 0 1-1.06 0L4.47 12.364a.75.75 0 0 1 .53-1.28zm11.84-.615a.75.75 0 0 1 1.06 0l1.169 1.167a.75.75 0 0 1-.53 1.28h-.46a6.59 6.59 0 0 1-6.55 5.834a6.58 6.58 0 0 1-4.967-2.256a.75.75 0 0 1 1.13-.987a5.08 5.08 0 0 0 3.838 1.743a5.09 5.09 0 0 0 5.036-4.333h-.363a.75.75 0 0 1-.53-1.281z" clip-rule="evenodd"/></svg>             -->
+                <VBtn icon class="!text-black dark:!text-white !text-small" variant="text" density="compact" @click="getDataToggle = !getDataToggle">                      
+                     <Icon icon="ion:reload-circle" width="32" height="32" class=""  />                 
                 </VBtn>
-                <VBtn icon="mdi:mdi-close" title="Close" color="onSurface" size="24" variant="flat" density="compact" @click="UserStore.setSelectedStation(null)" />   
             </VCol>
 
-            <VCol cols="12" class="pa-0 "  align="start" >    
+            <VCol cols="12" class="pa-0"  align="start" >    
                 <TransitionGroup name="slide-right"  >
-                    <VSheet v-show="graphType == 'live'"  key="0"   class="pa-0  "  >            
+                    <VSheet v-show="graphType == 'live'"  key="0"    class="pa-0 !rounded-[12px]  mt-1"  >            
                         <figure class="highcharts-figure highcharts-light ">
                             <div :id="graphcontainer"   ></div> 
                         </figure>
                     </VSheet>
-                    <VSheet v-show="graphType != 'live' && !historyLoading" key="1"  class="pa-0   "  >                       
+                    <VSheet v-show="graphType != 'live' && !historyLoading" key="1"    class="pa-0 !rounded-[12px]  mt-1"  >                       
                         <figure  class="highcharts-figure highcharts-light">
                             <div :id="graphcontainer1"  ></div> 
                         </figure>                    
@@ -42,7 +40,7 @@
     /** JAVASCRIPT HERE */
 
     // IMPORTS
-    import { ref,reactive,watch ,onMounted,onBeforeUnmount,computed } from "vue";  
+    import { ref,reactive,watch ,onMounted,onBeforeUnmount,computed, onBeforeMount } from "vue";  
     import { useRoute ,useRouter } from "vue-router";
     import { useAppStore } from '@/stores/appStore';
     import { useMqttStore } from '@/stores/mqttStore'; // Import Mqtt Store
@@ -50,12 +48,13 @@
     
     import { storeToRefs } from "pinia";
     import _ from "lodash";
+    import { useDisplay } from 'vuetify';
+    import { Icon } from "@iconify/vue";
 
     // Highcharts, Load the exporting module and Initialize exporting module.
     import Highcharts from 'highcharts';
-    import 'highcharts/highcharts-more';
-    import 'highcharts/modules/exporting';
-    import 'highcharts/modules/accessibility';
+    import  'highcharts/highcharts-more';
+    import  'highcharts/modules/exporting';
     
     
     
@@ -66,9 +65,10 @@
     const AppStore       = useAppStore();
     const UserStore      = useUserStore(); 
     const Mqtt           = useMqttStore();
+    const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
     const { connected, payload, payloadTopic } = storeToRefs(Mqtt);
-    const { selectedStation, darkmode, layout}  = storeToRefs(UserStore);
-    const { liveData } = storeToRefs(AppStore);
+    const { selectedStation, darkmode }  = storeToRefs(UserStore);
+    const { liveData, paramDetails,  } = storeToRefs(AppStore);
     const chart          = ref(null); // Chart object
     const chart1         = ref(null); // Chart object
     const points         = ref(300); // Specify the quantity of points to be shown on the live graph simultaneously.
@@ -87,7 +87,7 @@
 
 
     const selected       = ref({"name":'Live', "type":'live'});
-    const options        = ref([{"name":'Live', "type":'live'},{"name":'3 Days', "type":'three'},{"name":'7 Days', "type":'seven'},{"name":'1 Month', "type":'month'}]);
+    const options        = ref([{"name":'Live', "type":'live'},{"name":'3D', "type":'three'},{"name":'7D', "type":'seven'},{"name":'1M', "type":'month'}]);
     
     let worker           = new Worker("/src/assets/js/mapHistoryDataWorker.js"); 
 
@@ -99,6 +99,20 @@
     })
 
     // FUNCTIONS
+    const setChartParams = (param) => {
+        let data = paramDetails.value[param]; 
+
+        if(!!data){
+            chart.value.series[0].setData([]);
+            chart.value.update({series:{type: "spline", name: _.capitalize(param)}, subtitle: { text:  _.capitalize(param), align: 'center' }, yAxis: {max: data.max, min: data.min, labels: { format: `{value} ${data.units}` } }, tooltip: { valueSuffix: ` ${data.units}` }});
+
+            chart1.value.series[0].setData([]);
+            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: _.capitalize(param), align: 'center' }, yAxis: {max: data.max, min: data.min, labels: { format: `{value} ${data.units}` } }, tooltip: { valueSuffix: ` ${data.units}` }});
+            chart1.value.showLoading();
+            getData(param); 
+            chart1.value.hideLoading();
+        }
+    }
 
     const clearChart = () => {
         chart.value.series[0].setData([]);
@@ -108,7 +122,7 @@
       
         if (!!window.Worker) {  
             historyLoading.value = true;
-            // const { selectedStation, layout}  = storeToRefs(UserStore);
+            // const { selectedStation }  = storeToRefs(UserStore);
              
             let timestamp = Math.floor(new Date().getTime() / 1000);
             const cookie        = UserStore.getCookie("csrf_access_token"); 
@@ -139,6 +153,9 @@
         
         }
 
+    onBeforeMount(()=> {
+        
+    })
       
     onMounted(() => {
         // THIS FUNCTION IS CALLED AFTER THIS COMPONENT HAS BEEN MOUNTED
@@ -149,7 +166,8 @@
         else if (!darkmode.value)
             chartEl.value.forEach(el => { el.classList.replace('highcharts-dark','highcharts-light') });   
 
-        CreateCharts();      
+        CreateCharts();   
+         
         
         if(window.Worker){
             // WORKER EVENTS
@@ -170,6 +188,7 @@
                         }
             }
 
+            setChartParams(props.param); 
             getData(props.param);
     });
 
@@ -194,22 +213,23 @@
 
     watch(payload,(msg)=> {          
         // LIVE GRAPH
-        if(msg.type == 'station')
+        if(msg.type == 'station' && msg.id == selectedStation.value){
             params.value = Object.keys(msg.data)
         
-        if(points.value > 0)
-            points.value --;    
-        else
-            shift.value = true;    
+            if(points.value > 0)
+                points.value --;    
+            else
+                shift.value = true;    
 
-        if(msg.type == "station" && params.value.includes(props.param)){    
-            // liveData.value[props.param] = msg.data[props.param]   
-            if(!!chart.value.series && selectedStation.value == msg.id){
-                chart.value.setTitle({text: _.toUpper(msg.name)}); 
-                chart.value.series[0].addPoint({y:parseFloat(msg.data[props.param].toFixed(2)) ,x: msg.timestamp * 1000 }, true, shift.value);   
+            if(params.value.includes(props.param)){    
+                liveData.value[props.param] = msg.data[props.param]   
+                if(!!chart.value.series){
+                    chart.value.setTitle({text: _.toUpper(msg.name)}); 
+                    chart.value.series[0].addPoint({y:parseFloat(msg.data[props.param].toFixed(2)) ,x: msg.timestamp * 1000 }, true, shift.value);   
+                }              
             }  
-            
-        }          
+        }
+                  
     });
 
     watch(graphType,(name) => {       
@@ -221,153 +241,8 @@
             chart1.value.series[0].setData(month.value,true,true, false);          
     });
 
-    watch(()=> props.param, async(param) =>{
-         
-        if(param == "temperature"){            
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Temperature', align: 'center' }, yAxis: {max:50, min: 0, labels: { format: '{value} °C' } }, tooltip: { valueSuffix: ' °C' }});
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Temperature', align: 'center' }, yAxis: {max:50, min: 0, labels: { format: '{value} °C' } }, tooltip: { valueSuffix: ' °C' }});
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }        
-
-        else if(param == "humidity"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Humidity', align: 'center' }, yAxis: {max:100, min: 0, labels: { format: '{value} %' } },tooltip: { valueSuffix: ' %' }}); 
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "column", name: _.capitalize(props.param)}, subtitle: { text: 'Humidity', align: 'center' }, yAxis: {max:100, min: 0, labels: { format: '{value} %' } },tooltip: { valueSuffix: ' %' }}); 
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }
-
-        else if(param == "pressure"){            
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Pressure', align: 'center' }, yAxis: {max:1100, min: 900, labels: { format: '{value} hPa' } },tooltip: { valueSuffix: ' hPa' }}) 
-                  
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Pressure', align: 'center' }, yAxis: {max:1100, min: 900, labels: { format: '{value} hPa' } },tooltip: { valueSuffix: ' hPa' }}) 
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }
-
-        else if(param == "radiation"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Radiation', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}) 
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Radiation', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}) 
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }
-        
-        else if(param == "uva"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'UVA', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}); 
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'UVA', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}); 
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }
-
-                
-        else if(param == "uvb"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'UVB', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}); 
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'UVB', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}); 
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }
-
-                
-        else if(param == "uvc"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'UVC', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}); 
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'UVC', align: 'center' }, yAxis: {max:100, min: 0,   labels: { format: '{value} W/m2' } },tooltip: { valueSuffix: ' W/m2' }}); 
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }
-
-                
-        else if(param == "co2"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'CO2', align: 'center' }, yAxis: {max:5500, min: 0,   labels: { format: '{value} ppm' } },tooltip: { valueSuffix: ' ppm' }}); 
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'CO2', align: 'center' }, yAxis: {max:5500, min: 0,   labels: { format: '{value} ppm' } },tooltip: { valueSuffix: ' ppm' }}); 
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading();
-        }
-
-        else if(param == "rainfall"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Rainfall', align: 'center' }, yAxis: {max:60, min: 0,   labels: { format: '{value} mm' } },tooltip: { valueSuffix: ' mm' }});
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "column", name: _.capitalize(props.param)}, subtitle: { text: 'Rainfall', align: 'center' }, yAxis: {max:60, min: 0,   labels: { format: '{value} mm' } },tooltip: { valueSuffix: ' mm' }});
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading(); 
-        }
-
-        else if(param == "winddirection"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Wind Direction', align: 'center' }, yAxis: {max:360, min: 0, labels: { format: '{value} °' } },tooltip: { valueSuffix: ' °' }});
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Wind Direction', align: 'center' }, yAxis: {max:360, min: 0, labels: { format: '{value} °' } },tooltip: { valueSuffix: ' °' }});
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading(); 
-        }
-
-        else if(param == "windspeed"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Wind Speed', align: 'center' }, yAxis: {max:100, min: 0, labels: { format: '{value} m/s' } },tooltip: { valueSuffix: ' m/s' }});
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Wind Speed', align: 'center' }, yAxis: {max:100, min: 0, labels: { format: '{value} m/s' } },tooltip: { valueSuffix: ' m/s' }});
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading(); 
-        }
-
-        else if(param == "bat"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Battery', align: 'center' }, yAxis: {max:100, min: 0, labels: { format: '{value} %' } },tooltip: { valueSuffix: ' %' }});
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "column", name: _.capitalize(props.param)}, subtitle: { text: 'Battery', align: 'center' }, yAxis: {max:100, min: 0, labels: { format: '{value} %' } },tooltip: { valueSuffix: ' %' }});
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading(); 
-        }
-
-        else if(param == "voltage"){
-            chart.value.series[0].setData([]);
-            chart.value.update({series:{type: "spline", name: _.capitalize(props.param)}, subtitle: { text: 'Voltage', align: 'center' }, yAxis: {max:4.2, min: 0, labels: { format: '{value} V' } },tooltip: { valueSuffix: ' V' }});
-
-            chart1.value.series[0].setData([]);
-            chart1.value.update({series:{type: "area", name: _.capitalize(props.param)}, subtitle: { text: 'Voltage', align: 'center' }, yAxis: {max:4.2, min: 0, labels: { format: '{value} V' } },tooltip: { valueSuffix: ' V' }});
-            chart1.value.showLoading();
-            getData(param); 
-            chart1.value.hideLoading(); 
-        }
+    watch(()=> props.param, async(param) => {         
+        setChartParams(param);       
     })
 
 
@@ -379,10 +254,10 @@
    });
 
 
-   const CreateCharts = async () => {  
+    const CreateCharts = async () => {  
         // TEMPERATURE CHART
         chart.value = Highcharts.chart(graphcontainer.value, {
-            chart: { styledMode: true,   zoomType: 'x',height: 335, marginTop: 60,borderRadius: 12, borderWidth: 1, },
+            chart: { styledMode: true,   zoomType: 'x',height: 320, marginTop: 60,borderRadius: 12, borderWidth: 1 },
             title: { text: '', align: 'center' },
             subtitle: { text: 'Temperature', align: 'center' },
             yAxis: { 
@@ -433,7 +308,7 @@
         });
 
         chart1.value = Highcharts.chart(graphcontainer1.value, {
-            chart: { styledMode: true, zoomType: 'x',height: 335, marginTop: 60,borderRadius: 12, borderWidth: 1 },
+            chart: { styledMode: true, zoomType: 'x',height: 320, marginTop: 60,borderRadius: 12, borderWidth: 1 },
             title: { text: '', align: 'center' },
             subtitle: { text: 'Temperature', align: 'center' },
             yAxis: { 
@@ -488,7 +363,6 @@
 
 
 <style>
-
  /**######################################## */
  .highcharts-title {
      fill: var(--highcharts-title-color);
@@ -539,5 +413,5 @@
    fill: var(--highcharts-title-color);
  } 
  /**######################################## */
-
+ 
 </style>

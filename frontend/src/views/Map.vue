@@ -3,28 +3,78 @@
        
       <div :id="mapcontainer" class="w-[100%]  h-[100%]"  ></div> 
 
-      <VBottomSheet :model-value="openLiveSheet" height="400" persistent content-class="bg-transparent"  >
-        <VSheet rounded="t-lg" color="surface" >      
-          <VContainer class="h-full w-full pb-0 " fluid >
-            <VRow class=" h-full pa-0 rounded-lg">
-              <VCol  class="  border-r-2 border-neutral-300 rounded-lg overflow-hidden max-w-[230px] min-w-[200px] max-h-[390px] overflow-y-scroll scrolleffect !bg-neutral-100 dark:!bg-purple-100"  >                
-                  <VChip   v-for="param in params" size="large" :color="(darkmode)? 'surface': 'onSurface'" :variant="(graphToRender.selected == param)? 'flat': 'text' " class="text-caption ma-1 w-full max-w-[200px] rounded-lg border-b-[1px] border-neutral-600 "  @click="AppStore.resetGraphData(); graphToRender.selected = param; /*getData(param)*/" >
-                      <template #prepend>
-                        <Icon :icon="paramDetails[param].icon" width="24" height="24" class=""  />
-                      </template>
-                      <div class="flex flex-col py-1" >
-                        <p  class="pl-3 font-bold text-xs" >{{ _.capitalize(param) }}</p>
-                        <p class="pl-3 font-bold text-xs" > {{ _.round(sensordata[param], 2) }} {{ paramDetails[param].units }} </p>
-                      </div>
-                  </VChip>                    
-              </VCol>
-             
-              <VCol   class=" rounded-lg pa-0" >                
-                <KeepAlive>       
-                    <AllGraphs :param="graphToRender.selected" />                            
-                </KeepAlive>             
-              </VCol>
+      <VBottomSheet :model-value="openLiveSheet"  persistent content-class="bg-transparent relative pa-0"  >
+        <VBtn  icon align="end"   variant="text" class="!text-red-500 dark:!text-red-300 !text-small   absolute -top-12 right-0"   @click="selectedStation = null">                  
+                <Icon icon="solar:close-square-bold" width="32" height="32" class=""  />          
+            </VBtn>
+        <VSheet rounded="t-lg" color="surface" > 
+           
+          <VContainer class=" bg-[hsl(0,0%,93%)] dark:bg-[hsl(0,0%,20%)] " fluid >
+            <VRow  justify="center" align="center" class="pa-2" >
+                <VCol   class="" style=" width: 100%;"   >
+                    <div class="[&>*]:rounded-lg  grid grid-cols-[200px,_minmax(460px,_1fr)] grid-rows-[1fr]  max-[560px]:grid-cols-1 max-[560px]:grid-rows-[100px,fr1]  gap-5 max-h-[370px]    max-[560px]:hidden">
+                       <VCol  class="  border-r-2 border-neutral-300 rounded-lg overflow-hidden max-w-[230px] min-w-[200px] max-h-[370px] overflow-y-scroll scrolleffect !bg-neutral-100 dark:!bg-purple-100"  >                
+                          <VChip   v-for="param in params" size="large" :color="(darkmode)? 'surface': 'onSurface'" :variant="(graphToRender.selected == param)? 'flat': 'text' " class="text-caption ma-1 w-full max-w-[200px] rounded-lg border-b-[1px] border-neutral-600 "  @click="AppStore.resetGraphData(); graphToRender.selected = param; /*getData(param)*/" >
+                              <template #prepend>
+                                <Icon :icon="paramDetails[param].icon" width="24" height="24" class=""  />
+                              </template>
+                              <div class="flex flex-col py-1" >
+                                <p  class="pl-3 font-bold text-xs" >{{ _.capitalize(param) }}</p>
+                                <p class="pl-3 font-bold text-xs" > {{ _.round(sensordata[param], 2) }} {{ paramDetails[param].units }} </p>
+                              </div>
+                          </VChip>                    
+                      </VCol>
+                                                  
+                        <TransitionGroup name="lists">
+                            <div v-if="graphToRender.selected.length <= 0" class="col-span-1 max-h-[390px] flex justify-center align-center">
+                                <p class="text-lg "  >Select a <strong>'Parameter'</strong> from the left to graph</p>
+                            </div>
+                            <div v-else class="col-span-1 max-h-[390px] ">
+                                <KeepAlive>       
+                                    <AllGraphs :param="graphToRender.selected" />                            
+                                </KeepAlive>   
+                            </div>
+                        </TransitionGroup>
+
+                    </div> 
+                    <VTabs v-model="tabs" color="primary" grow  class="!hidden max-[560px]:!block mt-3"  >
+                        <VTab :value="1" class="mx-1" density="compact" hide-slider variant="flat"> <p class="text-none font-bold" >Live</p> </VTab>
+                        <VTab :value="2" class="mx-1"  density="compact" hide-slider variant="flat"> <p class="text-none font-bold" >Graph</p> </VTab>                        
+                    </VTabs>
+
+                    <VTabsWindow v-model="tabs"  class="!hidden max-[560px]:!block py-5" >
+                        <VTabsWindowItem   :key="1" :value="1" >
+                            <div class="max-h-[350px] py-5 grid grid-rows-[repeat(auto-fit,_minmax(50px,60px))] grid-cols-[1fr] gap-2 overflow-y-scroll place-content-start border-y [&>*]:w-full  ">                     
+                                <div   v-for="param in params"  class="grid grid-cols-3 gap-2 cursor-pointer rounded-md hover:bg-neutral-100 hover:dark:bg-neutral-600" :class="[(graphToRender.selected == param)? 'bg-neutral-200  dark:bg-neutral-600 ':'']"   @click="AppStore.resetGraphData(); graphToRender.selected = param; /*getData(param)*/" >                        
+                                    <div class="col-span-1 flex justify-center align-center" >
+                                        <VSheet width="40" height="40" rounded="pill" class="flex justify-center align-center" :class="[(graphToRender.selected ==  param)?'bg-neutral-800 dark:bg-neutral-600':'']"   >
+                                            <Icon :icon="paramDetails[param].icon" width="32" height="32"  :class="[(graphToRender.selected == param)?'text-sky-300/[0.8] dark:text-rose-300/[0.9]':'text-neutral-800 dark:text-neutral-100']"  />                                    
+                                        </VSheet>
+                                    </div>
+                                    <div class="col-span-2 flex flex-col justify-center align-start " > 
+                                        <p  class="pl-3 font-bold text-xs" >{{ _.capitalize(param) }}</p>
+                                        <p class="pl-3 font-bold text-xs" > {{ _.round(sensordata[param], 2) }} {{ paramDetails[param].units }} </p>
+                                    </div>                     
+                                </div>                        
+                            </div>
+                        </VTabsWindowItem>
+
+                        <VTabsWindowItem   :key="2" :value="2" >
+                          <TransitionGroup name="lists">
+                            <div v-if="graphToRender.selected.length <= 0" class="min-h-[560px] flex justify-center align-center">
+                                <p class="text-lg "  >Select a Parameter under the <strong>'Live Data'</strong> tab first</p>
+                            </div>
+                            <div v-else class="max-h-[350px]">
+                                <KeepAlive>       
+                                    <AllGraphs :param="graphToRender.selected" />                            
+                                </KeepAlive>                     
+                            </div>
+                          </TransitionGroup>                    
+                        </VTabsWindowItem>
+                    </VTabsWindow>
+                </VCol>
             </VRow>
+
           </VContainer>
         </VSheet>
       </VBottomSheet>      
@@ -91,6 +141,9 @@
   const redIcon                   = ref(null);
   const goldIcon                  = ref(null);
   const blackIcon                 = ref(null);
+  const tabs                      = ref(1);
+  const sectors                   = ref(["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW","N"]);
+  const directionName             = ref(""); 
   const graphToRender             = ref({"selected": "temperature","init":false, "list":[]})
 
   const mtLayer                   = new MaptilerLayer( {
@@ -121,42 +174,40 @@
         graphToRender.value.selected = params.value[0];
         graphToRender.value.init = true;
       }
-
+      
       if(msg.id == selectedStation.value){      
         params.value = {...Object.keys(msg.data)}; 
         sensordata.value = {...msg['data']}
       }
     
-      let lat = msg.lat;
-      let lon = msg.lon;
-      let date = new Date(msg.timestamp * 1000).toLocaleDateString('en-us', { /*weekday:"short",*/ year:"numeric", month:"short", day:"numeric"}) 
-      let time = new Date(msg.timestamp * 1000).toLocaleTimeString('en-us')     
-    
-      let keys = Object.keys(stations.value); 
+        let date = new Date(msg.timestamp * 1000).toLocaleDateString('en-us', { /*weekday:"short",*/ year:"numeric", month:"short", day:"numeric"}) 
+        let time = new Date(msg.timestamp * 1000).toLocaleTimeString('en-us')     
+      
+        let keys = Object.keys(stations.value); 
 
-      if(keys.includes(msg.id)){
-          // Marker already exist -  update marker    
-          let params = Object.keys(msg.data);            
-          let vals = ``
-          params.forEach( param => vals += `<div class="tooltipMssg_items"><span class="itemNameParish">${_.capitalize(param)}</span> <span class="itemValueParish">${_.round(msg["data"][param], 2)} ${paramDetails.value[param].units}</span></div>`)
+        if(keys.includes(msg.id)){
+            // Marker already exist -  update marker    
+            let params = Object.keys(msg.data);            
+            let vals = ``
+            params.forEach( param => vals += `<div class="tooltipMssg_items"><span class="itemNameParish">${_.capitalize(param)}</span> <span class="itemValueParish">${_.round(msg["data"][param], 2)} ${paramDetails.value[param].units}</span></div>`)
 
-          const details = createElement(
-                      `<div class="tooltipMssg">
-                          <div class="tooltipMssg_items"><span class="itemNameStation">Station</span> <span class="itemValueStation"> ${msg.name.toUpperCase()}</span></div>
-                          <div class="tooltipMssg_items"><span class="itemNameDate">Date</span> <span class="itemValueDate">${date}</span></div>
-                          <div class="tooltipMssg_items"><span class="itemNameTime">Time</span> <span class="itemValueTime">${time}</span></div>
-                          ${vals}                                             
-                      </div>` 
-                    );
+            const details = createElement(
+                        `<div class="tooltipMssg">
+                            <div class="tooltipMssg_items"><span class="itemNameStation">Station</span> <span class="itemValueStation"> ${msg.name.toUpperCase()}</span></div>
+                            <div class="tooltipMssg_items"><span class="itemNameDate">Date</span> <span class="itemValueDate">${date}</span></div>
+                            <div class="tooltipMssg_items"><span class="itemNameTime">Time</span> <span class="itemValueTime">${time}</span></div>
+                            ${vals}                                             
+                        </div>` 
+                      );
 
-          let myMarker = stations.value[msg.id]              
-          myMarker.setPopupContent(details) 
-          .on('mouseover', (ev) => { myMarker.openPopup(); })  
-          .on('mouseout', (ev) => { myMarker.closePopup(); }) 
-          .setIcon(greenIcon.value);             
-      }  
-
+            let myMarker = stations.value[msg.id]              
+            myMarker.setPopupContent(details) 
+            .on('mouseover', (ev) => { myMarker.openPopup(); })  
+            .on('mouseout', (ev) => { myMarker.closePopup(); }) 
+            .setIcon(greenIcon.value);             
+        }  
     }
+    
   
   });
 
@@ -197,8 +248,6 @@
 
 
   onMounted(() => {
-
-    
 
     if(!Mqtt.isConnected) { 
       if(suball.value){
@@ -256,8 +305,8 @@
   
   const createIcon = (name) => {      
     return new L.Icon({
-        iconUrl: `/src/assets/${name}.png`,
-        shadowUrl: '/src/assets/marker-shadow.png',
+        iconUrl: `/src/assets/markers/${name}.png`,
+        shadowUrl: '/src/assets/markers/marker-shadow.png',
         // iconUrl: `../src/assets/${name}.png`,
         // shadowUrl: '../src/assets/marker-shadow.png',
         iconSize:     [50, 50],

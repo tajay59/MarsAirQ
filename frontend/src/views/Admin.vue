@@ -3,7 +3,7 @@
     <RouterView />
     <!-- image="https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg" -->
 
-    <VNavigationDrawer width="270" permanent :floating="(route.name == 'Admin')? false : true" v-if="mdAndUp" >
+    <VNavigationDrawer v-model="adminDrawer" width="270" :floating="(route.name == 'Admin')? false : true"   >
       <template #prepend >
         <div class="my-3 mt-7"  >
           <VImg v-if="!darkmode" src="@/assets/logo6_light.png" width="200" max-height="150" class="mx-15" style=" cursor: pointer;" @click="router.push({name:'Home'})"  >
@@ -73,9 +73,10 @@ const UserStore         = useUserStore();
 const AppStore          = useAppStore();
 const { xs,smAndDown,smAndUp, mdAndUp }   = useDisplay();
 const {id,loggedIn,image, darkmode}       = storeToRefs(UserStore);
-const {newRegistrations, staffs, users, selectedAccount, requests}   = storeToRefs(AppStore);
+const {newRegistrations, staffs, users,adminDrawer, selectedAccount, requests}   = storeToRefs(AppStore);
 const myWorker          = ref(null);
 const siteWorker        = ref(null);
+const requestLoading    = ref(false);
 
 
 
@@ -117,11 +118,9 @@ onMounted(()=>{
     
         myWorker.value.port.onmessage = (e) => { 
             let {newRegistrations, staffs, users, selected} = e.data;
-            console.log(e.data);
             AppStore.setAdminAccountVariables("newRegistrations",newRegistrations);
             AppStore.setAdminAccountVariables("staffs",staffs);
-            AppStore.setAdminAccountVariables("users",users);
-            // console.log(e.lastEventId);
+            AppStore.setAdminAccountVariables("users",users); 
             if(!!selected)
               AppStore.setSelectedAccount(selected);
         };
@@ -150,6 +149,8 @@ onMounted(()=>{
 
     AppStore.getPageCount();
     AppStore.getPage(1);
+    AppStore.getRequests(requestLoading);
+    
 })
 
  

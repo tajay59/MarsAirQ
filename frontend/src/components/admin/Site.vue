@@ -867,8 +867,8 @@ const setMarkerOnListMap = (lat, lon) => {
 
 const createIcon = (name) => {      
     return new L.Icon({
-        iconUrl: `/src/assets/${name}.png`,
-        shadowUrl: '/src/assets/marker-shadow.png',
+        iconUrl: `/src/assets/markers/${name}.png`,
+        shadowUrl: '/src/assets/markers/marker-shadow.png',
         // iconUrl: `../src/assets/${name}.png`,
         // shadowUrl: '../src/assets/marker-shadow.png',
         iconSize: [50, 50],

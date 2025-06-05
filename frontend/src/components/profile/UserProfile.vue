@@ -1,5 +1,5 @@
     <template>
-    <div class=" flex flex-col gap-3 [&>*]:max-w-[500px] [&>*]:w-full  justify-between align-center" >
+    <div class=" flex flex-col gap-3 [&>*]:max-w-[500px] [&>*]:w-full  justify-between align-center pa-5" >
         <p class="text-lg font-bold mb-10" >Edit Profile</p>  
         <div class="flex justify-between mb-15"  >
             <div class="bg-[url('@/assets/default.png')]  size-[150px] rounded-full relative border border-neutral-500 dark:border-neutral-400" >

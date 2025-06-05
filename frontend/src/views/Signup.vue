@@ -14,8 +14,8 @@
                 </div>
               </template>
             </VImg> 
-            <div class="mt-n5 text-center" >
-              <span class="roboto-black-italic !text-purple-400 text-xl font-bold " style=" cursor: pointer" @click="router.push({name:'Home'})">Mars </span><span class="roboto-condensed-200 !text-gray-300">Air</span><span class="!text-purple-400 font-weight-bold text-h4">Q</span> 
+            <div class="mt-n2 text-center" >
+              <span class="roboto-black-italic !text-purple-400 text-xl font-bold " style=" cursor: pointer" @click="router.push({name:'Home'})">KaleidoScope </span> <sub class="roboto-condensed-200 !text-gray-300">MARS</sub> 
             </div>
             <div class="  text-center" >
               <span class="roboto-black-italic text-neutral-200/[0.8] text-4xl " style=" cursor: pointer" @click="router.push({name:'Home'})">Registration </span> 
@@ -59,9 +59,10 @@
                     <form  @submit.prevent="onSubmit" id="signupForm" class="mt-1">     
                       <div v-for="field in signupForm" :key="field.label"   >
                         <VSelect
-                            v-if          = " field.label == 'Country'" 
-                            :items        = "countries" 
-                            border
+                              v-if          = "field.label == 'Country'" 
+                              v-model       = "field.data"  
+                              :items        = "countries" 
+                              border
                               clearable
                               flat 
                               class         = "text-caption py-1 "
@@ -70,9 +71,9 @@
                               :rules        = "rules(field.name)" 
                               :label        = "field.label"     
                               :variant      = "field.variant"                            
-                              :type         = "((field.name == 'Password' && showPasscode) || (field.name == 'PasswordConfirm' && showPasscodeConfirm) )? 'text':field.type"
+                              type          = "text"
                               :name         = "field.name"              
-                              v-model       = "field.data"  
+                              
                           >
                           <template v-slot:clear>
                             <VIcon icon="mdi:mdi-close-circle" @click="field.data = ''" size="16"></VIcon>
@@ -83,7 +84,7 @@
                           <FloatLabel variant="on">
                             <AutoComplete   v-model="selectedOrganizations" optionLabel="organization" fluid dropdown placeholder="                        search" :suggestions="filteredOrganizations" @complete="search"  :pt="{root:'!text-purple-300 dark:!text-purple-200',dropdown: '!rounded-r-[50%]', chipItem: '!rounded-l-[50%] !text-purple-300 dark:!text-purple-200'}" style="width: 100%;" >
                               <template #option="slotProps">
-                                  <div class="flex gap-2 place-content-center">
+                                  <div class="flex gap-2 place-content-center" @click="signupForm.country.data = slotProps.option.country">
                                     
                                     <Icon :icon="getCountryIcon(slotProps.option.code)"  with="24" height="24"></Icon>
                                     <span class="text-sm" >{{ slotProps.option.organization }}</span>
@@ -239,8 +240,7 @@
   import { useDisplay } from 'vuetify'
   import { useTheme } from 'vuetify'
   import { useForm } from 'vee-validate';  
-  import { object, string, number, date, ObjectSchema  } from 'yup';
-  import  type { InferType } from 'yup';
+  import { object, string, number, date, ObjectSchema  } from 'yup'; 
   import { useRoute, useRouter } from "vue-router";
   import { ref,reactive, onMounted,onBeforeMount,computed, watch} from 'vue'; 
   import { Icon } from '@iconify/vue';
@@ -248,10 +248,8 @@
   // PINIA STORES
   import { storeToRefs } from 'pinia';
   import { useAppStore} from '@/stores/appStore';
-  import { useUserStore} from '@/stores/userStore';
-  import { fa } from 'vuetify/lib/iconsets/fa.mjs'; 
-  import { useToast } from 'primevue/usetoast';
-import { InputText } from 'primevue';
+  import { useUserStore} from '@/stores/userStore'; 
+  import { useToast } from 'primevue/usetoast'; 
   
   
   // VARIABLES 
@@ -494,8 +492,6 @@ const search = (event) => {
 
 const onClickFinish = ()=> {
         finished.value = true
-
-      alert('Finished')
     }
 
   const cancel = ()=>{

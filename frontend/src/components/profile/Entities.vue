@@ -1,19 +1,19 @@
 <template>
- <div class="w-full h-dvh flex flex-col " >
+ <div class="w-full flex flex-col" >
 
-    <div class=" h-20 flex flex-col justify-center ml-16 relative" >
+    <div class=" h-20 flex flex-col justify-center ml-1 " >
        <!-- TOP BAR -->          
     </div>
 
-    <div class="bg-neutral-200 dark:bg-neutral-800 h-full ml-10 rounded-tl-3xl overflow-hidden  border border-neutral-800" >
-        <VContainer class="min-h-screen" fluid >
+    <div class="bg-neutral-200 dark:bg-neutral-800 h-full rounded-tl-3xl  border border-neutral-800" :class="[(!smAndDown)?'pa-7':'pa-2']" >
+        <VContainer class="min-h-screen pr-0" fluid >
             
-            <VRow class=" w-full  bg-neutral-200 dark:bg-neutral-800 pa-7 pl-10"   >
+            <VRow class=" !w-full gap-3" justify="space-between" style="width: 100%;"  >
                 <!-- <VCol cols="12" > <p  class="text-xl font-medium">Site Details</p></VCol> -->
                 
-                <VCol class=""  :cols="(mdAndUp)? 5 : 12"  >
+                <VCol class="pa-0"  :cols="(mdAndUp)? 5 : 12"  >
                     <!-- LEFT PANEL -->
-                    <VCard class="pa-3 bg-neutral-100 dark:bg-neutral-700/[0.5] " flat rounded="lg"  >                        
+                    <VCard class="pa-5 bg-neutral-100 dark:bg-neutral-700/[0.5] " flat rounded="lg"  >                        
                         <div :id="mapcontainer" class="size-full rounded-lg " :class="[(mdAndUp)? 'min-h-[600px]':'min-h-[200px]']"  ></div>
                         <VCardItem  class="px-0" > 
                             <VContainer fluid class="pa-0" >
@@ -31,10 +31,10 @@
                     </VCard>
                 </VCol>
 
-                <VCol class="mt-" :cols="(mdAndUp)? 7 : 12" >         
+                <VCol class="pa-0" :cols="(mdAndUp)? 6 : 12" >         
                     <!-- RIGHT PANEL -->
                     
-                    <VCard v-if="Object.keys(entityPages.pages).length > 0" class="pa-3 flex flex-col place-items-center  bg-neutral-100 dark:bg-neutral-700/[0.5] relative !overflow-y-scroll" flat rounded="lg"  min-height="712" max-height="713"  >
+                    <VCard v-if="Object.keys(entityPages.pages).length > 0" class="pa-3 flex flex-col place-items-center  bg-neutral-100 dark:bg-neutral-700/[0.5] relative !overflow-y-scroll" flat rounded="lg"    max-height="713"  >
                         <!-- ENTITY LIST  -->          
                         <PanelMenu :model="menuItems" multiple class="w-full md:w-96"  >
                              <template #item="{ item }">
@@ -395,7 +395,7 @@ watch(()=> createEntity.name,async (entity)=> {
        
 })
 
-watch(()=> updateEntityReq.name,async (entity)=> {
+watch(() => updateEntityReq.name,async (entity)=> {
     let test
     try {
         test = await entitySchema.validate({"name": entity});
@@ -526,7 +526,7 @@ const enableEntityCreateBtn = computed(() =>  {
      } 
   ) 
 
-  const enableEntityUpdateBtn = computed(() => {       
+const enableEntityUpdateBtn = computed(() => {       
       if(!!updateEntityReq.name && !!updateEntityReq.country && !!updateEntityReq.organization && !!enableEntityUpdateSubmitButton.value ){
         if(updateEntityReq.name.length >= 3 && updateEntityReq.country.length == 2 && updateEntityReq.organization.length >= 3 )
             return false
@@ -587,7 +587,8 @@ const addEntity = async () => {
             createEntity.name           = "";
             createEntity.country        = ""; 
             createEntity.organization   = "";
-            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Entity! request submitted', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Entity! request submitted', life: 3000 });      
+            AppStore.getRequests(requestLoading);       
             break;
         
         case "exist":
@@ -618,7 +619,8 @@ const updateEntity = async () => {
             updateEntityReq.name        = "";
             updateEntityReq.country     = ""; 
             updateEntityReq.id          = "";
-            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Successfully submitted Entity! updated request', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'UPDATED', detail: 'Successfully submitted Entity! updated request', life: 3000 });    
+            AppStore.getRequests(requestLoading);         
             break;
 
         case "exist":
@@ -626,7 +628,8 @@ const updateEntity = async () => {
             updateEntityReq.name        = "";
             updateEntityReq.country     = ""; 
             updateEntityReq.id          = "";
-            toast.add({ severity: 'success', summary: 'EXIST', detail: 'ENTITY updated request already exist!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'EXIST', detail: 'ENTITY updated request already exist!', life: 3000 });  
+            AppStore.getRequests(requestLoading);           
             break;
 
         case "failed":
@@ -648,14 +651,16 @@ const deleteEntity = async () => {
             openDeleteEntity.value      = false; 
             deleteEntityReq.value.id    = "";
             deleteEntityReq.value.name  = "";            
-            toast.add({ severity: 'success', summary: 'DELETED', detail: 'Successfully submitted ENTITY! deletion request', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'DELETED', detail: 'Successfully submitted ENTITY! deletion request', life: 3000 });    
+            AppStore.getRequests(requestLoading);         
             break;
         
         case "exist":
             openDeleteEntity.value      = false; 
             deleteEntityReq.value.id    = "";
             deleteEntityReq.value.name  = "";
-            toast.add({ severity: 'success', summary: 'EXIST', detail: 'ENTITY deletion request already exist!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'EXIST', detail: 'ENTITY deletion request already exist!', life: 3000 });   
+            AppStore.getRequests(requestLoading);          
             break;
 
         case "failed":             
@@ -682,7 +687,8 @@ const siteRequest = async () => {
             createSite.lat  = "0";
             createSite.lon  = "0";
             createSite.entity = ""
-            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Successfully submitted request for new SITE!', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Successfully submitted request for new SITE!', life: 3000 });        
+            AppStore.getRequests(requestLoading);     
             break;
         
         case "failed":
@@ -709,7 +715,8 @@ const siteDeletionRequest = async () => {
             deleteSiteReq.entity    = "";
             deleteSiteReq.id        = "";
             
-            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Successfully submitted request for SITE! deletion', life: 3000 });             
+            toast.add({ severity: 'success', summary: 'SUBMITTED', detail: 'Successfully submitted request for SITE! deletion', life: 3000 });  
+            AppStore.getRequests(requestLoading);           
             break;
         
         case "failed": 
@@ -725,8 +732,8 @@ const siteDeletionRequest = async () => {
 
 const createIcon = (name) => {      
     return new L.Icon({
-        iconUrl: `/src/assets/${name}.png`,
-        shadowUrl: '/src/assets/marker-shadow.png',
+        iconUrl: `/src/assets/markers/${name}.png`,
+        shadowUrl: '/src/assets/markers/marker-shadow.png',
         // iconUrl: `../src/assets/${name}.png`,
         // shadowUrl: '../src/assets/marker-shadow.png',
         iconSize: [50, 50],

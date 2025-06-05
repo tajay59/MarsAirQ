@@ -25,7 +25,7 @@
      /** JAVASCRIPT HERE */
  
      // IMPORTS
-     import { ref,reactive,watch ,onMounted,onBeforeUnmount,computed } from "vue";  
+     import { ref,reactive,watch ,onMounted,onBeforeUnmount,computed, onBeforeMount } from "vue";  
      import { useRoute ,useRouter } from "vue-router";
      import { useAppStore } from '@/stores/appStore';
      import { useMqttStore } from '@/stores/mqttStore'; // Import Mqtt Store
@@ -51,7 +51,7 @@
      const UserStore      = useUserStore(); 
      const Mqtt           = useMqttStore();
      const { connected, payload, payloadTopic } = storeToRefs(Mqtt);
-     const { selectedStation, darkmode, layout}  = storeToRefs(UserStore);
+     const { selectedStation, darkmode,userSites, layout}  = storeToRefs(UserStore);
      const { liveData, paramDetails } = storeToRefs(AppStore);
      const chart          = ref(null); // Chart object
      const points         = ref(300); // Specify the quantity of points to be shown on the live graph simultaneously.
@@ -69,15 +69,25 @@
     const menu = ref();    
     const items = ref([{ label: 'Params', items: [] }, { label: 'Actions',  items: [ {label: "Delete", icon:"ic:baseline-delete", command: () => { emit('delete'); } }]}  ]);
     
-    const parameters = Object.keys(paramDetails.value)
-    parameters.forEach( item => items.value[0]["items"].push({ label: _.capitalize(item), icon: paramDetails.value[item].icon }))
+     
+     // COMPUTED
+     const getParams = computed(()=> {
+        let site =  userSites.value.filter( site => site.id == layout.value.site )
+        let result = []
+        if(site.length > 0){
+            let device =  site[0].devices.filter( device => device.id == layout.value.device)
+            if(device.length > 0)
+                result = device[0].params            
+        }
+        return result
+     })
 
      // PROPS
      const props = defineProps({
-     param :{type:String,default:"default"},
-     displaymode :{type: Boolean ,default: false},
-     width: {type:Number,default:300},
-     id :{type:String,default:""}
+        param :{type:String,default:"default"},
+        displaymode :{type: Boolean ,default: false},
+        width: {type:Number,default:300},
+        id :{type:String,default:""}
      })
       
      // FUNCTIONS
@@ -85,7 +95,11 @@
         menu.value.toggle(event);
     };    
  
-       
+    onBeforeMount(()=> {
+        // UPDATES items.value VARIABLE TO ENSURE ONLY PARAMS ASSIGNED TO STATION SHOWS IN GRAPH MENU
+        getParams.value.forEach( item => items.value[0]["items"].push({ label: _.capitalize(item), icon: paramDetails.value[item].icon }));
+     })
+
      onMounted(() => {
          // THIS FUNCTION IS CALLED AFTER THIS COMPONENT HAS BEEN MOUNTED
          chartEl.value = document.querySelectorAll(".highcharts-figure");
@@ -126,20 +140,12 @@
              params.value = Object.keys(msg.data)
  
              if(msg.type == "station" && params.value.includes(param.value) && !props.displaymode){    
-            if(msg.id == selectedStation.value){
-                if(!!chart.value.series){ 
-                    chart.value.series[0].points[0].update(msg.data[param.value]);
-                }  
-            }             
-         } 
-         /*
-         if(msg.type == "station" && params.value.includes(param.value)){    
-            
-             if(!!chart.value.series){ 
-                 chart.value.series[0].points[0].update(msg.data[param.value]);
-             }  
-             
-         } */         
+                if(msg.id == selectedStation.value){
+                    if(!!chart.value.series){ 
+                        chart.value.series[0].points[0].update(msg.data[param.value]);
+                    }  
+                }             
+         }         
      });
  
   

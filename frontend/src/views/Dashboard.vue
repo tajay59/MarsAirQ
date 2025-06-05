@@ -29,8 +29,8 @@
         </VRow>
 
             
-        <VRow  :justify="(smAndDown)? 'center':'start'"  align="start" class="gap-3 min-h-screen mt-15" style="max-width: 1500px; min-width: 250px; width: 100%;" > 
-            <VSheet border class="!rounded-xl pa-5 min-h-screen w-full !bg-neutral-100 dark:!bg-neutral-700" color="transparent" >
+        <VRow  :justify="(smAndDown)? 'center':'start'"  align="start" class="gap-3  mt-15" style="max-width: 1500px; min-width: 250px; width: 100%;" > 
+            <VSheet border class="!rounded-xl pa-5  w-full !bg-neutral-100 dark:!bg-neutral-700" color="transparent" >
                 <div v-if="layout.dashboard.length > 0" class="flex gap-2 flex-wrap justify-center" >
                     <TransitionGroup name="lists" >
                         <VSheet v-for="(component, index) in componentsToRender" :key="component.key" color="transparent"  >
@@ -88,6 +88,73 @@
                 </Drawer> 
             </VSheet>          
         </VRow>
+
+        <VRow  justify="center" align="center" class=" my-15" >
+            <VCol   class=" rounded-xl bg-[hsl(0,0%,93%)] dark:bg-[hsl(0,0%,20%)]" style="max-width: 1500px; width: 100%;"   >
+                <div class=" [&>*]:rounded-lg  grid grid-cols-[200px,_minmax(460px,_1fr)] grid-rows-[1fr]  max-[560px]:grid-cols-1 max-[560px]:grid-rows-[100px,fr1]  gap-5   max-[560px]:hidden">
+                    <div class="overflow-y-scroll max-h-[560px] pa-2 col-span-1  grid grid-rows-[repeat(auto-fit,_minmax(50px,60px))] grid-cols-[1fr] gap-3  place-content-start [&>*]:w-full ">               
+                        <div   v-for="(param,index) in getParams"  class="grid grid-cols-3 gap-2 cursor-pointer rounded-lg hover:bg-neutral-100 hover:dark:bg-neutral-600" :class="[(graphToRender.selected == param)? 'bg-neutral-200  dark:bg-neutral-600 ':'',(index+1 != getParams.length)? 'border-b':'']"  @click="graphToRender.selected = param">             
+                            <div class="col-span-1 flex justify-center align-center" >
+                                <VSheet width="40" height="40" rounded="pill" class="flex justify-center align-center" :class="[(graphToRender.selected ==  param)?'bg-neutral-800 dark:bg-neutral-600':'bg-transparent']"   >
+                                    <Icon :icon="paramDetails[param].icon" width="32" height="32"  :class="[(graphToRender.selected == param)?'text-sky-300/[0.8] dark:text-rose-300/[0.9]':'text-neutral-800 dark:text-neutral-100']"  />
+                                </VSheet>
+                            </div>
+                            <div class="col-span-2 flex flex-col justify-center align-start " > 
+                                <p class="text-[hsl(0,0%,40%)] dark:text-[hsl(0,0%,70%)] text-sm">{{ _.capitalize(param) }}</p>
+                                <p class="font-bold text-[hsl(0,0%,0%)] dark:text-[hsl(0,0%,100%)] text-sm"  style="font-family:  Roboto;" >{{ liveData[`${param}`] }}  <span>{{ paramDetails[param].units }}</span> <span>{{ (param =='winddirection')? `/ ${directionName}` : ' ' }}</span> </p>
+                            </div>                     
+                        </div>               
+                    </div>
+                
+                    <TransitionGroup name="lists">
+                        <div v-if="graphToRender.selected.length <= 0" class="col-span-1 min-h-[560px] flex justify-center align-center">
+                            <p class="text-lg "  >Select a <strong>'Parameter'</strong> from the left to graph</p>
+                        </div>
+                        <div v-else class="col-span-1 min-h-[560px] ">
+                            <KeepAlive>       
+                                <AllGraphs :param="graphToRender.selected" />                            
+                            </KeepAlive>   
+                        </div>
+                    </TransitionGroup>
+                </div>
+
+                <VTabs v-model="tabs" color="primary" grow  class="!hidden max-[560px]:!block "  >
+                    <VTab :value="1" class="mx-1" density="compact" hide-slider variant="flat"> <p class="text-none font-bold" >Live Data</p> </VTab>
+                    <VTab :value="2" class="mx-1"  density="compact" hide-slider variant="flat"> <p class="text-none font-bold" >Graph</p> </VTab>
+                </VTabs>
+
+                <VTabsWindow v-model="tabs"  class="!hidden max-[560px]:!block py-5" >
+                    <VTabsWindowItem   :key="1" :value="1" >
+                        <div class="grid grid-rows-[repeat(auto-fit,_minmax(50px,60px))] grid-cols-[1fr] gap-2  place-content-start border-y [&>*]:w-full min-h-[560px] ">                     
+                            <div   v-for="param in getParams"  class="grid grid-cols-3 gap-2 cursor-pointer rounded-md hover:bg-neutral-100 hover:dark:bg-neutral-600" :class="[(graphToRender.selected == param)? 'bg-neutral-200  dark:bg-neutral-600 ':'']"  @click="graphToRender.selected = param">                        
+                                <div class="col-span-1 flex justify-center align-center" >
+                                    <VSheet width="40" height="40" rounded="pill" class="flex justify-center align-center" :class="[(graphToRender.selected ==  param)?'bg-neutral-800 dark:bg-neutral-600':'']"   >
+                                        <Icon :icon="paramDetails[param].icon" width="32" height="32"  :class="[(graphToRender.selected == param)?'text-sky-300/[0.8] dark:text-rose-300/[0.9]':'text-neutral-800 dark:text-neutral-100']"  />                                    
+                                    </VSheet>
+                                </div>
+                                <div class="col-span-2 flex flex-col justify-center align-start " > 
+                                    <p>{{ _.capitalize(param) }}</p>
+                                    <p class="text-lg font-bold"  style="font-family:  Roboto;" >{{ liveData[`${param}`] }}  <span>{{ paramDetails[param].units }}</span> </p>
+                                </div>                     
+                            </div>                        
+                        </div>
+                    </VTabsWindowItem>
+
+                    <VTabsWindowItem   :key="2" :value="2" >
+                        <TransitionGroup name="lists">
+                            <div v-if="graphToRender.selected.length <= 0" class="min-h-[560px] flex justify-center align-center">
+                                <p class="text-lg "  >Select a Parameter under the <strong>'Live Data'</strong> tab first</p>
+                            </div>
+                            <div v-else class="min-h-[560px]">
+                                <KeepAlive>       
+                                    <AllGraphs :param="graphToRender.selected" />                            
+                                </KeepAlive>                     
+                            </div>
+                        </TransitionGroup>                        
+                    </VTabsWindowItem>
+                </VTabsWindow>
+            </VCol>
+        </VRow>
           
     </VContainer> 
 </template>
@@ -142,13 +209,18 @@ const AppStore        = useAppStore();
 const UserStore       = useUserStore();
 const toast           = useToast(); 
 const {connected, payload, payloadTopic } = storeToRefs(Mqtt);  
-const {dashboardMenu}  = storeToRefs(AppStore);
+const {dashboardMenu, liveData, paramDetails}  = storeToRefs(AppStore);
 const {darkmode,userSites, selectedStation, layout} = storeToRefs(UserStore);
 const deviceMenu = ref();
 const menuId = ref(`container${_.random(0,100000)}`);
-
- 
-
+const graphToRender     = ref({"selected": ""})
+const stationDate       = ref(null); 
+const stationTime       = ref(null);
+const tabs              = ref(1);
+const params            = ref([]); 
+const sectors           = ref(["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW","N"]);
+const directionName     = ref("");
+const windDirIcon       = ref(null);
 const items = ref([
     {
         label: 'File',
@@ -199,7 +271,7 @@ const items = ref([
 
  
 
-const componentsToRender = ref([]) 
+const componentsToRender = ref([]); 
 
 
     // VERY IMPORTANT!!
@@ -212,7 +284,7 @@ const menuItems = computed(()=>{
     userSites.value.forEach((site)=> {
         let devices = []
         let item = {"label": _.capitalize(site.name),"icon":"iconamoon:location-pin-duotone"}
-        site.devices.forEach( device => devices.push({"icon": "heroicons-solid:device-mobile","label": device.name,command: ()=> {updateDash(site,device)}}));
+        site.devices.forEach( device => devices.push({"icon": "heroicons-solid:device-mobile","label": device.name, command: ()=> {updateDash(site,device)}}));
         
         if(devices.length > 0){
             item["items"] = devices
@@ -222,7 +294,19 @@ const menuItems = computed(()=>{
     });
 
     return list
-})
+});
+
+const getParams = computed(()=> {
+        let site =  userSites.value.filter( site => site.id == layout.value.site )
+        let result = []
+        if(site.length > 0){
+            let device =  site[0].devices.filter( device => device.id == layout.value.device)
+            if(device.length > 0)
+                result = device[0].params            
+        }
+        return result
+     })
+
 
 const stationName = computed(()=>{    
     let name = ""
@@ -238,11 +322,100 @@ const stationName = computed(()=>{
 
 
 // WATCHERS
-  
-watch(payload, (data)=>{ 
-  
+watch(payload,(msg)=> {          
+        // LIVE GRAPH
 
-}) 
+        if(msg.type == "station"){
+            params.value = Object.keys(msg.data);
+            
+            if(msg.id == selectedStation.value){
+
+                if(params.value.includes('temperature'))   
+                    liveData.value.temperature = msg.data.temperature           
+                
+                if(params.value.includes('humidity'))    
+                    liveData.value.humidity = msg.data.humidity           
+                
+                if(params.value.includes('pressure'))    
+                    liveData.value.pressure = msg.data.pressure           
+                
+                if(params.value.includes('windspeed'))    
+                    liveData.value.windspeed = msg.data.windspeed         
+                
+                if(params.value.includes('winddirection')){    
+                    liveData.value.winddirection = msg.data.winddirection    
+                    directionName.value = sectors.value[Math.round((msg.data.winddirection % 360)/ 22.5)]
+                    if(!!windDirIcon.value)
+                        windDirIcon.value.style.transform = `rotate(${msg.data.winddirection}deg)`;       
+                }  
+
+                if(params.value.includes('radiation'))    
+                    liveData.value.radiation = msg.data.radiation 
+
+                if(params.value.includes('rainfall'))    
+                    liveData.value.rainfall = msg.data.rainfall 
+
+                if(params.value.includes('uva'))    
+                    liveData.value.uva = msg.data.uva     
+
+                if(params.value.includes('uvb'))    
+                    liveData.value.uvb = msg.data.uvb   
+
+                if(params.value.includes('uvc'))    
+                    liveData.value.uvc = msg.data.uvc   
+
+                if(params.value.includes('co2'))    
+                    liveData.value.co2 = msg.data.co2     
+
+                if(params.value.includes('bat'))   
+                    liveData.value.bat = msg.data.bat    
+            }
+        }
+            
+       
+         
+        
+        
+
+        /* 
+        day:
+            The representation of the day.
+            Possible values are "numeric", "2-digit".
+        weekday:
+            The representation of the weekday.
+            Possible values are "narrow", "short", "long".
+        year:
+            The representation of the year.
+            Possible values are "numeric", "2-digit".
+        month:
+            The representation of the month.
+            Possible values are "numeric", "2-digit", "narrow", "short", "long".
+        hour:
+            The representation of the hour.
+            Possible values are "numeric", "2-digit".
+        minute: The representation of the minute.
+            Possible values are "numeric", "2-digit".
+        second:
+            The representation of the second.
+            Possible values are "numeric", 2-digit".
+        hour12:
+            The representation of time format.
+            Accepts boolean true or false
+        */
+        
+        if(msg.type == "info" ){    
+            var dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',hour12: true };
+  
+            let date = new Date(msg.timestamp * 1000) 
+            stationDate.value = date.toLocaleDateString("en-US", dateOptions);    
+            stationTime.value = date.toLocaleTimeString("en-US",{hour: 'numeric', minute: 'numeric'});
+
+            liveData.value.current = msg.current
+            liveData.value.voltage = msg.voltage
+        }  
+
+       
+    });
 
 // FUNCTIONS
 

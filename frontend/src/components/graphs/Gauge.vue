@@ -24,7 +24,7 @@
      /** JAVASCRIPT HERE */
  
      // IMPORTS
-     import { ref, watch ,onMounted,onBeforeUnmount } from "vue";  
+     import { ref, watch, computed ,onMounted,onBeforeUnmount, onBeforeMount } from "vue";  
      import { useRoute ,useRouter } from "vue-router";
      import { useAppStore }  from '@/stores/appStore';
      import { useMqttStore } from '@/stores/mqttStore'; // Import Mqtt Store
@@ -50,7 +50,7 @@
      const UserStore      = useUserStore(); 
      const Mqtt           = useMqttStore();
      const { connected, payload, payloadTopic } = storeToRefs(Mqtt);
-     const { selectedStation, darkmode, layout}  = storeToRefs(UserStore);
+     const { selectedStation, darkmode,userSites, layout}  = storeToRefs(UserStore);
      const { liveData, paramDetails } = storeToRefs(AppStore);
      const chart          = ref(null); // Chart object
      const points         = ref(300); // Specify the quantity of points to be shown on the live graph simultaneously.
@@ -68,9 +68,20 @@
  
      const menu = ref();    
      const items = ref([{ label: 'Params', items: [] }, { label: 'Actions',  items: [ {label: "Delete", icon:"ic:baseline-delete", command: () => { emit('delete'); } }]}  ]);
+
+     // COMPUTED
+     const getParams = computed(() => {
+        let site =  userSites.value.filter( site => site.id == layout.value.site )
+        let result = []
+        if(site.length > 0){
+            let device =  site[0].devices.filter( device => device.id == layout.value.device)
+            if(device.length > 0)
+                result = device[0].params            
+        }
+        return result
+     })
+
       
-     const parameters = Object.keys(paramDetails.value)
-     parameters.forEach( item => items.value[0]["items"].push({ label: _.capitalize(item), icon: paramDetails.value[item].icon }))
  
      const toggle = (event) => {
          menu.value.toggle(event);
@@ -101,9 +112,6 @@
          }          
      });
  
-  
- 
-    
  
      watch(darkmode,(mode)=> {           
         if(mode)
@@ -120,7 +128,12 @@
          id :{type:String,default:""}
      })
  
-      
+     
+     onBeforeMount(()=> {
+        // UPDATES items.value VARIABLE TO ENSURE ONLY PARAMS ASSIGNED TO STATION SHOWS IN GRAPH MENU
+        getParams.value.forEach( item => items.value[0]["items"].push({ label: _.capitalize(item), icon: paramDetails.value[item].icon }));
+     })
+
      // FUNCTIONS
      onMounted(() => {
          // THIS FUNCTION IS CALLED AFTER THIS COMPONENT HAS BEEN MOUNTED
@@ -171,7 +184,7 @@
              endAngle: 90,
              background: null,
              center: ['50%', '75%'],
-             size: '120%'
+             size: '100%'
          },
          navigation: false,
          tooltip:{enabled: false},

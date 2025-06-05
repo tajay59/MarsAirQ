@@ -46,6 +46,7 @@ export const useUserStore =  defineStore('user', ()=>{
     const userEntity        = ref(null);
     const userEntities      = ref([]);
     const userEntitiesData  = ref([]);
+    const entityWithSites   = ref(null);
 
     // CONFIGURATIONS
     const modelTab          = ref("");
@@ -272,7 +273,7 @@ const deleteAllCookies = ()=> {
 const localLogout = () => {
     clearUser();     
     deleteAllCookies();  
-    console.log("FINISHING LOGGING OUT");
+    
     // map through that list and use the **$reset** fn to reset the state
     //   getActivePinia()._s.forEach(store => store.$reset());
     let pinia = getActivePinia()
@@ -281,7 +282,7 @@ const localLogout = () => {
     // pinia._s.forEach(store => {console.log(store); store.$reset(); });
     localStorage.clear();
     sessionStorage.clear();
-    console.log("ALL LOGGED OUT");
+    
 }
 
 const userLogout = async () => {
@@ -302,22 +303,16 @@ const userLogout = async () => {
       const data      = await response.json();
       let keys        = Object.keys(data);
     
-    if (response.status == 401) { 
-          console.log("HERE ");
+    if (response.status == 401) {  
 
           if(keys.includes("message")){
-            //console.log(data);
-            console.log("HERE 2");
+            //console.log(data); 
             if( data['message'] === "loggedOut" ) {   
-                console.log("HERE 4");
                 // PUSH NOTIFICATION              message,color,      textColor,      variant, icon,                 iconColor,   state
                 NotificationStore.pushNotification("Logged out!","secondary","text-onSecondary","flat","fas fa-circle-check","onSecondary",true,2000); 
 
                 // UPDATE PINIA STORES
-                localLogout(); 
-                // clearUser();      
-                // deleteAllCookies(); 
-              
+                localLogout();               
                 mqtt_sub_credentials.value = null;
                 Mqtt.username = null;
                 Mqtt.password = null;
@@ -327,15 +322,13 @@ const userLogout = async () => {
                 setTimeout(()=>{ router.replace( { name:"Home"});},1000);
                 
             }                                    
-            else {      
-                console.log("HERE 5"); 
+            else {       
                 localLogout();      
                 // PUSH NOTIFICATION 
-                NotificationStore.pushNotification( "Unable to logout" ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
+                // NotificationStore.pushNotification( "Unable to logout" ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
             }        
         }
-        else {    
-            console.log("HERE 3");          
+        else {             
             // PUSH NOTIFICATION 
             // NotificationStore.pushNotification( "Unable to logout"  ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
             // UPDATE PINIA STORES
@@ -347,8 +340,7 @@ const userLogout = async () => {
             setTimeout(()=>{ router.replace( { name:"Home"});},1000);
         }
     }                                        
-    else {    
-        console.log("HERE 1");         
+    else {            
       // PUSH NOTIFICATION 
       // NotificationStore.pushNotification( "Unable to logout" ,"error","text-onError","flat","fas fa-triangle-exclamation","onError",true,2000);  
       localLogout();
@@ -361,8 +353,7 @@ const userLogout = async () => {
     }
     catch(err){
        
-      if( err.message === "The user aborted a request."){
-        console.log("REQUEST TIMEDOUT");
+      if( err.message === "The user aborted a request."){ 
         // UPDATE PINIA STORE
         loggedIn.value  = false;
         user.value      = "";
@@ -396,9 +387,8 @@ const getAllSites = async () => {
       if(keys.includes("status")){                    
 
           if(data["status"] == "ok"){    
-            userSites.value = data["sites"];     
-            suball.value = data["suball"];  
-              
+            userSites.value = [...data["sites"]];     
+            suball.value = data["suball"];   
               // PUSH NOTIFICATION                   
           } 
           else if(data["status"] == "failed" ){                            
@@ -496,8 +486,62 @@ const getUserSuball = async () => {
   
   
         }
-    // INIT
-    // getCsrfToken();
+ 
+        
+const getEntityWithSites = async ( ) => { 
+        // FETCH REQUEST WILL TIMEOUT AFTER 20 SECONDS
+      
+        let funcName        = "getEntityWithSites"; 
+        const URL           = '/api/get/entitysites';
+     
+        let query            = {}
+        query["account"]     = id.value;  
+        query["entity"]      = userEntity.value; 
+                
+        try {
+            
+            const [status, data] = await FetchStore.POST(URL, JSON.stringify(query), {'Accept': 'application/json', 'Content-Type': 'application/json'} );
+    
+            if(status){
+                    
+            let keys        = Object.keys(data);
+            if(keys.includes("status")){                    
+    
+                if(data["status"] == "ok"){    
+                    entityWithSites.value =  {...data["entity"]};    
+                    return   "ok";                 
+                } 
+               
+            }
+            }
+            else {
+                if(data == "unauthorized") {
+                    console.log(`${funcName}: Unauthorized User`);
+                    return "unauthorized"  // Empty object
+                }
+                else if(data == "token refreshed") {
+                    console.log(`${funcName}: Retrying in in 1 seconds`);
+                    setTimeout( () => { getEntityWithSites() } ,1000); 
+                }
+                else if(data == "unknown") {
+                    console.log(`${funcName}: Unknown response`);
+                    return "unknown"  // Empty object
+                }
+                else if(data == "aborted") {
+                    console.log(`${funcName}: Request aborted`);
+                    // PUSH NOTIFICATION 
+                    setTimeout( () => { getEntityWithSites()} ,5000); 
+                }
+            } 
+
+            return "failed"
+        }
+        catch(err){  
+        console.error(`${funcName} error: ${err.message}`);             
+        }   
+
+    
+            }
 
     return {
       loggedIn,
@@ -527,6 +571,8 @@ const getUserSuball = async () => {
       userEntities,
       userEntity,
       userEntitiesData, 
+      entityWithSites,
+      getEntityWithSites,
       getUserSuball,
       getAllSites,
       setSelectedStation,

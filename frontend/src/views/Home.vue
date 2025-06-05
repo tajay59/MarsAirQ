@@ -26,8 +26,8 @@
           <p class="mt-10 nunito font-semibold text-lg text-center text-neutral-900  dark:text-neutral-200/[0.8] mb-10 " style="max-width: 500px;">Join the growing community that relies on Mars AirQ to monitor and improve air quality</p>
 
           <div class="mt-5 flex gap-2 justify-center align-center" >  
-            <VBtn text="Login" color="transparent" width="150" height="50" class="text-none !text-base !bg-neutral-100 dark:!bg-neutral-700  !text-neutral-900 dark:!text-neutral-100 !border" ></VBtn>
-            <VBtn text="Register" color="transparent" width="150" height="50"  class="text-none text-base !bg-neutral-700 dark:!bg-neutral-100  !text-neutral-100 dark:!text-neutral-900 !border" ></VBtn>
+            <VBtn text="Login" color="transparent" width="150" height="50" @click="router.push({name:'Login'})" class="text-none !text-base !bg-neutral-100 dark:!bg-neutral-700  !text-neutral-900 dark:!text-neutral-100 !border" ></VBtn>
+            <VBtn text="Register" color="transparent" width="150" height="50" @click="router.push({name:'Signup'})"  class="text-none text-base !bg-neutral-700 dark:!bg-neutral-100  !text-neutral-100 dark:!text-neutral-900 !border" ></VBtn>
           </div>
          </div>
 

@@ -5,7 +5,8 @@
       <!-- TOP ROW -->
       <VRow class=" gap-3 mt-15"  style="max-width: 1200px;" >
         <VCol class=""> 
-          <div id="sitemap" class="w-full min-w-[300px] max-w-[594px]  rounded-lg h-[300px]  min-[697px]:h-[826px]"  ></div>
+          <div :id="graphcontainer" class="w-full min-w-[300px] max-w-[594px]  rounded-lg h-[300px]  min-[697px]:h-[826px]"  > 
+          </div>
         </VCol> 
 
         <VCol v-if="!!site" class="  flex flex-col justify-between min-w-[350px]">
@@ -98,7 +99,7 @@
               
               </VContainer>
 
-            </VCardItem>
+            </VCardItem> 
           </VCard>
 
           <VCard  class="my-2 bg-neutral-100 dark:bg-neutral-800" flat border >
@@ -192,7 +193,7 @@
                         <VCol align="start" class="ml-2" >
                           <div class=" flex justify-start mb-2 font-medium opacity-60" ><p>Params</p></div>
                           <VBtn   v-for="param in device.params"     width="36" height="36" variant="text" :elevation="0" :title="_.capitalize(param)"  icon  density="compact"    >
-                              <Icon :icon="paramDetails[param].icon" width="32" height="32" class=""  /> 
+                              <!-- <Icon :icon="paramDetails[param].icon" width="32" height="32" class=""  />  -->
                           </VBtn> 
                         </VCol>
                       </VRow>
@@ -238,16 +239,93 @@
             </template>
         </VDialog>
 
+         <Button label="Show" @click="visible = true" />
+         <Dialog v-model:visible="visible" modal header="Request a new device" :style="{ width: '25rem' }">
+            <!-- <span class="text-surface-500 dark:text-surface-400 block mb-8">Update your information.</span>  -->
+            <div :id="graphcontainer2" class="size-full rounded-lg w-full h-[300px] mb-3"  ></div>
+            <span class="text-surface-500 dark:text-surface-400 block mb-8">Fill in the information.</span> 
+
+            <FloatLabel v-for="(field, index) in Object.keys(createDevice).filter(name => !['params','processor'].includes(name))" :key="index" variant="in" class="group relative my-3" > 
+                <IconField   >   
+                  <!-- <InputIcon class="pi pi-search" />              -->
+                  <InputText id="on_name"  v-model="createDevice[field]" placeholder=" " :pt="{ root: { class:'peer w-full !pt-[16px] !pr-[50px] !pb-0 !pl-[16px] !border rounded-lg !bg-neutral-50 dark:!bg-neutral-800 focus:!bg-neutral-700 focus:dark:!bg-neutral-300 !border focus:!border-neutral-500 !text-black/[0.8] focus:!text-white/[0.8] dark:!text-white/[0.8] dark:focus:!text-black/[0.8]'}}" />
+                  <InputIcon v-if="!!createDevice[field]" class="!absolute  !right-3 !top-[16px] cursor-pointer" @click="createDevice[field] = ''" >
+                     <Icon icon="flowbite:close-circle-solid" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-400 group-has-[input:focus]:!text-neutral-200  group-has-[input:focus]:dark:!text-neutral-700" />
+                  </InputIcon>   
+                   <Transition name="bounce" mode="out-in" >
+                      <Message v-if="createDeviceFormErrors[field][0]" severity="error" size="small"  class="!text-xs" variant="simple">{{ createDeviceFormErrors[field][1]}}</Message>
+                   </Transition>
+                </IconField>
+                <label for="on_name" class="!absolute !top-5 group-has-[input:focus]:!top-0 group-has-[input:not(:placeholder-shown)]:!top-0 group-has-[input:focus]:!text-[11px] group-has-[input:not(:placeholder-shown)]:!text-[11px] !text-sm !text-black/[0.8] group-has-[input:focus]:!text-white/[0.8]  dark:!text-white/[0.7] group-has-[input:focus]:dark:!text-black/[0.8]  !px-1 rounded ">{{ field }}</label>
+            </FloatLabel>
+
+            <!-- <FloatLabel variant="in" class="group relative my-1" > 
+                <IconField   >    
+                  <InputText id="on_name"  v-model="createDevice.name" placeholder=" " :pt="{ root: { class:'peer w-full !pt-[16px] !pr-[50px] !pb-0 !pl-[16px] !border rounded-lg !bg-neutral-50 dark:!bg-neutral-800 focus:!bg-neutral-700 focus:dark:!bg-neutral-300 !border focus:!border-neutral-500 !text-black/[0.8] focus:!text-white/[0.8] dark:!text-white/[0.8] dark:focus:!text-black/[0.8]'}}" />
+                  <InputIcon v-if="!!createDevice.name" class="!absolute  !right-3 !top-[16px] cursor-pointer" @click="createDevice.name = ''" >
+                     <Icon icon="flowbite:close-circle-solid" width="24" height="24" class="!text-neutral-500 dark:!text-neutral-400 group-has-[input:focus]:!text-neutral-200  group-has-[input:focus]:dark:!text-neutral-700" />
+                  </InputIcon>   
+                   <Transition name="bounce" mode="out-in" >
+                      <Message v-if="createDeviceFormErrors.name[0]" severity="error" size="small"  class="!text-xs" variant="simple">{{ createDeviceFormErrors.name[1]}}</Message>
+                   </Transition>
+                </IconField>
+                <label for="on_name" class="!absolute !top-5 group-has-[input:focus]:!top-0 group-has-[input:not(:placeholder-shown)]:!top-0 group-has-[input:focus]:!text-[11px] group-has-[input:not(:placeholder-shown)]:!text-[11px] !text-sm !text-black/[0.8] group-has-[input:focus]:!text-white/[0.8]  dark:!text-white/[0.7] group-has-[input:focus]:dark:!text-black/[0.8]  !px-1 rounded ">Name</label>
+            </FloatLabel> -->
+         
+          
+            <VSelect v-model="createDevice.processor" :items="processors" :rules = "createDeviceFormErrors.processor" item-title="name" item-value="name" label="Processor" class="my-2 rounded-lg border border-neutral-600 dark:border-neutral-50 overflow-clip"  density="compact" variant="solo-inverted"   flat    clearable  >
+              <template v-slot:item="{ props, item }">
+                <VListItem v-bind="props" :title="_.capitalize(item.raw.name)"  class="ml-5">
+                  <template #prepend >
+                    <Icon :icon="item.raw.icon" width="24" height="24"  class="mr-5" />
+                  </template>
+                </VListItem>
+              </template>
+            </VSelect>
+
+            <MultiSelect v-model="createDevice.params" :options="parameters" name="parameters" optionLabel="name" optionValue="param" filter placeholder="Select Countries"  class="w-full">
+                <!-- { "name": "Temperature", "param": "AT", "units": "°C", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "htmlUnits": "<small class=\"text-xs\"> °C</small>" } -->
+                  <template #option="slotProps">
+                      <div class="flex items-center">
+                          <!-- <img :alt="slotProps.option.name" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${slotProps.option.param.toLowerCase()} mr-2`" style="width: 18px" /> -->
+                          <div>{{ slotProps.option.name }}</div>
+                      </div>
+                  </template>
+                  <template #dropdownicon>
+                      <i class="pi pi-map" />
+                  </template>
+                  <template #filtericon>
+                      <i class="pi pi-map-marker" />
+                  </template>
+                  <template #header>
+                      <div class="font-medium px-3 py-2">Available Parameters</div>
+                  </template>
+                  <template #footer>
+                      <div class="p-3 flex justify-between">
+                          <Button label="Add New" severity="secondary" text size="small" icon="pi pi-plus" />
+                          <Button label="Remove All" severity="danger" text size="small" icon="pi pi-times" />
+                      </div>
+                  </template>
+              </MultiSelect>
+
+            <div class="flex justify-end gap-2 my-3">
+                <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
+                <Button type="button" label="Save" @click="visible = false"  :disabled="enableDeviceCreateBtn"></Button>
+            </div>
+            
+        </Dialog>
+
         <VDialog v-model="openCreateDevice" class="mx-5" transition="dialog-bottom-transition" width="100%" max-width="400"  persistent >
           <!-- CREATE DEVICE -->
             <template v-slot:default="{ isActive }">
                 <VCard  > 
                     <VCardTitle class="h-[300px] pa-2 rounded-lg" >
-                        <div id="devicemap" class="size-full rounded-lg"  ></div>
+                        <div :id="graphcontainer1" class="size-full rounded-lg"  ></div>
                     </VCardTitle>
 
                     <VCardSubtitle class=" px-2 pt-3">
                         <p class=" text-2xl font-light"  style="font-family: Nunito;" >Add a Device</p>
+                        
                     </VCardSubtitle>
 
                     <VCardText class="pb-0 px-2">
@@ -281,7 +359,32 @@
                           </template>
 
                         </VSelect>
-                    
+                          <!-- pt:overlay="!z-[5000]" pt:header="!z-[6001]" -->
+                        <!-- <MultiSelect v-model="tester" :options="parameters" name="parameters" optionLabel="name" optionValue="param" filter placeholder="Select Countries"  :pt="{root:'!bg-red',pcfiltercontainer: {root: { class: '',style:'background: purple;z-index:200000;' }},pcfilter: {root: { class: '',style:'background: purple;z-index:200000;' }}  ,labelContainer:{style:'color:red;background:red;'},overlay:'!z-[25000]'}" :dt="{overlay:{background:'{neutral.200}'}}"  class="w-full md:w-80">
+                          { "name": "Temperature", "param": "AT", "units": "°C", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "htmlUnits": "<small class=\"text-xs\"> °C</small>" }
+                            <template #option="slotProps">
+                                <div class="flex items-center">
+                                    <img :alt="slotProps.option.name" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${slotProps.option.param.toLowerCase()} mr-2`" style="width: 18px" />
+                                    <div>{{ slotProps.option.name }}</div>
+                                </div>
+                            </template>
+                            <template #dropdownicon>
+                                <i class="pi pi-map" />
+                            </template>
+                            <template #filtericon>
+                                <i class="pi pi-map-marker" />
+                            </template>
+                            <template #header>
+                                <div class="font-medium px-3 py-2">Available Parameters</div>
+                            </template>
+                            <template #footer>
+                                <div class="p-3 flex justify-between">
+                                    <Button label="Add New" severity="secondary" text size="small" icon="pi pi-plus" />
+                                    <Button label="Remove All" severity="danger" text size="small" icon="pi pi-times" />
+                                </div>
+                            </template>
+                        </MultiSelect> -->
+                      
                       </VCardText>
 
                     <VCardActions class="justify-end pa-4">
@@ -424,8 +527,7 @@
       </VRow>
 
       <!-- BOTTOM ROW --> 
-   
-   
+  
     </VContainer>
      
   </template>
@@ -438,6 +540,8 @@
   import { useDisplay } from 'vuetify';
   import { useToast } from 'primevue/usetoast';
   import { useRoute } from "vue-router"; 
+  import { object, string, number, array } from 'yup';
+  import { z } from "zod/v4";
   import _ from 'lodash';
   import { Icon } from '@iconify/vue';
   import { MaptilerLayer, MaptilerStyle } from "@maptiler/leaflet-maptilersdk";
@@ -451,7 +555,7 @@
   
 
 
-
+const visible = ref(false);
 // VARIABLES
 const AppStore          = useAppStore(); 
 const UserStore         = useUserStore();
@@ -489,6 +593,7 @@ const updateSiteMarker  = shallowRef(null);
 const createDeviceMarker  = shallowRef(null); 
 const createSiteMarker  = shallowRef(null);
 const mymap             = shallowRef(null);
+const mymap1            = shallowRef(null);
 const updatesitemap     = shallowRef(null); 
 const updatedevicemap   = shallowRef(null);  
 const listmap           = shallowRef(null);
@@ -503,18 +608,104 @@ const updateSite          = reactive({id:"",name:"", lat:"0",lon:"0", enabled: t
 const createDevice        = reactive({name:"", lat:"0",lon:"0", processor:"", params :[]});
 const updateDevice        = reactive({siteid:"",deviceid:"", name:"", lat:"0",lon:"0", processor:"", params:[]});
 const deleteDevice        = reactive({siteid:"",id:"", name:""});
-const paramOptions        = ref(["temperature","humidity","pressure","co2","voc","vocindex","pm25","pm10","radiation","uva","uvb","uvc","voltage","current","bat","oxidised","reduced","nh3","lux"]);
-let searchTextID, timeoutVal = 1000; 
+const enableDeviceBtn     = ref(true);
+const graphcontainer    = ref(`container${_.random(0,100000)}`);
+const graphcontainer1   = ref(`container${_.random(0,100000)}`);
+const graphcontainer2   = ref(`container${_.random(0,100000)}`);
 
-const processors = ref([{"name":"esp32", "icon":"simple-icons:espressif"},{"name":"zero", "icon":"cib:raspberry-pi"},{"name":"pimoroni", "icon":"cib:raspberry-pi"}])
+
+
+const paramOptions        = ref(["temperature","humidity","pressure","co2","voc","vocindex","pm25","pm10","radiation","uva","uvb","uvc","voltage","current","bat","oxidised","reduced","nh3","lux","sm1","sm2","sm3","sm4","sm5","sm6","sm7","sat1","sat2","sat3","sat4","sat5","sat6","sat7","srh1","srh2","srh3","srh4","srh5","srh6","srh7"]);
+let searchTextID, timeoutVal = 1000; 
  
+const processors = ref([{"name":"esp32", "icon":"simple-icons:espressif"},{"name":"zero", "icon":"cib:raspberry-pi"},{"name":"pimoroni", "icon":"cib:raspberry-pi"},{"name":"aws", "icon":"solar:station-bold"},{"name":"goes", "icon":"emojione-monotone:satellite-antenna"}])
+
+// const test = ref([ { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude", "param": "ALT", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 1", "param": "ALT1", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 2", "param": "ALT2", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 3", "param": "ALT3", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 4", "param": "ALT4", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 5", "param": "ALT5", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 6", "param": "ALT6", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 7", "param": "ALT7", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> °C</small>", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "name": "Temperature", "param": "AT", "units": "°C" }, { "htmlUnits": "<small class=\"text-xs\"> °C</small>", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "name": "Temperature 1", "param": "AT1", "units": "°C" }, { "htmlUnits": "<small class=\"text-xs\"> °C</small>", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "name": "Temperature 2", "param": "AT2", "units": "°C" }])
+
+const test = ref([ { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude", "param": "ALT", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 1", "param": "ALT1", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 2", "param": "ALT2", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 3", "param": "ALT3", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 4", "param": "ALT4", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 5", "param": "ALT5", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 6", "param": "ALT6", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> ft</small>", "icon": "material-symbols-light:altitude-rounded", "max": 4000, "min": 0, "name": "Altitude 7", "param": "ALT7", "units": "ft" }, { "htmlUnits": "<small class=\"text-xs\"> °C</small>", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "name": "Temperature", "param": "AT", "units": "°C" }, { "htmlUnits": "<small class=\"text-xs\"> °C</small>", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "name": "Temperature 1", "param": "AT1", "units": "°C" }, { "htmlUnits": "<small class=\"text-xs\"> °C</small>", "icon": "fluent:temperature-20-regular", "max": 40, "min": 0, "name": "Temperature 2", "param": "AT2", "units": "°C" }])
+const tester = ref()
+
+
+// VALIDATION CONFIG 
+const createDeviceFormErrors    = reactive({name: [false,""], lat:[false,""],lon:[false,""], processor:[false,""], params :[false,""]});
+const creatDeviceParamList      = ref(Object.keys(createDeviceFormErrors)); 
+
+let deviceSchema = z.object({ // all properties are required by default
+  name: z.string().min(3, 'Minimum 3 characters').regex(/^[A-Za-z]*$/, 'Letters only. No space'),
+  lat: z.number().min(-90,"Must be >= -90°").max(90,"Must be <= 90°"),
+  lon: z.number().min(-180,"Must be >= -180°").max(180,"Must be >= 180°"),
+  processor: z.string().min(3, 'Minimum 3 characters').regex(/^[A-Za-z0-9]*$/, 'Letters & Numbers only. No space'),
+  params: z.array(z.string()).min(1,"Must select at least one parameter")
+});
 
 // WATCHERS
+
+watch(createDevice,  (entity) => {
+    let result 
+    try {
+        result =  deviceSchema.parse({"name": entity.name,"lat": parseFloat(entity.lat),"lon": parseFloat(entity.lon),"processor": entity.processor,"params": entity.params}); 
+        creatDeviceParamList.value.forEach(key => createDeviceFormErrors[key] = [false,""]); // reset errors
+        enableDeviceBtn.value = false;
+    } catch (errors) {
+         enableDeviceBtn.value = true;
+         if(errors instanceof z.ZodError){ 
+            let remaining = []; // Save list of params that had errors
+
+            errors.issues.forEach(error => {
+                createDeviceFormErrors[error['path'][0]] = [true,error.message];
+                remaining.push(error['path'][0]);
+              });
+
+            // Set all params without errors to default
+            creatDeviceParamList.value.forEach(key => {
+              if(!remaining.includes(key))
+                createDeviceFormErrors[key] = [false,""];
+            }); 
+            // console.log("ERRORS: ",errors.issues);            
+          }
+    }       
+});
+
+
+watch(visible,  (state) => {
+    if(state){
+
+        setTimeout(()=> {
+          mymap1.value = map(graphcontainer2.value,{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
+            
+            // /*
+            tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                        maxZoom: 18,
+                        id: 'tedwardsuwi/cl0d2e6io000t14qntylpu4j4',
+                        tileSize: 512,
+                        zoomOffset: -1,
+                        accessToken: 'pk.eyJ1IjoidGVkd2FyZHN1d2kiLCJhIjoiY2x3Y3RqMXY1MHpuNTJxcDA4emQ0ejQycCJ9.t-ENJ58Apo7e4gfhEidE8A'
+                    }).addTo(mymap1.value);
+            // */    
+        //    mtLayer.addTo(mymap.value) 
+        mymap1.value.whenReady(()=> {
+          createDeviceMarker.value = marker([14.5255555556, -75.8183333333],{title: "Site",opacity:1.0,riseOnHover:true })
+          .on('click', (e) => { 
+          console.log("Clicked marker");
+              })   
+
+          .bindPopup('Device location')  
+          .setIcon(greenIcon.value)   
+          createDeviceMarker.value.addTo(mymap1.value)
+          
+            })   
+             
+        },500) 
+    } 
+     
+});
+
 watch(openCreateDevice,  (state) => {
     if(state){
 
         setTimeout(()=> {
-          listmap.value = map('devicemap',{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
+          listmap.value = map(graphcontainer1.value,{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
             
             // /*
             tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -633,7 +824,7 @@ watch(()=> site.value, (site) => {
     }    
   })
 
-  watch(updateSite, (site) => {
+watch(updateSite, (site) => {
     if( !!updatesitemap.value) {
       updatesitemap.value.setZoom(11);
       updatesitemap.value.setView([site.lat, site.lon]);
@@ -641,7 +832,7 @@ watch(()=> site.value, (site) => {
     }    
   })
 
-  watch(updateDevice, (site) => {
+watch(updateDevice, (site) => {
     if(!!updatedevicemap.value) { 
       updatedevicemap.value.setZoom(11);
       updatedevicemap.value.setView([site.lat, site.lon]);
@@ -697,6 +888,23 @@ watch(siteLoading, (loading) => {
 
 
 // COMPUTED PROPERTIES
+const parameters = computed(()=> {
+  return Object.values(paramDetails.value); 
+   
+});
+
+const enableDeviceCreateBtn = computed(() => { 
+      let res = []; 
+      creatDeviceParamList.value.forEach(key => {
+          if(!!createDeviceFormErrors[key]){ 
+            res.push((createDeviceFormErrors[key][1].length > 0)? true: false);
+          }                  
+            });  
+      return ((res.includes(true) == false) && (enableDeviceBtn.value == false))? false : true; 
+     } 
+  ) 
+
+
 const entitySiteName = computed(()=>{
   let entity = "";
   let sitename = "";
@@ -719,15 +927,7 @@ const enableSiteUpdateBtn  = computed(() =>
      } 
   ) 
 
-const enableDeviceCreateBtn = computed(() => 
-     {       
-      if(!!createDevice.lat && !!createDevice.lon  && !!createDevice.name){
-        if(createDevice.name.length > 3 && createDevice.lat.length > 3  && createDevice.lon.length > 3 )
-            return false
-      }
-      return true        
-     } 
-  ) 
+
 
 const enableDeviceUpdateBtn = computed(() => 
      {       
@@ -934,8 +1134,8 @@ const setMarkerOnListMap = (lat, lon) => {
 
 const createIcon = (name) => {      
     return new L.Icon({
-        iconUrl: `/src/assets/${name}.png`,
-        shadowUrl: '/src/assets/marker-shadow.png',
+        iconUrl: `/src/assets/markers/${name}.png`,
+        shadowUrl: '/src/assets/markers/marker-shadow.png',
         // iconUrl: `../src/assets/${name}.png`,
         // shadowUrl: '../src/assets/marker-shadow.png',
         iconSize: [50, 50],
@@ -945,8 +1145,6 @@ const createIcon = (name) => {
         shadowAnchor : [13,40]
     });  
   }
-
-
 
 onBeforeMount(()=>{  
     AppStore.getSite(route.params.id);
@@ -962,7 +1160,8 @@ goldIcon.value  = createIcon("goldstripe");
 blackIcon.value = createIcon("blackstripe");
 
 
-mymap.value =  map('sitemap',{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);     
+mymap.value =  map(graphcontainer.value,{ zoomControl: false}).setView([14.5255555556, -75.8183333333], 4);  
+   
 
 
 tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {

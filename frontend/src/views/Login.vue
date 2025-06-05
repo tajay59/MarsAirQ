@@ -5,7 +5,7 @@
         <VRow  align="center" justify="center"  style=" overflow: hidden;"  class="fill-height pa-0 ma-0 rounded-lg"  >
           <VCol v-if="!smAndDown" class=" fill-height pa-0" align="center" style="height: 100%;" >
             <!-- LEFT IMAGES -->
-            <VCard height="100%" width="100%" variant="flat" border   class="bg-[url('@/assets/sky1.png')] bg-no-repeat bg-cover bg-rose-950 d-flex align-center justify-center rounded-e-xl"  flat> 
+            <VCard height="100%" width="100%" variant="flat" border   class="bg-[url('@/assets/sky1.png')] bg-no-repeat bg-cover bg-black d-flex align-center justify-center rounded-e-xl"  flat> 
               <template v-slot:image>
                   <!-- <VImg  src="@/assets/landing.png" cover   height="100%">              
                     <template v-slot:placeholder>
@@ -38,7 +38,7 @@
                       </template>
                     </VImg> 
                     <div class="mt-n5" >
-                      <span class="roboto-black-italic text-primary font-bold text-xl " style=" cursor: pointer" @click="router.push({name:'Home'})">Mars </span><span class="roboto-condensed-200  ">Air</span><span class="text-primary font-weight-bold text-h4">Q</span> 
+                      <span class="roboto-black-italic text-primary font-bold text-xl " style=" cursor: pointer" @click="router.push({name:'Home'})">KaleidoScope </span><sub class="roboto-condensed-200  ">MARS</sub>
                     </div>
                   </VCol>
 

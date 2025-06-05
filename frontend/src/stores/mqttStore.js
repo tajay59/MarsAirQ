@@ -92,8 +92,7 @@ export const useMqttStore =  defineStore('mqtt', ()=>{
            try {
                 payload.value       = JSON.parse(response.payloadString); 
                 payloadTopic.value  = response.destinationName;
-                // console.log(`Topic : ${payloadTopic.value} \nPayload : ${response.payloadString}`);  
-                // console.log(`Received new MQTT message,  Topic : ${payloadTopic.value}`);                   
+                // console.log(`Topic : ${payloadTopic.value} \nPayload : ${response.payloadString}`);                 
             } 
            catch (error) {
                 console.log(`onMessageArrived Error: ${error}`);

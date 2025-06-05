@@ -124,7 +124,7 @@ router.beforeEach( async (to, from)=>{
     // console.log(`AUTH : ${UserStore.loggedIn}  ROLE : ${UserStore.role}`)
 
     if(to.name !== 'Login' && !UserStore.loggedIn){ 
-      // console.log(" USER NOT LOGGED IN "); 
+      console.log(" USER NOT LOGGED IN "); 
       UserStore.loggedIn  = false;
       UserStore.user      = "";
       UserStore.role      = "user";

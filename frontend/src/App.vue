@@ -78,12 +78,16 @@ const {
    payload,
    payloadTopic } = storeToRefs(Mqtt);
 
-  const {overlay,
+  const {
+    overlay,
     openSiteSearch,
     openEntitySearch,
     openCreateSite,
     openCreateEntity,
-    dashboardMenu
+    dashboardMenu,
+    adminDrawer,
+    profileDrawer,
+    paramDetails,
   }  = storeToRefs(AppStore)
 
 let subsID = "";
@@ -112,7 +116,7 @@ const allItems = ref([
     {
         label: 'Profile',
         icon: 'iconamoon:profile-fill', 
-        command: () => { router.push({name:'Profile'}); }
+        command: () => { router.push({name:'ProfileEntities'}); }
     },
     {
         label: 'Settings',
@@ -163,6 +167,16 @@ const allItems = ref([
         label: 'Create Site',
         icon: 'line-md:map-marker-plus-filled', 
         command: () => { openCreateSite.value = true; }
+    },
+    {
+        label: 'Drawer',
+        icon: 'line-md:menu-fold-right', 
+        command: () => { adminDrawer.value = !adminDrawer.value; }
+    },
+    {
+        label: 'Menu',
+        icon: 'line-md:menu-fold-right', 
+        command: () => { profileDrawer.value = !profileDrawer.value; }
     },
 ]);
  
@@ -228,22 +242,43 @@ const configSpeedDial = (route)=> {
         case "/":
               show.value = ["Home","Settings","Dashboard","Login","Theme","Profile","Analysis","Map"]
               break;
+
         case "/admin":
-              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map"]
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Drawer"]
+              break;
+        case "/admin/accounts":
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Drawer"]
               break;
         case "/admin/entities":
-              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Search Site","Create Entity","Search Entity"]
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Search Site","Create Entity","Search Entity","Drawer"]
               break;
-        
+        case "/admin/requests":
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Drawer"]
+              break;
+        case "/admin/emails":
+              show.value = ["Home","Dashboard","Login","Theme","Profile","Analysis","Map","Drawer"]
+              break;
         case "/analytics/map":
             show.value = ["Home","Settings","Dashboard","Login","Theme","Profile","Analysis"]
             break;
+
+        case "/profile":
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Menu"]
+            break;
         case "/profile/devices":
-            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map"]
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Menu"]
             break;
+        case "/profile/requests":
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Menu"]
+            break;
+        case "/profile/notifications":
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Menu"]
+            break;
+        
         case "/profile/entities":
-            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Search Site","Create Site","Create Entity"]
+            show.value = ["Home","Settings","Dashboard","Login","Theme","Analysis","Map","Create Entity","Menu"]
             break;
+
         case "/analytics/dashboard":
             show.value = ["Home","Settings","Add Graphs","Login","Theme","Profile","Analysis","Map","Save Dashboard"]
             break;
@@ -297,6 +332,8 @@ onBeforeMount(()=> {
   }  
 
   configSpeedDial(route.fullPath);
+  if(Object.keys(paramDetails.value).length <= 0)
+    AppStore.getParamsList();
 });
 
 onMounted(() => {
@@ -352,13 +389,30 @@ const updateDashboard = async () => {
 /* @import url("./node_modules/highcharts/css/themes/grid-light.css");  */
 /* @import url("./node_modules/highcharts/css/themes/sand-signika.css"); */
 
-@import url("https://fonts.googleapis.com/css?family=Unica+One");
+/* @import url("https://fonts.googleapis.com/css?family=Unica+One"); */
 @import url("./node_modules/highcharts/css/highcharts.css");
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+.highcharts-series-inactive { /** Prevent graying out of chart when hovering */
+    opacity: 1 !important;
+}
+
+
+.highcharts-background {
+  transition: all 250ms;
+}
+
+.highcharts-description {
+  margin: 10px;
+}
+
+.controls {
+  margin: 10px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -413,7 +467,7 @@ const updateDashboard = async () => {
     --highcharts-color-7: #b27fd6;
 
     /* UI colors */
-    --highcharts-background-color: #fafafa;  /* Transparent background #fafafa #f4f4f5 #e4e4e7 #d4d4d8*/
+    --highcharts-background-color: #d6d6d611;  /* Transparent background #fafafa #f4f4f5 #e4e4e7 #d4d4d8*/
 
     /*
       Neutral color variations
@@ -463,7 +517,7 @@ const updateDashboard = async () => {
   --highcharts-color-7: #4d8029;
 
   /* UI colors */
-  --highcharts-background-color: #27272a;  /* Transparent background #3f3f46  #27272a #18181b*/   
+  --highcharts-background-color: #262626;  /* Transparent background #3f3f46  #27272a #18181b*/   
 
   /* Neutral color variations */
   --highcharts-neutral-color-100:#ffffff;
@@ -498,23 +552,6 @@ const updateDashboard = async () => {
 --highcharts-border-radius-color: hsl(0, 0%, 30%);
 }
 
-
-.highcharts-series-inactive { /** Prevent graying out of chart when hovering */
-    opacity: 1 !important;
-}
-
-
-.highcharts-background { 
-  transition: all 250ms;
-}
-
-.highcharts-description {
-  margin: 10px;
-}
-
-.controls {
-  margin: 10px;
-}
 
 .highcharts-yaxis-grid .highcharts-grid-line {
     stroke-width: 1px;
@@ -555,7 +592,7 @@ const updateDashboard = async () => {
   ::-webkit-scrollbar-thumb:hover { background: rgb(var(--v-theme-secondary)); }    Handle on hover 
   */
 
-  ::-webkit-scrollbar { width: 5px; height: 5px; } /* SCROLLBAR SETTING */
+  ::-webkit-scrollbar { width: 0px; height: 5px; } /* SCROLLBAR SETTING */
   ::-webkit-scrollbar-track { box-shadow: inset 0 0 5px grey; border-radius: 10px; }   /* Track */
   ::-webkit-scrollbar-thumb { background: var(--highcharts-color-0) ; border-radius: 10px; }    /* Handle */ 
   ::-webkit-scrollbar-thumb:hover { background: var(--highcharts-color-0); }   /* Handle on hover */
