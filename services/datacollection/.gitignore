@@ -1,0 +1,51 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+migrations
+dist-ssr
+coverage
+*.local
+
+/cypress/videos/
+/cypress/screenshots/
+
+pwd
+
+# Editor directories and files
+logo/*
+env/*
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+node_modules
+app/productImages/*
+app/productImages_old/*
+app/invoices/*
+app/qrcodes/*
+app/__pycache__/*
+app/database.db
+*.code-workspace
+optionsfile.txt
+
+# Python
+__pycache__
+venv
+lab7_env
+
+# Environment Variables
+.env
+.flaskenv

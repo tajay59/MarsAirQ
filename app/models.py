@@ -38,3 +38,5 @@ class Tokenlist(db.Model):
      #id fresh iat jti type sub nbf csrf user_id created_at exp valid            
 
      
+
+     

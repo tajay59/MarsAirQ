@@ -8,7 +8,7 @@ This file creates your application.
 # from crypt import methods
 import site
 import bcrypt
-from app import app, jwt, DB, Config,Logger, mail, db , JWTtoDict, CheckForm,  Message, create_invoice,create_quotation,create_comm_inv, create_fileNotFound #, csrf , HTML,
+from app import app, jwt, DB, Config,Logger, mail, db , JWTtoDict, Message #, create_invoice,create_quotation,create_comm_inv, create_fileNotFound #, csrf , HTML,
 from app.models import Tokenlist
 from flask import render_template, request, jsonify, send_file, redirect, make_response, session, url_for, abort, send_from_directory 
 from markupsafe import escape
@@ -43,8 +43,6 @@ staffRoles = ["staff","admin"]
 # Create MongoDB instance
 mongo = DB(Config,Logger)
 
-# Create CheckForm instance decorator class
-checkform = CheckForm(Logger)
 
 # TIME OFFSET TO CORRECT ALL TIME TO BARBADOS (-4) TIME
 timeOffset = -4
@@ -710,7 +708,7 @@ def login():
                     account.pop("timestamp") 
                     account.pop("registered") 
                     account.pop("emailconfirmed")  
-                    return assign_access_refresh_tokens(account["id"],message,True)    
+                    return assign_access_refresh_tokens(account['id'],message,True)    
             
             return jsonify({"status":"Invalid credentials"}) 
     return jsonify({"status":"failed"}) 
@@ -746,7 +744,7 @@ def mobile_login():
                     account.pop("timestamp") 
                     account.pop("registered") 
                     account.pop("emailconfirmed")        
-                    return assign_access_refresh_tokens_mobile(account["id"], message, True)    
+                    return assign_access_refresh_tokens_mobile(account['id'], message, True)    
     
     return jsonify({"status":"failed","message":"Invalid Credentials","username":"","role":"user","id": ""}) 
 
@@ -910,7 +908,7 @@ def register():
 
                 # STORE TEMPORARILY IN DATABASE FOR TWO WEEKS
                 espireAt    = datetime.now(timezone(timedelta(hours= timeOffset))) + timedelta(weeks=2)
-                query       = { "expireAt":espireAt,"type":"newregistration","email":email,"id":user["id"],"user": user }
+                query       = { "expireAt":espireAt,"type":"newregistration","email":email,"id":user['id'],"user": user }
                 inserted    = mongo.createTempDoc(query)
 
                 # CHECK IF USER WAS SUCCESSFULLY ADDED TO DATABASE
@@ -1145,7 +1143,7 @@ def getUserSuball():
 
 
 @app.route('/api/all/sites', methods=['POST'])  
-@jwt_required()
+# @jwt_required()
 @tryCatch(name="getAllSites")
 def getAllSites():   
     if request.method == "POST": 
@@ -1160,7 +1158,7 @@ def getAllSites():
         else:
             sites = mongo.findAllSites({ 'type': 'site', '$or': [ { 'entity': account["entity"] }, { 'entities': { '$in': [account["entities"]] } } ] }) 
 
-        if sites:          
+        if sites:         
             return jsonify({"status":"ok","sites": sites, "suball": account["suball"]})
 
     return jsonify({"status":"failed"})
@@ -1197,7 +1195,10 @@ def getRequests():
         account     = mongo.findUser(id= user)
 
         if account and account["role"] == "admin":
-            req = mongo.findAllTempDoc({"type":"requests"})            
+            req = mongo.findAllTempDoc({"type":"requests"}) 
+            return jsonify({"status":"ok","requests": req})
+        elif account and account["role"] == "user":     
+            req = mongo.findAllTempDoc({"type":"requests","account.id": account["id"]},{"_id":0,"account":0})       
             return jsonify({"status":"ok","requests": req})
 
     return jsonify({"status":"failed"})
@@ -1250,18 +1251,18 @@ def approveOrDenyRequests():
 
                     # UPDATE DATABASE
                     if doc["reqtype"] == "createentity":
-                        status = createEntityFromRequest(doc["account"]["id"],doc["data"]["name"], doc["data"]["country"], doc["data"]["organization"])   
+                        status = createEntityFromRequest(doc['account']['id'],doc['data']['name'], doc["data"]["country"], doc["data"]["organization"])   
                     elif doc["reqtype"] == "updateentity":
-                        status = updateEntityFromRequest(doc["data"]["id"],doc["data"]["name"], doc["data"]["country"], doc["data"]["organization"])
+                        status = updateEntityFromRequest(doc["data"]['id'],doc['data']['name'], doc["data"]["country"], doc["data"]["organization"])
                     elif doc["reqtype"] == "deleteentity":
-                        status = deleteEntityFromRequest(doc["data"]["id"] )   
+                        status = deleteEntityFromRequest(doc["data"]['id'] )   
                     
                     elif doc["reqtype"] == "createsite":
-                        status =  addSite(doc["data"]["name"],float(doc["data"]["lat"]) ,float(doc["data"]["lon"]) ,doc["data"]["entity"] )   
+                        status =  addSite(doc['data']['name'],float(doc["data"]["lat"]) ,float(doc["data"]["lon"]) ,doc["data"]["entity"] )   
                     elif doc["reqtype"] == "updatesite":
-                        status =  updateSiteFromRequest(doc["data"]["id"], doc["data"]["name"], doc["data"]["lat"], doc["data"]["lon"])  
+                        status =  updateSiteFromRequest(doc["data"]['id'], doc['data']['name'], doc["data"]["lat"], doc["data"]["lon"])  
                     elif doc["reqtype"] == "deletesite":
-                        status =  deleteSiteFromRequest(doc["data"]["id"])  
+                        status =  deleteSiteFromRequest(doc["data"]['id'])  
                         
                     elif doc["reqtype"] == "createdevice":
                         siteID = doc["data"].pop("siteid")
@@ -1285,47 +1286,47 @@ def approveOrDenyRequests():
                         reqMessage2 = ""
 
                         if doc["reqtype"] == "createentity":
-                            reqMessage = f"A new Entity ({doc["data"]["name"]}) request"
-                            reqMessage2 = f"a new Entity ({doc["data"]["name"]})"
+                            reqMessage = f"A new Entity ({doc['data']['name']}) request"
+                            reqMessage2 = f"a new Entity ({doc['data']['name']})"
                         if doc["reqtype"] == "updateentity":
-                            reqMessage = f"An Entity ({doc["data"]["name"]}) update request"
-                            reqMessage2 = f"an update to Entity ({doc["data"]["name"]})"
+                            reqMessage = f"An Entity ({doc['data']['name']}) update request"
+                            reqMessage2 = f"an update to Entity ({doc['data']['name']})"
                         if doc["reqtype"] == "deleteentity":
-                            reqMessage = f"An Entity ({doc["data"]["name"]}) deletion request"
-                            reqMessage2 = f"Entity ({doc["data"]["name"]}) to be deleted"
+                            reqMessage = f"An Entity ({doc['data']['name']}) deletion request"
+                            reqMessage2 = f"Entity ({doc['data']['name']}) to be deleted"
 
                         elif doc["reqtype"] == "createsite":
-                            reqMessage = f"A new Site ({doc["data"]["name"]}) for {doc["entity"]["organization"]}"
-                            reqMessage2 = f"a new Site ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A new Site ({doc['data']['name']}) for {doc['entity']['organization']}"
+                            reqMessage2 = f"a new Site ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
                         elif doc["reqtype"] == "updatesite":
-                            reqMessage = f"A Site ({doc["data"]["name"]}) for {doc["entity"]["organization"]} update request"
-                            reqMessage2 = f"updating your Site ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A Site ({doc['data']['name']}) for {doc['entity']['organization']} update request"
+                            reqMessage2 = f"updating your Site ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
                         elif doc["reqtype"] == "deletesite":
-                            reqMessage = f"A Site ({doc["data"]["name"]}) for {doc["entity"]["organization"]} deletion request"
-                            reqMessage2 = f"deleting your Site ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A Site ({doc['data']['name']}) for {doc['entity']['organization']} deletion request"
+                            reqMessage2 = f"deleting your Site ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
 
                         elif doc["reqtype"] == "createdevice":
-                            reqMessage = f"A new Device ({doc["data"]["name"]}) for {doc["entity"]["organization"]}"
-                            reqMessage2 = f"a new Device ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A new Device ({doc['data']['name']}) for {doc['entity']['organization']}"
+                            reqMessage2 = f"a new Device ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
                         elif doc["reqtype"] == "updatedevice":
-                            reqMessage = f"A Device ({doc["data"]["name"]}) for {doc["entity"]["organization"]} update request"
-                            reqMessage2 = f"updating your Device ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A Device ({doc['data']['name']}) for {doc['entity']['organization']} update request"
+                            reqMessage2 = f"updating your Device ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
                         elif doc["reqtype"] == "deletedevice":
-                            reqMessage = f"A Device ({doc["data"]["name"]}) for {doc["entity"]["organization"]} deletion request"
-                            reqMessage2 = f"deleting your Device ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A Device ({doc['data']['name']}) for {doc['entity']['organization']} deletion request"
+                            reqMessage2 = f"deleting your Device ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
 
                         #E-MAIL ALL RELEVANT PARTIES
                         emails = mongo.miscFind({"id":"emails"}) 
                         emailList = emails['requests']
                         # SEND EMAIL TO USER WITH VERIFICATION CODE 
                         msg = Message("KS -  Request(Approved) Alert",sender="KS.donotreply@cimh.edu.bb" , recipients=[x['email'] for x in  emailList])                      
-                        msg.html    = f'{reqMessage} was approved for {doc["account"]['firstname'].capitalize()} {doc["account"]['lastname'].capitalize()} with email: {doc["account"]['email']} on our kaleidoscope platform. Login and visit the Admin section to see the account details.'
+                        msg.html    = f"{reqMessage} was approved for {doc['account']['firstname'].capitalize()} {doc['account']['lastname'].capitalize()} with email: {doc['account']['email']} on our kaleidoscope platform. Login and visit the Admin section to see the account details."
                         mail.send(msg) 
 
                         
 
                         # SEND EMAIL TO USER ACKNOWLEDGING RECEIPT OF NEW ACCOUNT REQUEST 
-                        msg = Message(f"kaleidoscope Request",sender="KS.donotreply@cimh.edu.bb" , recipients=[doc["account"]['email']])                        
+                        msg = Message(f"kaleidoscope Request",sender="KS.donotreply@cimh.edu.bb" , recipients=[doc['account']['email']])                        
                         msg.html    = f'''<!DOCTYPE html> <html> <head> <title>kaleidoscope</title> </head> <body>
                             <div><p>  Dear Customer, </p></div>
                             <div><p>  We are pleased to inform you that your request for {reqMessage2}, on CIMH's kaleidoscope platform has been approved. Please visit our website and log in to begin using the platform.</p></div>
@@ -1356,35 +1357,35 @@ def approveOrDenyRequests():
                         reqMessage = ""
                         reqMessage2 = ""
                         if doc["reqtype"] == "createentity":
-                            reqMessage = f"A new Entity ({doc["data"]["name"]}) request"
-                            reqMessage2 = f"request for a new Entity ({doc["data"]["name"]})"
+                            reqMessage = f"A new Entity ({doc['data']['name']}) request"
+                            reqMessage2 = f"request for a new Entity ({doc['data']['name']})"
                         if doc["reqtype"] == "updateentity":
-                            reqMessage = f"An Entity ({doc["data"]["name"]}) update request"
-                            reqMessage2 = f"Entity ({doc["data"]["name"]}) update request"
+                            reqMessage = f"An Entity ({doc['data']['name']}) update request"
+                            reqMessage2 = f"Entity ({doc['data']['name']}) update request"
                         if doc["reqtype"] == "deleteentity":
-                            reqMessage = f"An Entity ({doc["data"]["name"]}) deletion request"
-                            reqMessage2 = f"Entity ({doc["data"]["name"]}) deletion request"
+                            reqMessage = f"An Entity ({doc['data']['name']}) deletion request"
+                            reqMessage2 = f"Entity ({doc['data']['name']}) deletion request"
                             
                         elif doc["reqtype"] == "createsite":
-                            reqMessage = f"A new Site ({doc["data"]["name"]}) linked to the {doc["entity"]["organization"]} entity,"
-                            reqMessage2 = f"request for a new Site ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity,"
+                            reqMessage = f"A new Site ({doc['data']['name']}) linked to the {doc['entity']['organization']} entity,"
+                            reqMessage2 = f"request for a new Site ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity,"
                         elif doc["reqtype"] == "updatesite":
-                            reqMessage = f"A Site ({doc["data"]["name"]}) for {doc["entity"]["organization"]} update request"
-                            reqMessage2 = f"request to update, Site ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"                    
+                            reqMessage = f"A Site ({doc['data']['name']}) for {doc['entity']['organization']} update request"
+                            reqMessage2 = f"request to update, Site ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"                    
                         elif doc["reqtype"] == "deletesite":
-                            reqMessage = f"A Site ({doc["data"]["name"]}) for {doc["entity"]["organization"]} deletion request"
-                            reqMessage2 = f"request to delete, Site ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A Site ({doc['data']['name']}) for {doc['entity']['organization']} deletion request"
+                            reqMessage2 = f"request to delete, Site ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
 
 
                         elif doc["reqtype"] == "createdevice":
-                            reqMessage = f"A new Device ({doc["data"]["name"]}) linked to the {doc["entity"]["organization"]} entity,"
-                            reqMessage2 = f"request for a new Device ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity,"
+                            reqMessage = f"A new Device ({doc['data']['name']}) linked to the {doc['entity']['organization']} entity,"
+                            reqMessage2 = f"request for a new Device ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity,"
                         elif doc["reqtype"] == "updatedevice":
-                            reqMessage = f"A Device ({doc["data"]["name"]}) for {doc["entity"]["organization"]} update request"
-                            reqMessage2 = f"request to update, Device ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"                    
+                            reqMessage = f"A Device ({doc['data']['name']}) for {doc['entity']['organization']} update request"
+                            reqMessage2 = f"request to update, Device ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"                    
                         elif doc["reqtype"] == "deletedevice":
-                            reqMessage = f"A Device ({doc["data"]["name"]}) for {doc["entity"]["organization"]} deletion request"
-                            reqMessage2 = f"request to delete, Device ({doc["data"]["name"]}), linked to your {doc["entity"]["organization"]} entity"
+                            reqMessage = f"A Device ({doc['data']['name']}) for {doc['entity']['organization']} deletion request"
+                            reqMessage2 = f"request to delete, Device ({doc['data']['name']}), linked to your {doc['entity']['organization']} entity"
 
                         #E-MAIL ALL RELEVANT PARTIES
                         emails = mongo.miscFind({"id":"emails"}) 
@@ -1392,11 +1393,11 @@ def approveOrDenyRequests():
 
                         # SEND EMAIL TO USER WITH VERIFICATION CODE 
                         msg = Message("KS -  Request(Denied) Alert",sender="KS.donotreply@cimh.edu.bb" , recipients=[x['email'] for x in  emailList])                      
-                        msg.html    = f'FYI - {reqMessage} was denied for {doc["account"]['firstname'].capitalize()} {doc["account"]['lastname'].capitalize()} with email: {doc["account"]['email']}.'
+                        msg.html    = f"FYI - {reqMessage} was denied for {doc['account']['firstname'].capitalize()} {doc['account']['lastname'].capitalize()} with email: {doc['account']['email']}."
                         mail.send(msg) 
 
                         # SEND EMAIL TO USER ACKNOWLEDGING RECEIPT OF NEW ACCOUNT REQUEST 
-                        msg = Message(f"kaleidoscope Request",sender="KS.donotreply@cimh.edu.bb" , recipients=[doc["account"]['email']])                        
+                        msg = Message(f"kaleidoscope Request",sender="KS.donotreply@cimh.edu.bb" , recipients=[doc['account']['email']])                        
                         msg.html    = f'''<!DOCTYPE html> <html> <head> <title>kaleidoscope</title> </head> <body>
                             <div><p>  Dear Customer, </p></div>
                             <div><p>  We regret to inform you that your {reqMessage2} on CIMH's kaleidoscope platform, cannot be approved at this time.</p></div>
@@ -1463,7 +1464,7 @@ def approveOrDeny():
                         emailList = emails['registration']
                         # SEND EMAIL TO USER WITH VERIFICATION CODE 
                         msg = Message("KS -  Account(Approved) Alert",sender="KS.donotreply@cimh.edu.bb" , recipients=[x['email'] for x in  emailList])                      
-                        msg.html    = f'A new kaleidoscope account was approved for {newAccount['firstname'].capitalize()} {newAccount['lastname'].capitalize()} with email: {newAccount['email']}. Login and visit the Admin section to see the account details.'
+                        msg.html    = f"A new kaleidoscope account was approved for {newAccount['firstname'].capitalize()} {newAccount['lastname'].capitalize()} with email: {newAccount['email']}. Login and visit the Admin section to see the account details."
                         mail.send(msg) 
 
                         # SEND EMAIL TO USER ACKNOWLEDGING RECEIPT OF NEW ACCOUNT REQUEST 
@@ -1501,7 +1502,7 @@ def approveOrDeny():
                         emailList = emails['registration']
                         # SEND EMAIL TO USER WITH VERIFICATION CODE 
                         msg = Message("KS -  Account(Denied) Alert",sender="KS.donotreply@cimh.edu.bb" , recipients=[x['email'] for x in  emailList])                      
-                        msg.html    = f'FYI - A new account request denied for {newAccount['firstname'].capitalize()} {newAccount['lastname'].capitalize()} with email: {newAccount['email']}.'
+                        msg.html    = f"FYI - A new account request denied for {newAccount['firstname'].capitalize()} {newAccount['lastname'].capitalize()} with email: {newAccount['email']}."
                         mail.send(msg) 
 
                         # SEND EMAIL TO USER ACKNOWLEDGING RECEIPT OF NEW ACCOUNT REQUEST 
@@ -1545,7 +1546,7 @@ def deleteAccounts():
 
             if accountDel:
                 count = mongo.removeUser(email= accountDel["email"])
-                count1 = mongo.removeMqttUser(accountDel["id"])
+                count1 = mongo.removeMqttUser(accountDel['id'])
 
                 if count > 0 and count1 > 0:          
                     return jsonify({"status":"deleted"})
@@ -1570,6 +1571,28 @@ def getAllEntities():
     
             entitiesData = mongo.findAllEntities(query,{ '_id': 0, 'web': 0, 'device': 0 })    
             return jsonify({"status":"ok","entity": account["entity"],"entities": account["entities"], "entitiesData": entitiesData})
+
+    return jsonify({"status":"failed"})  
+
+
+@app.route('/api/get/entitysites', methods=['POST'])  
+@jwt_required()
+@tryCatch(name="getEntityWithSites")
+def getEntityWithSites():   
+    if request.method == "POST": 
+        data        = request.get_json()
+        # GET USER ACCOUNT INFO
+        accountID   = escape(data["account"])
+        entityID    = escape(data["entity"])  
+        account     = mongo.findUser(id= accountID)
+
+        if account:
+            entity = mongo.findEntityWithSites(id= entityID)
+            if entity:      
+                if len(entity) > 0:    
+                    return jsonify({"status":"ok","entity": entity[0] })
+                elif len(entity) <=0:
+                    return jsonify({"status":"ok","entity": {} })
 
     return jsonify({"status":"failed"})  
 
@@ -1619,28 +1642,28 @@ def createEntity():
                 entity               = {"id": f"ENT{token_hex(16)}","name": name, "country": country, "code": code, "organization": organization} 
                 entity["web"]        = {"username":token_hex(8),"password": token_hex(16)}
                 entity["device"]     = {"username":token_hex(8),"password": token_hex(16)}
-                entity["websubtopic"]       = f"/station/data/{name.replace(" ","").lower()}/#"
-                entity["devicesubtopic"]    = f"/station/msg/{name.replace(" ","").lower()}/#"
+                entity["websubtopic"]       = f"/station/data/{name.replace(' ','').lower()}/#"
+                entity["devicesubtopic"]    = f"/station/msg/{name.replace(' ','').lower()}/#"
                 pwdWeb               = ph.hash(entity["web"]["password"])
                 pwdDevice            = ph.hash(entity["device"]["password"])
             
 
                 web                  = {} 
-                web["id"]            = token_hex(16)
+                web['id']            = token_hex(16)
                 web["username"]      = entity["web"]["username"]
                 web["password"]      = pwdWeb
                 web["type"]          = "web"
                 web["superuser"]     = False
-                web["owner"]         = entity["id"]
+                web["owner"]         = entity['id']
                 web["acls"]          = [{"type":"main","topic": entity["websubtopic"],"acc":4},{"type":"other","topic": entity["websubtopic"],"acc":1}, {"type":"suball","topic":f"/station/data/#","acc":1},{"type":"other","topic":f"/station/data/#","acc":1}]
                 
                 device               = {}
-                device["id"]         = token_hex(16)
+                device['id']         = token_hex(16)
                 device["username"]   = entity["device"]["username"]
                 device["password"]   = pwdDevice
                 device["type"]       = "device"
                 device["superuser"]  = False
-                device["owner"]      = entity["id"]
+                device["owner"]      = entity['id']
                 device["acls"]       = [{"type":"sub","topic": entity["devicesubtopic"],"acc":4},{"type":"other","topic": entity["devicesubtopic"],"acc":1},{"type":"pub","topic": entity["websubtopic"],"acc":2}]
                 
                 res = mongo.addEntity(entity)
@@ -1682,7 +1705,7 @@ def updateEntity():
       
         data        = request.get_json()
         # GET USER ACCOUNT INFO
-        id          = escape(data["id"])
+        id          = escape(data['id'])
         accountID   = escape(data["account"])
         name        = escape(data["name"])
         organization  = escape(data["organization"])
@@ -1765,7 +1788,7 @@ def createDevice():
         data        = request.get_json()
         # GET USER ACCOUNT INFO
         accountID   = escape(data["account"])
-        siteID      = escape(data["id"])
+        siteID      = escape(data['id'])
         account     = mongo.findUser(id= accountID)
 
         if account["role"] == "admin":
@@ -1775,7 +1798,7 @@ def createDevice():
             if siteToUpdate:
                 data.pop("id")
                 data.pop("account")
-                data["id"] = f"DEV{token_hex(16)}"
+                data['id'] = f"DEV{token_hex(16)}"
                 data["lat"] = float(data["lat"])
                 data["lon"] = float(data["lon"])
                 data["dashboard"] = []
@@ -1833,7 +1856,7 @@ def deleteDevice():
         if account:    
             data = mongo.updateSite({"id": siteID,"devices.id": deviceID},{"$pull": {"devices" : { "id": deviceID }}})
             
-            if deviceID not in [x["id"] for x in data["devices"]]:          
+            if deviceID not in [x['id'] for x in data["devices"]]:          
                 site = mongo.getSiteWithOwner(site= siteID)
             
                 if site:
@@ -1850,7 +1873,7 @@ def updateSite():
         data        = request.get_json()
         # GET USER ACCOUNT INFO
         accountID   = escape(data["account"])
-        siteID      = escape(data["id"])
+        siteID      = escape(data['id'])
         account     = mongo.findUser(id= accountID)
 
         if account["role"] == "admin":
@@ -1944,7 +1967,7 @@ def updateAccounts():
         data        = request.get_json()
         # GET USER ACCOUNT INFO
         id          = escape(data["account"])
-        user        = escape(data["id"])
+        user        = escape(data['id'])
 
         account     = mongo.findUser(id= id)
       
@@ -2096,9 +2119,11 @@ def assignUserToEntity():
         userAcc     = mongo.findUser(id= userID)
         
         if account["role"] == "admin" : 
-            if userAcc :    
+            entity = mongo.findEntity(id=entityID)
+           
+            if userAcc and entity:    
                 # ASSIGN
-                res = mongo.updateUser({"id": userID},{"$set":{"entity": entityID}})
+                res = mongo.updateUser({"id": userID},{"$set":{"entity": entityID, "organization": entity['organization']}})
                 if res:
                     return jsonify({"status":"assigned","data": res })
                     
@@ -2176,6 +2201,17 @@ def getEmailList():
             emails = mongo.miscUpdate(query={"id":"emails"},update={"$set":{"registration":[],"cancellation":[]}})  
             return jsonify({"status":"created","data":emails})    
     return jsonify({"status":"none found"})    
+
+@app.route('/api/misc/paramslist', methods=['GET'])
+# @jwt_required()
+@tryCatch(name="getParamsList")
+def getParamsList():
+    if request.method == "GET": 
+        data = mongo.miscFind({"id":"params"}) 
+        if data:
+            return jsonify({"status":"found","data": data["params"]})    
+    return jsonify({"status":"none found"})   
+
 
 @app.route('/api/misc/emaillist/update', methods=['POST'])
 @jwt_required()
@@ -2354,28 +2390,28 @@ def createEntityFromRequest(accountID,name, code, organization):
             entity               = {"id": f"ENT{token_hex(16)}","name": name, "country": country, "organization": organization, "code": code} 
             entity["web"]        = {"username":token_hex(8),"password": token_hex(16)}
             entity["device"]     = {"username":token_hex(8),"password": token_hex(16)}
-            entity["websubtopic"]       = f"/station/data/{name.replace(" ","").lower()}/#"
-            entity["devicesubtopic"]    = f"/station/msg/{name.replace(" ","").lower()}/#"
+            entity["websubtopic"]       = f"/station/data/{name.replace(' ','').lower()}/#"
+            entity["devicesubtopic"]    = f"/station/msg/{name.replace(' ','').lower()}/#"
             pwdWeb               = ph.hash(entity["web"]["password"])
             pwdDevice            = ph.hash(entity["device"]["password"])
         
 
             web                  = {} 
-            web["id"]            = token_hex(16)
+            web['id']            = token_hex(16)
             web["username"]      = entity["web"]["username"]
             web["password"]      = pwdWeb
             web["type"]          = "web"
             web["superuser"]     = False
-            web["owner"]         = entity["id"]
+            web["owner"]         = entity['id']
             web["acls"]          = [{"type":"main","topic": entity["websubtopic"],"acc":4},{"type":"other","topic": entity["websubtopic"],"acc":1}, {"type":"suball","topic":f"/station/data/#","acc":1},{"type":"other","topic":f"/station/data/#","acc":1}]
             
             device               = {}
-            device["id"]         = token_hex(16)
+            device['id']         = token_hex(16)
             device["username"]   = entity["device"]["username"]
             device["password"]   = pwdDevice
             device["type"]       = "device"
             device["superuser"]  = False
-            device["owner"]      = entity["id"]
+            device["owner"]      = entity['id']
             device["acls"]       = [{"type":"sub","topic": entity["devicesubtopic"],"acc":4},{"type":"other","topic": entity["devicesubtopic"],"acc":1},{"type":"pub","topic": entity["websubtopic"],"acc":2}]
             
             res = mongo.addEntity(entity)
@@ -2383,7 +2419,7 @@ def createEntityFromRequest(accountID,name, code, organization):
             if res:
                 mongo.addMqttUser(web.copy())
                 mongo.addMqttUser(device.copy())
-                updated = mongo.updateUser({"id": accountID} ,{"$set": {"entity": entity["id"]}})
+                updated = mongo.updateUser({"id": accountID} ,{"$set": {"entity": entity['id']}})
                 entities = mongo.findAllEntities({"_id":0})                
                 return "created"
             
@@ -2456,7 +2492,7 @@ def createDeviceFromRequest(siteID, data):
     siteToUpdate     = mongo.findSite(id= siteID) # Site to update
 
     if siteToUpdate: 
-        data["id"]          = f"DEV{token_hex(16)}" 
+        data['id']          = f"DEV{token_hex(16)}" 
         data["dashboard"]   = []
         data["lat"]         = float(data["lat"])
         data["lon"]         = float(data["lon"])
@@ -2484,7 +2520,7 @@ def updateDeviceFromRequest(siteID,deviceID, data):
 def deleteDeviceFromRequest(siteID,deviceID):   
     data = mongo.updateSite({"id": siteID,"devices.id": deviceID},{"$pull": {"devices" : { "id": deviceID }}})
     
-    if deviceID not in [x["id"] for x in data["devices"]]:
+    if deviceID not in [x['id'] for x in data["devices"]]:
         return  "deleted" 
 
     return  "failed" 

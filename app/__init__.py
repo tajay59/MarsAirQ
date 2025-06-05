@@ -7,14 +7,14 @@ from flask_mail import Mail, Message
 from werkzeug.middleware.proxy_fix import ProxyFix
 from queue import Empty, Queue
 
-import asyncio
-from .mi70 import  init_pressure, init_temperature, init_collocation_device
+#import asyncio
+#from .mi70 import  init_pressure, init_temperature, init_collocation_device
 from .mqtt import MQTT  
 
 from .functions import DB, JWTtoDict
-from .utils import create_invoice,create_quotation,create_comm_inv, create_fileNotFound, maintainFedExAuthToken
-from .decoratorsClasses import CheckForm
-from flask_wtf.csrf import CSRFProtect
+#from .utils import create_invoice,create_quotation,create_comm_inv, create_fileNotFound, maintainFedExAuthToken
+# from .decoratorsClasses import CheckForm
+# from flask_wtf.csrf import CSRFProtect
 from flask_sqlalchemy import SQLAlchemy
 import logging
 

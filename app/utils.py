@@ -9,6 +9,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics 
 from datetime import datetime
 import locale
+from json import loads, dumps
 
 # Set the locale to the user's default locale
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -706,6 +707,22 @@ def maintainFedExAuthToken():
                         print(" Task 0 running")
            
 
+def generateParameters(params):
+    results = {}
+
+    for name,param,units,icon,max,min,htmlUnits in params:
+        p = param
+        if "_" in param:
+            p = param[:-1]
+
+        results[p] = {"name":f"{name}","param":p,"units": units, "icon": icon,"max": max,"min": min, "htmlUnits": htmlUnits}
+
+        for x in range(7):
+            results[f"{param}{x+1}"] = {"name":f"{name} {x+1}","param":f"{param}{x+1}","units": units, "icon": icon,"max": max,"min": min, "htmlUnits": htmlUnits}
+            
+    
+    with open("parameters.json",mode="w") as f:
+        f.write(dumps(results))
 
 if __name__ == '__main__':
     # Define invoice details
@@ -713,7 +730,43 @@ if __name__ == '__main__':
     fees = 40
     # Create the invoice
     # create_invoice(file_name, order, fees)
-    create_comm_inv(file_name, order, fees)
+    # create_comm_inv(file_name, order, fees)
     # create_quotation(file_name,  order, fees)
- 
- 
+    
+    # ("","",),
+
+    generateParameters(
+        [
+            ("Temperature","AT","°C","fluent:temperature-20-regular",40,0,'<small class="text-xs"> °C</small>'),
+            ("Dewpoint","DWPNT","°C","fluent:temperature-20-regular",40,0,'<small class="text-xs"> °C</small>'),
+            ("Wind Chill","WCI","°C","fluent:temperature-20-regular",40,0,'<small class="text-xs"> °C</small>'),
+            ("Heat Index","HI","°C","fluent:temperature-20-regular",40,0,'<small class="text-xs"> °C</small>'),
+            ("Humidity","RH","%","material-symbols:humidity-percentage-rounded",100,0,'<small class="text-xs"> %</small>'),
+            ("Pressure","PRES","hPa", "lets-icons:pressure-light",1050,900,'<small class="text-xs"> hPa</small>'),
+            ("Illuminance","ILM","lux","line-md:car-light",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Ammonia","NH3_","ppm","lets-icons:chemistry-light",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Carbon Dioxide","CO2_","ppm","iwwa:co2",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Carbon Monoxide","CO_","ppm","mdi:carbon-monoxide",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Nitrogen Dioxide","NO2_","ppm","iconoir:nitrogen",5000,0,'<small class="text-xs"> ppm</small>'),
+
+            ("Soil Moisture","SM","","hugeicons:soil-moisture-field",5000,0,'<small class="text-xs"> </small>'),
+            ("Soil Temperature","ST","°C","carbon:soil-temperature",40,0,'<small class="text-xs"> °C</small>'), 
+
+            ("Altitude","ALT", "ft",  "material-symbols-light:altitude-rounded", 4000, 0,'<small class="text-xs"> ft</small>'),
+            ("Wind Speed","WS","m/s",  "fa6-solid:wind", 100, 0,'<small class="text-xs"> m/s</small>'),
+            ("Wind Direction","WDIR","°", "teenyicons:direction-solid", 359, 0,'<small class="text-xs"> °</small>'),
+            ("Rain","RA","mm","mdi:weather-heavy-rain",20,0,'<small class="text-xs"> mm</small>'),
+            ("Volatile Organic Compounds","VOC","ppm", "material-symbols-light:air-rounded",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Total Volatile Organic Compounds","TVOC","ppm", "material-symbols-light:air-rounded",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Volatile Organic Compounds Index","VOCI","","ic:baseline-gpp-good",5000,0,'<small class="text-xs"> </small>'),
+            ("Particulate Matter ","PM1_","ppm","fluent:dust-28-regular",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Particulate Matter 2.5","PM2.5_","ppm","fluent:dust-28-regular",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Particulate Matter 10","PM10_","ppm","fluent:dust-28-regular",5000,0,'<small class="text-xs"> ppm</small>'),
+            ("Solar Radiation","TSI","W/m2", "solar:sunset-bold",100,0,'<small class="text-xs">W/m<sup>2</sup></small>'),
+            ("Ultraviolet A","UVA","W/m2", "solar:sunset-bold",100,0, '<small class="text-xs">W/m<sup>2</sup></small>'),
+            ("Ultraviolet B","UVB","W/m2", "solar:sunset-bold-duotone",100,0, '<small class="text-xs">W/m<sup>2</sup></small>'),
+            ("Ultraviolet C","UVC","W/m2", "solar:sunset-line-duotone",100,0, '<small class="text-xs">W/m<sup>2</sup></small>'),
+            ("Voltage","V","V", "ix:voltage-filled",14,2.8,'<small class="text-xs"> V</small>'),
+            ("Battery","BAT","V", "ix:voltage-filled",14,2.8,'<small class="text-xs"> V</small>'),
+            ("Battery Percentage","BATP","%","mdi:battery-high",100,0,'<small class="text-xs"> %</small>'), 
+            ])

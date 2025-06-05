@@ -9,3 +9,17 @@
         </div>      
 
       </div>
+
+
+
+ <div class=" bg- green  flex justify-center align-center" >           
+                <div class="rotater font-extrabold bg- red text-5xl"  style="font-family: Nunito;writing-mode: vertical-lr;text-orientation: mixed; " >Design your custom Bottle</div>
+              </div>
+
+
+
+
+
+
+
+ :pt="{root:'!bg-red',pcfiltercontainer: {root: { class: '',style:'background: purple;z-index:200000;' }},pcfilter: {root: { class: '',style:'background: purple;z-index:200000;' }}  ,labelContainer:{style:'color:red;background:red;'},overlay:'!z-[25000]'}" :dt="{overlay:{background:'{neutral.200}'}}" 

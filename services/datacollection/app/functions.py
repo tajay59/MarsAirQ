@@ -6,35 +6,6 @@
 #################################################################################################################################################
 
 
-class JWTtoDict: 
-
-    def __init__(self,payload: dict):
-
-        # Imports
-        from json import loads, dumps
-
-        self.dumps          = dumps
-        self.loads          = loads
-
-
-        # Variables
-        if type(payload["sub"]) == str :
-            self.token           = payload 
-            self.token["sub"]    = loads(payload["sub"])            
-        else :
-            self.token           = payload 
-             
-
-    def getToken(self) -> dict:
-        return self.token
-    
-    def getSubStr(self) -> str:
-        return self.dumps(self.token["sub"])
-    
-    def __del__(self):
-         # Delete class instance to free resources
-         pass
-
 
 from functools import wraps
 
@@ -52,9 +23,8 @@ class DB:
         from requests import get
         from json import loads, dumps, dump
         from datetime import timedelta, datetime, timezone
-        import pytz
-        from flask import  jsonify
-        from pymongo import MongoClient , errors, ReturnDocument
+        import pytz 
+        from pymongo import MongoClient , errors, ReturnDocument, AsyncMongoClient
         from urllib import parse
         from urllib.request import  urlopen 
         from random import randint 
@@ -67,18 +37,16 @@ class DB:
         from bson.codec_options import CodecOptions
         import cv2 
         from pyzbar.pyzbar import decode
-        import pyqrcode
-        from collections import defaultdict
-        # from reportlab.lib.pagesizes import letter
-        # from reportlab.pdfgen import canvas
+        import pyqrcode 
+        from collections import defaultdict 
         from PIL import Image
         from glob import glob
         import csv
+        import pprint
         
-
+        self.pprint                         = pprint
         self.glob                           = glob
-        self.csv                            = csv
-        # self.canvas                         = canvas
+        self.csv                            = csv 
         self.Image                          = Image
         self.defaultdict                    = defaultdict
         self.Config                         = Config
@@ -115,7 +83,6 @@ class DB:
         self.loads                      	= loads
         self.dumps                      	= dumps
         self.dump                       	= dump
-        self.jsonify                        = jsonify
         self.islice                         = islice
         self.ObjectId                       = ObjectId
         self.CodecOptions                   = CodecOptions( tz_aware=True, tzinfo= pytz.timezone('America/Barbados'))
@@ -134,7 +101,7 @@ class DB:
         self.port			                = Config.DB_PORT
         self.username                   	= parse.quote_plus(Config.DB_USERNAME)
         self.password                   	= parse.quote_plus(Config.DB_PASSWORD)
-        self.remoteMongo                	= MongoClient
+        self.remoteMongo                	= AsyncMongoClient #MongoClient
         self.ReturnDocument                 = ReturnDocument
         self.PyMongoError               	= errors.PyMongoError
         self.BulkWriteError             	= errors.BulkWriteError 
@@ -143,14 +110,14 @@ class DB:
         self.tls                            = False # MUST SET TO TRUE IN PRODUCTION
 
 
-    def __del__(self):
+    async def __del__(self):
             # Delete class instance to free resources
             pass
     
-    def Print(self, message):
+    async def Print(self, message):
         print(message)
 
-    def testConnection(self):
+    async def testConnection(self):
         # TEST CONNECTION TO MONGODB DATABASE
         self.Print("TESTING CONNECTION TO REMOTE DATABASE ")
         print(self.username, self.password,self.server,self.port)
@@ -171,207 +138,13 @@ class DB:
             pass
 
         return result
-    
-    def downloadSampleImages(self):
-        # Create a directory to save the downloaded images
-        if not self.exists('productImages'):
-            self.makedirs('productImages')
-
-        # Number of images to download
-        num_images = 50000
-
-        for i in range(num_images):
-            response = self.get(f'https://picsum.photos/800/600?random={i}', stream=True)
-            if response.status_code == 200:
-                image_path = f'productImages/image_{i}.jpg'
-                with open(image_path, 'wb') as file:
-                    for chunk in response.iter_content(chunk_size=1024):
-                        file.write(chunk)
-                print(f"Downloaded {image_path}")
-            else:
-                print(f"Error downloading image {i}: Status code {response.status_code}")
 
 
-    def chunk(self,it, size):
-        it = iter(it)
-        return iter(lambda: tuple(self.islice(it, size)), ())
-    
-
-    def getCode(self, data):
-        url = self.pyqrcode.create(data.split(".")[0])
-
-        path = self.join(self.getcwd(),self.Config.QRCODE_FOLDER,data) 
-        url.png(path, scale=15)
-        # in-memory stream is also supported
-        # buffer = self.BytesIO()
-        # url.svg(buffer, title = "one.png")
-        # do whatever you want with buffer.getvalue()
-        # print(list(buffer.getvalue()))
-        return path
-    
-    # def getBatchCodePDF(self, product, codes):
-    #     path    = self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER) 
-    #     files   = self.listdir(path)
-
-    #     # Delete existing files
-    #     for file in files:
-    #         self.remove(self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER,file))
-
-    #     # Define constants
-    #     num_rows        = 5
-    #     num_cols        = 4
-    #     image_width     = 150
-    #     image_height    = 150
-    #     spacing         = 1 
-        
-    #     # Create a new PDF file
-    #     c = self.canvas.Canvas(self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER,"output.pdf") , pagesize= self.letter)
-        
-    #     # Calculate grid dimensions
-    #     total_width = (num_cols * image_width) + ((num_cols - 1) * spacing)
-    #     total_height = (num_rows * image_height) + ((num_rows - 1) * spacing)
-        
-    #     # Calculate starting positions
-    #     start_x = (self.letter[0] - total_width) / 2
-    #     start_y = (self.letter[1] - total_height) / 2
-         
-    #     for code in codes:
-    #         name    = f"{product}_{code}"
-    #         url     = self.pyqrcode.create(name)
-    #         path    = self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER,f"{name}.png") 
-    #         url.png(path, scale=5, module_color=[0, 0, 0, 128])
-
-         
-    #     # Get list of images
-    #     path     = self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER) 
-    #     images   = self.listdir(path)
-         
-    #     # Draw images on the canvas
-    #     for i, file in enumerate(images):
-    #         row = i // num_cols
-    #         col = i % num_cols
-    #         x = start_x + col * (image_width + spacing)
-    #         y = start_y + row * (image_height + spacing)
-            
-    #         # Draw the image
-    #         image_path    = self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER,file) 
-    #         image = self.Image.open(image_path)
-    #         c.drawImage(image_path, x, y, width=image_width, height=image_height)
-
-         
-    #     # Save the PDF
-    #     c.save()
-
-    #     #path = self.join(self.getcwd(),self.Config.QRCODE_FOLDER,"output.pdf")
-
-    #     # in-memory stream is also supported
-    #     # buffer = self.BytesIO()
-    #     # url.svg(buffer, title = "one.png")
-    #     # do whatever you want with buffer.getvalue()
-    #     # print(list(buffer.getvalue()))
-    #     return "output.pdf"
-
-
-    def getBatchCodeCSV(self, product, codes):
-        path    = self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER) 
-        files   = self.listdir(path)
-
-        # Delete existing files
-        for file in files:
-            self.remove(self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER,file))
-
-        path = self.join(self.getcwd(),self.Config.QRCODE_TEMP_FOLDER,'labels.csv') 
-
-        with open(path, 'w', newline='') as csvfile:
-            spamwriter = self.csv.writer(csvfile, delimiter=',',quotechar='|', quoting= self.csv.QUOTE_MINIMAL)
-            spamwriter.writerow(['Product','Serial'])
-            for code in codes:
-                spamwriter.writerow([f"{product}_{code}",f"{code.upper()}"]) 
-
-        csvfile.close()     
-
-        return "labels.csv"
-
-
-
-    def generateQRcode(self,codeInfo):
-
-        try:
-            path = self.join(self.getcwd(),self.Config.QRCODE_FOLDER,f"{codeInfo['code']}.png")
-            #path = self.join(self.getcwd(),"qrcodes\\",f"{codeInfo['code']}.png")   # PATH USED WHEN TESTING
-            qr_code = self.pyqrcode.create(codeInfo['code'])
-            qr_code.png(path,scale = 15)
-
-            # READ SAVED IMAGE
-            image = self.cv.imread(path)
-            font = self.cv.FONT_HERSHEY_SIMPLEX
-            #               image , text                   ,x,y   , font, fontize,colors 
-            self.cv.putText(image,codeInfo['site'].upper(),(60,20), font, 0.5,(0,0,0),1,self.cv.LINE_AA)
-            self.cv.putText(image,codeInfo['location'].upper(),(60,37), font, 0.5,(0,0,0),1,self.cv.LINE_AA)
-            if codeInfo['param'] == "shelf":
-                self.cv.putText(image,f"SHELF {codeInfo['shelf']}",(520,20), font, 0.5,(0,0,0),1,self.cv.LINE_AA)
-            self.cv.putText(image,codeInfo['code'],(60,55), font, 0.5,(0,0,0),1,self.cv.LINE_AA)
-            
-
-            #self.cv.imshow("Display window", image)
-            #k = self.cv.waitKey(0)
-            self.cv.imwrite(path, image)
-
-        except Exception as e:
-            msg = str(e)
-            print("generateQRcode error ",msg)
-            return None
-        else: 
-            return self.exists(path)
- 
-
-
-    def BarcodeReader(self,image):
-        # READ BARCODDE FROM IMAGE FILE AND RETURN THE DECODED DATA
-        print("IMAGE NAME IS ",image)
-        path = self.join(self.getcwd(),self.Config.UPLOAD_FOLDER , image)
-        # read the image in numpy array using cv2
-        img = self.cv.imread(path)
-        data = ""
-        # Decode the barcode image
-        detectedBarcodes = self.bardecoder(img)
-        
-        # If not detected then print the message
-        if not detectedBarcodes:
-            print("Barcode Not Detected or your barcode is blank/corrupted!")
-        else:
-        
-            # Traverse through all the detected barcodes in image
-            for barcode in detectedBarcodes:
-            
-                # Locate the barcode position in image
-                (x, y, w, h) = barcode.rect
-                
-                # Put the rectangle in image using
-                # cv2 to heighlight the barcode
-                self.cv.rectangle(img, (x-10, y-10),
-                            (x + w+10, y + h+10),
-                            (255, 120, 0), 2)
-                
-                if barcode.data!="":
-                
-                    # Print the barcode data
-                    data = barcode.data.decode('utf-8')
-                    print(barcode.data.decode('utf-8'))
-                    print(barcode.type)
-                    self.cv.imwrite(path, img)
-                    
-        #Display the image
-        # cv2.imshow("Image", img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        return {"decodedTo":data,"image":image}#{data:img}
-    
 
     def defaultDecorator(db="",collection=""):
         def innerDecorator(f):            
             @wraps(f)
-            def wrapper(*args,**kwargs):   
+            async def wrapper(*args,**kwargs):   
                 cmd = list(kwargs.keys())
 
                 col = collection
@@ -387,10 +160,10 @@ class DB:
                 kwargs['remotedb']  = remotedb
 
                 try:      
-                    output = f(*args,**kwargs)
+                    output = await f(*args,**kwargs)
 
                     # CLOSE MONGODB CONNECTION
-                    client.close()  
+                    await client.close()  
                     return output
                     
                 except Exception as e:
@@ -401,8 +174,8 @@ class DB:
     
 
     @defaultDecorator(db="marsairq",collection="storage")
-    def test(self,query, remotedb = None):
-        result = remotedb.find_one(query,{"_id":0})  
+    async def test(self,query, remotedb = None):
+        result = await remotedb.find_one(query,{"_id":0})  
         return result
 
 
@@ -410,7 +183,7 @@ class DB:
     # DATABASE OPERATION FUNCTIONS
     ##############################
     @defaultDecorator(db="marsairq",collection="sites")
-    def searchPaginationPageCount(self,searchtext, entity='' ,role='', remotedb = None):
+    async def searchPaginationPageCount(self,searchtext, entity='' ,role='', remotedb = None):
         # RETURNS A COUNT OF HOW MANY SITES MATCHES WITH THE QUERY PARAMETERS
         pageSize = 30
         try: 
@@ -420,7 +193,7 @@ class DB:
                 query = { "type": "site", 'name': { '$regex': f'{searchtext}', '$options': 'i' } }
              
             # SEARCH PAGINATION-FINAL COUNT 
-            number  = remotedb.count_documents(query)    
+            number  = await remotedb.count_documents(query)    
             pages   = 0      
            
             if number > 0:
@@ -438,7 +211,7 @@ class DB:
         
 
     @defaultDecorator(db="marsairq",collection="sites") # xuser
-    def getSearchPagination(self,searchtext,page, entity='', role='', remotedb = None):
+    async def getSearchPagination(self,searchtext,page, entity='', role='', remotedb = None):
         # RETURN A SPECIFIC PAGE FOR A SPECIFIC PRODUCT TYPE
         try:
             pageSize = 30   
@@ -448,8 +221,8 @@ class DB:
                 query = {"type": "site", f'name': { '$regex': f'{searchtext}', '$options': 'i' }   }    
 
             #  SEARCH PAGINATION-FINAL            
-            result      = list(remotedb.aggregate([{ '$match': query }, { '$sort': { 'number': 1 } }, { '$skip':  pageSize * page }, { '$limit': pageSize }, { '$project': { '_id': 0 } } ])) 
-        
+            cursor      = await remotedb.aggregate([{ '$match': query }, { '$sort': { 'number': 1 } }, { '$skip':  pageSize * page }, { '$limit': pageSize }, { '$project': { '_id': 0 } } ]) 
+            result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("getSearchPagination error ",msg)
@@ -458,7 +231,7 @@ class DB:
             return result
  
     @defaultDecorator(db="marsairq",collection="sites") # xuser
-    def paginationPage(self,page,entity='', role='', remotedb = None):
+    async def paginationPage(self,page,entity='', role='', remotedb = None):
         # RETURN A SPECIFIC PAGE FOR A SPECIFIC PRODUCT TYPE
         try:
             pageSize = 5 #30      
@@ -467,8 +240,8 @@ class DB:
             if role in ['staff','admin']:
                 query = { "type": "site"  }    
             #  PAGINATION FINAL
-            result      = list(remotedb.aggregate([ { '$match': query }, { '$skip': pageSize * page }, { '$limit': pageSize }, { '$project': { '_id': 0 } } ])) 
-                  
+            cursor      = await remotedb.aggregate([ { '$match': query }, { '$skip': pageSize * page }, { '$limit': pageSize }, { '$project': { '_id': 0 } } ]) 
+            result      = await cursor.to_list()      
         except Exception as e:
             msg = str(e)
             print("paginationPage error ",msg)
@@ -478,7 +251,7 @@ class DB:
         
 
     @defaultDecorator(db="marsairq", collection="sites")
-    def paginationPageCount(self, entity='' ,role='', remotedb = None):
+    async def paginationPageCount(self, entity='' ,role='', remotedb = None):
         # RETURNS A COUNT OF HOW MANY SITES MATCHES WITH THE QUERY PARAMETERS
         pageSize = 5  
         try: 
@@ -488,7 +261,7 @@ class DB:
                 query = { "type": "site"}
                        
             # SEARCH PAGINATION-FINAL COUNT 
-            number  = remotedb.count_documents(query)      
+            number  = await remotedb.count_documents(query)      
             pages   = 0      
            
             if number > 0:
@@ -506,7 +279,7 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="entities")
-    def searchPaginationPageCountEntity(self,searchtext, entity='' ,role='', remotedb = None):
+    async def searchPaginationPageCountEntity(self,searchtext, entity='' ,role='', remotedb = None):
         # RETURNS A COUNT OF HOW MANY ENTITIES MATCHES WITH THE QUERY PARAMETERS
         pageSize = 5
         try: 
@@ -516,7 +289,7 @@ class DB:
                 query = {'name': { '$regex': f'{searchtext}', '$options': 'i' } }
              
             # SEARCH PAGINATION-FINAL COUNT 
-            number  = remotedb.count_documents(query)    
+            number  = await remotedb.count_documents(query)    
             pages   = 0       
 
             if number > 0:
@@ -534,7 +307,7 @@ class DB:
         
 
     @defaultDecorator(db="marsairq",collection="entities") # xuser
-    def getSearchPaginationEntity(self,searchtext,page, entity='', role='', remotedb = None):
+    async def getSearchPaginationEntity(self,searchtext,page, entity='', role='', remotedb = None):
         # RETURN A SPECIFIC PAGE FOR A SPECIFIC PRODUCT TYPE
         try:
             pageSize = 5   
@@ -544,8 +317,8 @@ class DB:
                 query = {f'name': { '$regex': f'{searchtext}', '$options': 'i' }   }    
 
             #  SEARCH PAGINATION-FINAL            
-            result      = list(remotedb.aggregate([{ '$match': query }, { '$sort': { 'number': 1 } }, { '$skip':  pageSize * page }, { '$limit': pageSize }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': { '_id': 0 } } ])) 
-        
+            cursor      = await remotedb.aggregate([{ '$match': query }, { '$sort': { 'number': 1 } }, { '$skip':  pageSize * page }, { '$limit': pageSize }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': { '_id': 0 } } ]) 
+            result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("getSearchPaginationEntity error ",msg)
@@ -555,7 +328,7 @@ class DB:
  
 
     @defaultDecorator(db="marsairq",collection="entities") # xuser
-    def paginationPageEntity(self,page,entity='', role='', remotedb = None):
+    async def paginationPageEntity(self,page,entity='', role='', remotedb = None):
         # RETURN A SPECIFIC PAGE FOR A SPECIFIC PRODUCT TYPE
         try:
             pageSize = 5 #30      
@@ -564,8 +337,8 @@ class DB:
             if role in ['staff','admin']:
                 query = { }    
             #  PAGINATION FINAL
-            result      = list(remotedb.aggregate([ { '$match': query }, { '$skip': pageSize * page }, { '$limit': pageSize }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': { '_id': 0 } } ])) 
-                  
+            cursor      = await remotedb.aggregate([ { '$match': query }, { '$skip': pageSize * page }, { '$limit': pageSize }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': { '_id': 0 } } ]) 
+            result      = await cursor.to_list()      
         except Exception as e:
             msg = str(e)
             print("paginationPageEntity error ",msg)
@@ -574,7 +347,7 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="entities")
-    def paginationPageCountEntity(self, entity='' ,role='', remotedb = None):
+    async def paginationPageCountEntity(self, entity='' ,role='', remotedb = None):
         # RETURNS A COUNT OF HOW MANY SITES MATCHES WITH THE QUERY PARAMETERS
         pageSize = 5  #30
         try: 
@@ -584,7 +357,7 @@ class DB:
                 query = { }
            
             # SEARCH PAGINATION-FINAL COUNT 
-            number  = remotedb.count_documents(query)     
+            number  = await remotedb.count_documents(query)     
             pages   = 0      
            
             if number > 0:
@@ -602,10 +375,11 @@ class DB:
    
         
     @defaultDecorator(db="marsairq",collection="misc")
-    def miscLocOrShel(self,ID, remotedb = None):
+    async def miscLocOrShel(self,ID, remotedb = None):
         # RETURN LOCATION OR SHELVE INFO BASED ON SPECIFIED ID
         try:
-            result      = list(remotedb.aggregate([ { '$match': { 'id': 'location', '$or': [ { 'barcode': ID }, { 'shelves.barcode': ID } ] } }, { '$addFields': { 'shelve': { '$arrayElemAt': [ { '$filter': { 'input': '$shelves', 'as': 'item', 'cond': { '$eq': [ '$$item.barcode', ID ] } } }, 0 ] } } }, { '$project': { '_id': 0, 'barcode': 1, 'name': 1, 'shelve': '$shelve.number' } } ]))
+            cursor      = await remotedb.aggregate([ { '$match': { 'id': 'location', '$or': [ { 'barcode': ID }, { 'shelves.barcode': ID } ] } }, { '$addFields': { 'shelve': { '$arrayElemAt': [ { '$filter': { 'input': '$shelves', 'as': 'item', 'cond': { '$eq': [ '$$item.barcode', ID ] } } }, 0 ] } } }, { '$project': { '_id': 0, 'barcode': 1, 'name': 1, 'shelve': '$shelve.number' } } ])
+            result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print(" miscLocOrShel error ",msg)
@@ -614,10 +388,10 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="misc")
-    def miscFind(self,query, remotedb = None):
+    async def miscFind(self,query, remotedb = None):
         # SEARCH MISC COLLECTION WITH QUERY
         try:
-            result      = remotedb.find_one(query,{"_id":0})
+            result      = await remotedb.find_one(query,{"_id":0})
         except Exception as e:
             msg = str(e)
             print("miscFind error ",msg)
@@ -627,10 +401,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="misc")
-    def miscFindAll(self,query,projection, remotedb = None):
+    async def miscFindAll(self,query,projection, remotedb = None):
         # SEARCH MISC COLLECTION, RETURN ALL THAT MATCHES QUERY
         try:
-            result      = list(remotedb.find(query,projection))
+            result      = await remotedb.find(query,projection).to_list()
         except Exception as e:
             msg = str(e)
             print("miscFindAll error ",msg)
@@ -639,10 +413,10 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="misc")
-    def miscUpdate(self,query,update, remotedb = None):
+    async def miscUpdate(self,query,update, remotedb = None):
         # ADD NEW ENTRY TO MISC COLLECTION
         try:
-            result      = remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER,upsert=True)
+            result      = await remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER,upsert=True)
         except Exception as e:
             msg = str(e)
             print("miscUpdate error ",msg)
@@ -652,10 +426,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="misc")
-    def miscUpsert(self,id,name,site,location,object, remotedb = None):
+    async def miscUpsert(self,id,name,site,location,object, remotedb = None):
         # INSERT 'object' INTO THE MISC COLLECT
         try:
-            result      = remotedb.find_one_and_update({"id":id,"name":name,"site":site,"barcode":location},object,{"_id":0},return_document= self.ReturnDocument.AFTER,upsert=True)
+            result      = await remotedb.find_one_and_update({"id":id,"name":name,"site":site,"barcode":location},object,{"_id":0},return_document= self.ReturnDocument.AFTER,upsert=True)
         except Exception as e:
             msg = str(e)
             print("miscUpsert error ",msg)
@@ -668,10 +442,10 @@ class DB:
     #         ROUTES        #
     #########################
     @defaultDecorator(db="marsairq",collection="data")
-    def addData(self,data, remotedb = None):
+    async def addData(self,data, remotedb = None):
         '''ADD A NEW STORAGE LOCATION TO COLLECTION'''
         try: 
-            result      = remotedb.insert_one(data) 
+            result      = (await remotedb.insert_one(data)).inserted_id 
         except Exception as e:
             print("addData error ",str(e))
             return False 
@@ -680,10 +454,11 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="data")
-    def addBatchData(self,data, remotedb = None):
+    async def addBatchData(self,data, remotedb = None):
         '''ADD A NEW STORAGE LOCATION TO COLLECTION'''
         try: 
-            result      = remotedb.insert_many(data, ordered=False) 
+            result      = await remotedb.insert_many(data, ordered=False) 
+            # result.inserted_ids
         except Exception as e:
             print("addBatchData error ",str(e))
             return False 
@@ -691,21 +466,23 @@ class DB:
             return True
         
     @defaultDecorator(db="marsairq",collection="data")
-    def getCollocationData(self,start,end, query, remotedb = None):
+    async def getCollocationData(self,start,end, query, remotedb = None):
         ''' GET PRESSURE DATA FOR ALL SENSORS '''
         try: 
-            result      = list(remotedb.aggregate([{'$match': { 'date': { '$gte': start, '$lte': end }, 'model': { '$in': query } } }, { '$project': { '_id': 0 } }, { '$group': { '_id': '$model', 'values': { '$push': '$$ROOT' } } }]))
+            cursor      = await remotedb.aggregate([{'$match': { 'date': { '$gte': start, '$lte': end }, 'model': { '$in': query } } }, { '$project': { '_id': 0 } }, { '$group': { '_id': '$model', 'values': { '$push': '$$ROOT' } } }])
+            result      = await cursor.to_list()
         except Exception as e:
             print("getCollocationData error ",str(e))            
         else:                  
             return result
         
     @defaultDecorator(db="marsairq",collection="data")
-    def getMapHistoryData(self,id,start,end, param, remotedb = None):
+    async def getMapHistoryData(self,id,start,end, param, remotedb = None):
         ''' GET PRESSURE DATA FOR ALL SENSORS '''
         try:
            
-            result      = list(remotedb.aggregate(  [ { '$match': { 'id': id, 'date': { '$gte': start, '$lte': end } } }, { '$project': { '_id': 0, 'name': 1, 'id': 1, param: f'$data.{param}', 'date': 1 } } ]))
+            cursor      = await remotedb.aggregate(  [ { '$match': { 'id': id, 'date': { '$gte': start, '$lte': end } } }, { '$project': { '_id': 0, 'name': 1, 'id': 1, param: f'$data.{param}', 'date': 1 } } ])
+            result      = await cursor.to_list()
             sq = self.DataFrame(result)
             
             # sq['date'] = self.to_datetime(sq['timestamp'],unit='s')
@@ -729,10 +506,10 @@ class DB:
     #          TEMP         #
     #########################
     @defaultDecorator(db="marsairq",collection="temp")
-    def createTempDoc(self,query, remotedb = None):
+    async def createTempDoc(self,query, remotedb = None):
         # CREATE TEMPORARY DOCUMENT IN TEMP COLLECTION
         try:
-            result      = remotedb.insert_one(query)
+            result      = (await remotedb.insert_one(query)).inserted_id
         except Exception as e:
             print("createTempDoc error ",str(e))
             return False
@@ -740,10 +517,10 @@ class DB:
             return True
 
     @defaultDecorator(db="marsairq",collection="temp")
-    def findTempDoc(self,query, remotedb = None):
+    async def findTempDoc(self,query, remotedb = None):
         # SEARCH FOR A TEMPORARY DOCUMENT IN TEMP COLLECTION
         try:
-            result      = remotedb.find_one(query,{"_id":0})
+            result      = await remotedb.find_one(query,{"_id":0})
         except Exception as e:
             print("findTempDoc error ",str(e))
             return None
@@ -751,10 +528,10 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="temp")
-    def findAllTempDoc(self,query,project={"_id":0}, remotedb = None):
+    async def findAllTempDoc(self,query, remotedb = None):
         # SEARCH FOR A TEMPORARY DOCUMENT IN TEMP COLLECTION
         try:
-            result      = list(remotedb.find(query,project))
+            result      = await remotedb.find(query,{"_id":0}).to_list()
         except Exception as e:
             print("findAllTempDoc error ",str(e))
             return None
@@ -762,10 +539,10 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="temp")
-    def deleteTempDoc(self,query, remotedb = None):
+    async def deleteTempDoc(self,query, remotedb = None):
         # SEARCH FOR A TEMPORARY DOCUMENT IN TEMP COLLECTION
         try:
-            result      = remotedb.delete_one(query)
+            result      = await remotedb.delete_one(query)
         except Exception as e:
             print("deleteTempDoc error ",str(e))
             return 0
@@ -773,10 +550,10 @@ class DB:
             return result.deleted_count
 
     @defaultDecorator(db="marsairq",collection="temp")
-    def updateTempDoc(self,query,update, remotedb = None):
+    async def updateTempDoc(self,query,update, remotedb = None):
         # UPDATE EXISTING DOCUMENT IN TEMP COLLECTION
         try:            
-            result      = remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
+            result      = await remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
         except Exception as e:
             msg = str(e)
             print("updateTempDoc error ",msg)
@@ -789,11 +566,11 @@ class DB:
     ###############################################################
 
     @defaultDecorator(db="marsairq",collection="storage")
-    def userAssignedItems(self,id, remotedb = None):
+    async def userAssignedItems(self,id, remotedb = None):
         # CHECKS IF USER EXIST USING ID OR EMAIL ADDRESS PROVIDED
         try: 
-            result = list(remotedb.aggregate([ { '$match': { 'shelf': id } }, { '$project': { '_id': 0 } }, { '$group': { '_id': '$product', 'count': { '$sum': 1 }, 'barcodes': { '$push': '$$ROOT.barcode' }, 'pro': { '$push': '$$ROOT' } } }, { '$lookup': { 'from': 'product', 'localField': 'pro.product', 'foreignField': 'id', 'pipeline': [ { '$project': { '_id': 0 } } ], 'as': 'item' } }, { '$project': { '_id': 0, 'count': 1, 'barcodes': 1, 'product': { '$arrayElemAt': [ '$item', 0 ] } } } ])) 
-            
+            cursor      = await remotedb.aggregate([ { '$match': { 'shelf': id } }, { '$project': { '_id': 0 } }, { '$group': { '_id': '$product', 'count': { '$sum': 1 }, 'barcodes': { '$push': '$$ROOT.barcode' }, 'pro': { '$push': '$$ROOT' } } }, { '$lookup': { 'from': 'product', 'localField': 'pro.product', 'foreignField': 'id', 'pipeline': [ { '$project': { '_id': 0 } } ], 'as': 'item' } }, { '$project': { '_id': 0, 'count': 1, 'barcodes': 1, 'product': { '$arrayElemAt': [ '$item', 0 ] } } } ]) 
+            result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("userAssignedItems error ",msg)
@@ -805,10 +582,11 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="accounts")
-    def whoHasWhat(self, remotedb = None):
+    async def whoHasWhat(self, remotedb = None):
         # RETURN ALL THAT IS ASSIGNED TO EACH STAFF MEMBER
         try: 
-            result      = list(remotedb.aggregate([ { '$match': { '$or':[{'role': 'staff' },{'role': 'admin' }] } }, { '$lookup': { 'from': 'storage', 'localField': 'shelf', 'foreignField': 'shelf', 'pipeline': [ { '$project': { '_id': 0, 'product': 1, 'barcode': 1 } }, { '$lookup': { 'from': 'product', 'localField': 'product', 'foreignField': 'id', 'pipeline': [ { '$project': { '_id': 0 } } ], 'as': 'product' } }, { '$project': { 'barcode': 1, 'product': { '$arrayElemAt': [ '$product', 0 ] } } }, { '$group': { '_id': '$product.id', 'count': { '$sum': 1 }, 'barcodes': { '$push': '$barcode' }, 'product': { '$first': '$product' } } } ], 'as': 'assigned' } }, { '$project': { '_id': 0, 'username': 1, 'email': 1, 'role': 1, 'firstname': 1, 'lastname': 1, 'department': 1, 'assigned': 1 } } ] ))
+            cursor      = await remotedb.aggregate([ { '$match': { '$or':[{'role': 'staff' },{'role': 'admin' }] } }, { '$lookup': { 'from': 'storage', 'localField': 'shelf', 'foreignField': 'shelf', 'pipeline': [ { '$project': { '_id': 0, 'product': 1, 'barcode': 1 } }, { '$lookup': { 'from': 'product', 'localField': 'product', 'foreignField': 'id', 'pipeline': [ { '$project': { '_id': 0 } } ], 'as': 'product' } }, { '$project': { 'barcode': 1, 'product': { '$arrayElemAt': [ '$product', 0 ] } } }, { '$group': { '_id': '$product.id', 'count': { '$sum': 1 }, 'barcodes': { '$push': '$barcode' }, 'product': { '$first': '$product' } } } ], 'as': 'assigned' } }, { '$project': { '_id': 0, 'username': 1, 'email': 1, 'role': 1, 'firstname': 1, 'lastname': 1, 'department': 1, 'assigned': 1 } } ] )
+            result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("whoHasWhat error ",msg)
@@ -818,10 +596,10 @@ class DB:
         
 
     @defaultDecorator(db="marsairq",collection="accounts")
-    def userExist(self, email="",id="",role="user", remotedb = None):
+    async def userExist(self, email="",id="",role="user", remotedb = None):
         # CHECKS IF USER EXIST USING ID OR EMAIL ADDRESS PROVIDED
         try: 
-            result      = remotedb.count_documents({'$or':[{"email": email},{"id":id}] })
+            result      = await remotedb.count_documents({'$or':[{"email": email},{"id":id}] })
         except Exception as e:
             msg = str(e)
             print("userExist error ",msg)
@@ -832,10 +610,10 @@ class DB:
             return (False,"success")
 
     @defaultDecorator(db="marsairq",collection="accounts")
-    def findUser(self,email="",id="", remotedb = None):
+    async def findUser(self,email="",id="", remotedb = None):
         # SEARCH FOR USER USING ID OR EMAIL ADDRESS PROVIDED
         try: 
-            result      = remotedb.find_one({'$or':[{"email": email},{"id":id}]  },{"_id":0}) 
+            result      = await remotedb.find_one({'$or':[{"email": email},{"id":id}]  },{"_id":0}) 
         except Exception as e:
             msg = str(e)
             print("findUser error ",msg)
@@ -845,10 +623,10 @@ class DB:
         
         
     @defaultDecorator(db="marsairq",collection="accounts")
-    def findAllUser(self,text='', remotedb = None):
+    async def findAllUser(self,text='', remotedb = None):
         # SEARCH FOR USER USING ID OR EMAIL ADDRESS PROVIDED
         try: 
-            result      = list(remotedb.find({'$or':[{"email": { '$regex': f'{text}', '$options': 'i' }},{"id": { '$regex': f'{text}', '$options': 'i' }},{"firstname": { '$regex': f'{text}', '$options': 'i' }},{"lastname": { '$regex': f'{text}', '$options': 'i' }},{"organization": { '$regex': f'{text}', '$options': 'i' }}]  },{"_id":0})) 
+            result      = await remotedb.find({'$or':[{"email": { '$regex': f'{text}', '$options': 'i' }},{"id": { '$regex': f'{text}', '$options': 'i' }},{"firstname": { '$regex': f'{text}', '$options': 'i' }},{"lastname": { '$regex': f'{text}', '$options': 'i' }},{"organization": { '$regex': f'{text}', '$options': 'i' }}]  },{"_id":0}).to_list()
         except Exception as e:
             msg = str(e)
             print("findAllUser error ",msg)
@@ -857,10 +635,10 @@ class DB:
             return result
         
     @defaultDecorator(db="marsairq",collection="accounts")
-    def findAllStaff(self, remotedb = None):
+    async def findAllStaff(self, remotedb = None):
         # RETURN LIST OF STAFF MEMBERS FOR /ADMIN ROUTE
         try: 
-            result      = list(remotedb.find( {'$or':[{"role":"staff"},{"role":"admin"}]  } ,{"_id":0,"password":0 }))
+            result      = await remotedb.find( {'$or':[{"role":"staff"},{"role":"admin"}]  } ,{"_id":0,"password":0 }).to_list()
         except Exception as e:
             msg = str(e)
             print("findAllStaff error ",msg)
@@ -869,10 +647,10 @@ class DB:
             return result
         
     @defaultDecorator(db="marsairq",collection="accounts")
-    def findAllClient(self, remotedb = None):
+    async def findAllClient(self, remotedb = None):
         # RETURN LIST OF EXTERNAL MEMBERS FOR /ADMIN ROUTE
         try: 
-            result      = list(remotedb.find({"role":"user"},{"_id":0,"password":0}))
+            result      = await remotedb.find({"role":"user"},{"_id":0,"password":0}).to_list()
         except Exception as e:
             msg = str(e)
             print("findAllStaff error ",msg)
@@ -882,10 +660,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="accounts")
-    def updateUser(self,query,update, remotedb = None):
+    async def updateUser(self,query,update, remotedb = None):
         # UPDATE PARAMS FOR SPECIFIED USER
         try: 
-            result      = remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
+            result      = await remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
         except Exception as e:
             msg = str(e)
             print("updateUser error ",msg)
@@ -894,10 +672,10 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="accounts")
-    def addUser(self,newAccount, remotedb = None):
+    async def addUser(self,newAccount, remotedb = None):
         # ADD NEW USER ACCOUNT TO DATABASE
         try: 
-            result      = remotedb.insert_one(newAccount)
+            result      = (await remotedb.insert_one(newAccount)).inserted_id
         except Exception as e:
             msg = str(e)
             print("addUser error ",msg)
@@ -906,10 +684,10 @@ class DB:
             return True
 
     @defaultDecorator(db="marsairq",collection="accounts")
-    def removeUser(self,email, remotedb = None):
+    async def removeUser(self,email, remotedb = None):
         # REMOVE USER ACCOUNT FROM  DATABASE
         try: 
-            result      = remotedb.delete_one({"email":email})
+            result      = await remotedb.delete_one({"email":email})
         except Exception as e:
             msg = str(e)
             print("removeUser error ",msg)
@@ -919,10 +697,10 @@ class DB:
         
         
     @defaultDecorator(db="marsairq",collection="mqtt_users")
-    def addMqttUser(self,newAccount, remotedb = None):
+    async def addMqttUser(self,newAccount, remotedb = None):
         # ADD NEW MQTT USER ACCOUNT TO DATABASE
         try: 
-            result      = remotedb.insert_one(newAccount)
+            result      = (await remotedb.insert_one(newAccount)).inserted_id
         except Exception as e:
             msg = str(e)
             print("addMqttUser error ",msg)
@@ -931,10 +709,10 @@ class DB:
             return True
 
     @defaultDecorator(db="marsairq",collection="mqtt_users")
-    def mqttUserExist(self,id="", site="", remotedb = None):
+    async def mqttUserExist(self,id="", site="", remotedb = None):
         # CHECKS IF MQTT USER EXIST USING ID PROVIDED
         try: 
-            result      = remotedb.count_documents({"$or":[{"id":id},{"site":site}]})
+            result      = await remotedb.count_documents({"$or":[{"id":id},{"site":site}]})
         except Exception as e:
             msg = str(e)
             print("mqttUserExist error ",msg)
@@ -946,10 +724,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="mqtt_users")
-    def removeMqttUser(self,id, remotedb = None):
+    async def removeMqttUser(self,id, remotedb = None):
         # REMOVE USER ACCOUNT FROM  DATABASE
         try: 
-            result      = remotedb.delete_many({"owner": id})
+            result      = await remotedb.delete_many({"owner": id})
         except Exception as e:
             msg = str(e)
             print("removeMqttUser error ",msg)
@@ -959,10 +737,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="mqtt_users")
-    def updateMqttUser(self,query,update, remotedb = None):
+    async def updateMqttUser(self,query,update, remotedb = None):
         # UPDATE PARAMS FOR SPECIFIED USER
         try: 
-            result      = remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
+            result      = await remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
         except Exception as e:
             msg = str(e)
             print("updateMqttUser error ",msg)
@@ -973,10 +751,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="sites")
-    def addSite(self,newSite, remotedb = None):
+    async def addSite(self,newSite, remotedb = None):
         # ADD NEW USER ACCOUNT TO DATABASE
         try: 
-            result      = remotedb.insert_one(newSite)
+            result      = (await remotedb.insert_one(newSite)).inserted_id
         except Exception as e:
             msg = str(e)
             print("addSite error ",msg)
@@ -985,10 +763,10 @@ class DB:
             return True
         
     @defaultDecorator(db="marsairq",collection="sites")
-    def deleteSite(self,query, remotedb = None):
+    async def deleteSite(self,query, remotedb = None):
         # DELETE SITE FROM COLLECTION
         try:
-            result      = remotedb.delete_one(query)
+            result      = await remotedb.delete_one(query)
         except Exception as e:
             print("deleteSite error ",str(e))
             return 0
@@ -996,10 +774,10 @@ class DB:
             return result.deleted_count
 
     @defaultDecorator(db="marsairq",collection="sites")
-    def deleteAllSite(self,query, remotedb = None):
+    async def deleteAllSite(self,query, remotedb = None):
         # REMOVE USER ACCOUNT FROM  DATABASE
         try: 
-            result      = remotedb.delete_many(query)
+            result      = await remotedb.delete_many(query)
         except Exception as e:
             msg = str(e)
             print("deleteAllSite error ",msg)
@@ -1009,12 +787,13 @@ class DB:
         
 
     @defaultDecorator(db="marsairq",collection="sites")
-    def findAllSites(self,query, remotedb = None):
+    async def findAllSites(self,query, remotedb = None):
         # RETURN LIST OF SITES
         try: 
-            result      = list(remotedb.find(query,{"_id":0}))
+            result      = await remotedb.find(query,{"_id":0}).to_list()
             # [ { '$match': { 'type': 'site', '$or': [ { 'owner': owner }, { 'secondaryowners': { '$in': [ owner ] } } ] } }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ]
-            # result      = list(remotedb.aggregate([ { '$match': query }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ]))
+            # cursor      = await remotedb.aggregate([ { '$match': query }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ])
+            # result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("findAllSites error ",msg)
@@ -1023,10 +802,10 @@ class DB:
             return result
     
     @defaultDecorator(db="marsairq",collection="sites")
-    def findSite(self,id="",project={"_id":0}, remotedb = None):
+    async def findSite(self,id="",project={"_id":0}, remotedb = None):
         # SEARCH FOR USER USING ID OR EMAIL ADDRESS PROVIDED
         try: 
-            result      = remotedb.find_one({"id":id},project) 
+            result      = await remotedb.find_one({"id":id},project) 
         except Exception as e:
             msg = str(e)
             print("findSite error ",msg)
@@ -1035,10 +814,10 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="sites")
-    def updateSite(self,query,update, remotedb = None):
+    async def updateSite(self,query,update, remotedb = None):
         # UPDATE PARAMS FOR SPECIFIED USER
         try: 
-            result      = remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
+            result      = await remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
         except Exception as e:
             msg = str(e)
             print("updateSite error ",msg)
@@ -1048,10 +827,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="sites")
-    def getSiteWithOwner(self,site, remotedb = None):
+    async def getSiteWithOwner(self,site, remotedb = None):
         # UPDATE PARAMS FOR SPECIFIED USER
         try: 
-            result      = list(remotedb.aggregate([ { '$match': { 'type': 'site', 'id': site } }, { '$lookup': { 'from': 'accounts', 'localField': 'owner', 'foreignField': 'id', 'pipeline': [ { '$project': { '_id': 0, 'firstname': 1, 'lastname': 1, 'organization': 1, 'email': 1, 'country': 1 } } ], 'as': 'acc_owner' } }, { '$project': { '_id': 0 } } ]) )
+            cursor      = await remotedb.aggregate([ { '$match': { 'type': 'site', 'id': site } }, { '$lookup': { 'from': 'accounts', 'localField': 'owner', 'foreignField': 'id', 'pipeline': [ { '$project': { '_id': 0, 'firstname': 1, 'lastname': 1, 'organization': 1, 'email': 1, 'country': 1 } } ], 'as': 'acc_owner' } }, { '$project': { '_id': 0 } } ]) 
             if len(result) > 0:
                 result = result[0]
         
@@ -1065,12 +844,12 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="sites")
-    def getSitesForOwner(self,owner, remotedb = None):
+    async def getSitesForOwner(self,owner, remotedb = None):
         # GET ALL SITES THAT IS ASSIGNED TO A SPECIFIC USER. 
         try: 
             # GET ALL SITES FOR OWNER WITH MQTT
-            result      = list(remotedb.aggregate([ { '$match': { 'type': 'site', '$or': [ { 'owner': owner }, { 'secondaryowners': { '$in': [ owner ] } } ] } }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ]))
-             
+            cursor      = await remotedb.aggregate([ { '$match': { 'type': 'site', '$or': [ { 'owner': owner }, { 'secondaryowners': { '$in': [ owner ] } } ] } }, { '$lookup': { 'from': 'mqtt_users', 'localField': 'id', 'foreignField': 'site', 'as': 'credentials', 'pipeline': [ { '$project': { '_id': 0, 'username': 1 } } ] } }, { '$addFields': { 'list': '$$CURRENT.credentials.username' } }, { '$addFields': { 'username': { '$cond': { 'if': { '$gt': [ { '$size': '$list' }, 0 ] }, 'then': { '$arrayElemAt': [ '$list', 0 ] }, 'else': '' } } } }, { '$project': { '_id': 0, 'list': 0, 'credentials': 0 } } ])
+            result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("getSitesForOwner error ",msg)
@@ -1083,10 +862,10 @@ class DB:
     #                           ENTITY                            #
     ###############################################################
     @defaultDecorator(db="marsairq",collection="entities")
-    def addEntity(self,query, remotedb = None):
+    async def addEntity(self,query, remotedb = None):
         # ADD NEW USER ACCOUNT TO DATABASE
         try: 
-            result      = remotedb.insert_one(query)
+            result      = (await remotedb.insert_one(query)).inserted_id
         except Exception as e:
             msg = str(e)
             print("addEntity error ",msg)
@@ -1095,10 +874,10 @@ class DB:
             return True
         
     @defaultDecorator(db="marsairq",collection="entities")
-    def findAllEntitiesCredentials(self,query,project={"_id":0}, remotedb = None):
+    async def findAllEntitiesCredentials(self,query,project={"_id":0}, remotedb = None):
         # RETURN LIST OF ENTITIES
         try: 
-            result      = list(remotedb.find(query,project))            
+            result      = await remotedb.find(query,project).to_list()            
         except Exception as e:
             msg = str(e)
             print("findAllEntitiesCredentials error ",msg)
@@ -1107,12 +886,12 @@ class DB:
             return result
         
     @defaultDecorator(db="marsairq",collection="entities")
-    def findAllEntities(self,query,project={"_id":0}, remotedb = None):
+    async def findAllEntities(self,query,project={"_id":0}, remotedb = None):
         # RETURN LIST OF ENTITIES
         try: 
-            # result      = list(remotedb.find({},project))
-            result      = list(remotedb.aggregate([ { '$match': query }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': project } ]))
-            
+            # result      = await remotedb.find({},project))
+            cursor      = await remotedb.aggregate([ { '$match': query }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': project } ])
+            result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("findAllEntities error ",msg)
@@ -1120,13 +899,13 @@ class DB:
         else: 
             return result
 
-    @defaultDecorator(db="marsairq",collection="entities")
-    def findAllEntitiesForSignup(self,project={"_id":0}, remotedb = None):
+    @defaultDecorator(db="marsairq",collection="sites")
+    async def findAllEntitiesForSignup(self,project={"_id":0}, remotedb = None):
         # RETURN LIST OF ENTITIES
         try: 
-            result      = list(remotedb.find({},project))
-            # result      = list(remotedb.aggregate([ { '$match': {} }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': { '_id': 0, 'web': 0, 'device': 0 } } ]))
-            
+            result      = await remotedb.find({},project).to_list()
+            # cursor      = await remotedb.aggregate([ { '$match': {} }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'as': 'sites', 'pipeline': [ { '$project': { '_id': 0, 'id': 1, 'name': 1, 'lat': 1, 'lon': 1 } } ] } }, { '$project': { '_id': 0, 'web': 0, 'device': 0 } } ])
+            # result      = await cursor.to_list()
         except Exception as e:
             msg = str(e)
             print("findAllEntitiesForSignup error ",msg)
@@ -1135,10 +914,10 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="entities")
-    def findEntityCredentials(self,query,project={"_id":0}, remotedb = None):
+    async def findEntityCredentials(self,query,project={"_id":0}, remotedb = None):
         # FIND A SINGLE ENTITY
         try: 
-            result      = remotedb.find_one(query,project) 
+            result      = await remotedb.find_one(query,project) 
         except Exception as e:
             msg = str(e)
             print("findEntityCredentials error ",msg)
@@ -1147,36 +926,22 @@ class DB:
             return result
 
     @defaultDecorator(db="marsairq",collection="entities")
-    def findEntity(self,id="",project={"_id":0}, remotedb = None):
+    async def findEntity(self,id="",project={"_id":0}, remotedb = None):
         # FIND A SINGLE ENTITY
         try: 
-            result      = remotedb.find_one({"id":id},project) 
+            result      = await remotedb.find_one({"id":id},project) 
         except Exception as e:
             msg = str(e)
             print("findEntity error ",msg)
             return None
         else: 
             return result
-    
+        
     @defaultDecorator(db="marsairq",collection="entities")
-    def findEntityWithSites(self,id="",project={ '_id': 0, 'entity': 0 }, remotedb = None):
-        # FIND A SINGLE ENTITY
-        try: 
-            result      = list(remotedb.aggregate([ { '$match': { 'id': id } }, { '$lookup': { 'from': 'sites', 'localField': 'id', 'foreignField': 'entity', 'pipeline': [ { '$project': project } ], 'as': 'sites' } }, { '$project': { '_id': 0 } } ]))
-
-        except Exception as e:
-            msg = str(e)
-            print("findEntityWithSites error ",msg)
-            return None
-        else: 
-            return result
-    
-    
-    @defaultDecorator(db="marsairq",collection="entities")
-    def deleteEntity(self,query, remotedb = None):
+    async def deleteEntity(self,query, remotedb = None):
         # SEARCH FOR A TEMPORARY DOCUMENT IN TEMP COLLECTION
         try:
-            result      = remotedb.delete_one(query)
+            result      = await remotedb.delete_one(query)
         except Exception as e:
             print("deleteEntity error ",str(e))
             return 0
@@ -1184,10 +949,10 @@ class DB:
             return result.deleted_count
         
     @defaultDecorator(db="marsairq",collection="entities")
-    def entityExist(self,id="", name="", organization="", remotedb = None):
+    async def entityExist(self,id="", name="", organization="", remotedb = None):
         # CHECKS IF MQTT USER EXIST USING ID PROVIDED
         try: 
-            result      = remotedb.count_documents({"$or":[{"id":id},{"name": name},{"organization": organization}]})
+            result      = await remotedb.count_documents({"$or":[{"id":id},{"name": name},{"organization": organization}]})
         except Exception as e:
             msg = str(e)
             print("entityExist error ",msg)
@@ -1199,10 +964,10 @@ class DB:
 
 
     @defaultDecorator(db="marsairq",collection="entities")
-    def updateEntity(self,query,update, remotedb = None):
+    async def updateEntity(self,query,update, remotedb = None):
         # UPDATE A SINGLE ENTITY
         try: 
-            result      = remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
+            result      = await remotedb.find_one_and_update(query,update,{"_id":0},return_document= self.ReturnDocument.AFTER, upsert = True) 
         except Exception as e:
             msg = str(e)
             print("updateEntity error ",msg)
@@ -1211,7 +976,7 @@ class DB:
             return result
 
 
-def main():
+async def main():
     from config import Config
     from time import time, ctime, sleep
     from math import floor

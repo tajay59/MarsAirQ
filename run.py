@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from app import app, mongo, Config, Mqtt, init_pressure, init_temperature, init_collocation_device, HMP75_queue, PTB330_queue, ESP32_queue
+from app import app, mongo, Config #, Mqtt, init_pressure, init_temperature, init_collocation_device, HMP75_queue, PTB330_queue, ESP32_queue
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor 
 
 

@@ -1,0 +1,4 @@
+
+fastapi run --port 5000 --host 127.0.0.1 --reload --workers 4 run.py
+or
+uvicorn app:app --host 127.0.0.1 --port 5000 --workers 4  --reload
